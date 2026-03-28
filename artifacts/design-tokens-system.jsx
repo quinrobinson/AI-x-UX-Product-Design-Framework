@@ -372,7 +372,7 @@ Return ONLY the updated :root {} block with comments explaining each choice.`;
         <div style={{ maxWidth: 1100, margin: "0 auto", display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
           <div>
             <div style={{ fontSize: 10, fontFamily: tokens.fontMono, letterSpacing: 3, textTransform: "uppercase", color: "rgba(255,255,255,0.4)", marginBottom: 8 }}>
-              Universal Starter
+              Simple Design System
             </div>
             <h1 style={{ fontFamily: tokens.fontHeading, fontSize: 32, fontWeight: 700, margin: "0 0 6px" }}>{tokens.brandName}</h1>
             <p style={{ fontSize: 14, color: "rgba(255,255,255,0.6)", margin: 0 }}>Tune the knobs. Preview live. Export for your client.</p>
@@ -585,10 +585,10 @@ Return ONLY the updated :root {} block with comments explaining each choice.`;
                 <div style={{ fontSize: 10, fontFamily: tokens.fontMono, letterSpacing: 2, textTransform: "uppercase", color: "#999", marginBottom: 20 }}>Border Radius</div>
                 <div style={{ display: "flex", gap: 20 }}>
                   {[
-                    ["sm", tokens.radiusSm],
-                    ["md", tokens.radiusMd],
-                    ["lg", tokens.radiusLg],
-                    ["full", tokens.radiusFull],
+                    ["Radius/100", tokens.radiusSm],
+                    ["Radius/200", tokens.radiusMd],
+                    ["Radius/400", tokens.radiusLg],
+                    ["Radius/Full", tokens.radiusFull],
                   ].map(([label, val]) => (
                     <div key={label} style={{ textAlign: "center" }}>
                       <div style={{ width: 56, height: 56, background: tokens.primaryLight, border: `2px solid ${tokens.primary}`, borderRadius: val }} />
@@ -736,20 +736,20 @@ Return ONLY the updated :root {} block with comments explaining each choice.`;
                   {[
                     { title: "Flat", shadow: "none", border: `1px solid ${tokens.neutral300}` },
                     { title: "Elevated", shadow: tokens.shadowMd, border: `1px solid ${tokens.neutral300}` },
-                    { title: "Prominent", shadow: tokens.shadowLg, border: `1px solid ${tokens.neutral300}` },
+                    { title: "Prominent", shadow: tokens.shadowLg, border: "1px solid transparent" },
                   ].map((card) => (
                     <div
                       key={card.title}
                       style={{
                         padding: 32,
                         borderRadius: tokens.radiusMd,
-                        background: "#fff",
+                        background: tokens.neutral50,
                         border: card.border,
                         boxShadow: card.shadow,
                       }}
                     >
-                      <div style={{ fontFamily: tokens.fontHeading, fontWeight: 700, fontSize: 16, marginBottom: 8 }}>{card.title}</div>
-                      <p style={{ fontSize: 13, color: tokens.neutral500, lineHeight: 1.5, margin: 0 }}>Card component with {card.title.toLowerCase()} treatment for content hierarchy.</p>
+                      <div style={{ fontFamily: tokens.fontHeading, fontWeight: 600, fontSize: 24, marginBottom: 12, lineHeight: 1.2, letterSpacing: "-0.48px" }}>{card.title}</div>
+                      <p style={{ fontSize: 16, color: tokens.neutral500, lineHeight: 1.4, margin: 0, fontFamily: tokens.fontBody }}>Card component with {card.title.toLowerCase()} treatment for content hierarchy.</p>
                     </div>
                   ))}
                 </div>
@@ -760,12 +760,12 @@ Return ONLY the updated :root {} block with comments explaining each choice.`;
                 <div style={{ fontSize: 10, fontFamily: tokens.fontMono, letterSpacing: 2, textTransform: "uppercase", color: "#999", marginBottom: 20 }}>Badges & Status</div>
                 <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
                   {[
-                    { label: "Active", bg: `${tokens.success}18`, color: tokens.success },
-                    { label: "Pending", bg: `${tokens.warning}18`, color: tokens.warning },
-                    { label: "Error", bg: `${tokens.error}18`, color: tokens.error },
-                    { label: "Info", bg: `${tokens.info}18`, color: tokens.info },
+                    { label: "Positive", bg: "#ebffee", color: "#02542d" },
+                    { label: "Warning", bg: "#fff8e6", color: "#7d4e00" },
+                    { label: "Danger", bg: "#ffebeb", color: "#c62828" },
                     { label: "Default", bg: tokens.neutral100, color: tokens.neutral600 },
-                    { label: "Brand", bg: tokens.primaryLight, color: tokens.primaryDark },
+                    { label: "Brand", bg: tokens.primaryLight, color: tokens.primary },
+                    { label: "Neutral", bg: tokens.neutral200, color: tokens.neutral900 },
                   ].map((b) => (
                     <span
                       key={b.label}
@@ -790,9 +790,9 @@ Return ONLY the updated :root {} block with comments explaining each choice.`;
                 <div style={{ fontSize: 10, fontFamily: tokens.fontMono, letterSpacing: 2, textTransform: "uppercase", color: "#999", marginBottom: 20 }}>Alerts</div>
                 <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                   {[
-                    { type: "Success", bg: `${tokens.success}10`, border: tokens.success, color: tokens.success, msg: "Your changes have been saved successfully." },
-                    { type: "Error", bg: `${tokens.error}10`, border: tokens.error, color: tokens.error, msg: "Something went wrong. Please try again." },
-                    { type: "Info", bg: `${tokens.info}10`, border: tokens.info, color: tokens.info, msg: "A new version is available for update." },
+                    { type: "Positive", bg: "#ebffee", border: "#14ae5c", color: "#02542d", msg: "Your changes have been saved successfully." },
+                    { type: "Warning", bg: "#fff8e6", border: "#ffb800", color: "#7d4e00", msg: "Please review your entries before continuing." },
+                    { type: "Danger", bg: "#ffebeb", border: tokens.error, color: "#c62828", msg: "Something went wrong. Please try again." },
                   ].map((a) => (
                     <div
                       key={a.type}
