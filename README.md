@@ -32,13 +32,15 @@ The `figma-playbook.md` is a companion skill that works alongside any phase skil
 
 Use it by reading the phase skill + the playbook together. The phase skill defines *what* to create; the playbook defines *how* to create it in Figma.
 
-### `/artifacts` — Interactive React Components
-Four JSX artifacts that render as interactive tools:
+### `/artifacts` — Interactive React Components & Onboarding Deck
+
+Four JSX artifacts that render as interactive tools, plus a team onboarding presentation:
 
 - **`design-process-system.jsx`** — Clickable phase-by-phase system with AI prompts, skill docs, templates, and tool recommendations per phase
 - **`design-tokens-system.jsx`** — Universal starter design system with tunable tokens, live component previews, presets, and AI-powered customization export
 - **`design-system-checklist.jsx`** — Comprehensive audit checklist synthesized from Material Design 3, Atlassian, IBM Carbon, and Apple HIG — with Figma-ready prompts per item
 - **`m3-token-reference.jsx`** — Interactive M3 token documentation for Button, Card, Text Field, and Navigation Bar — covers color roles, elevation, shape, typography, and spacing with Figma variable spec prompts
+- **`onboarding-deck.pptx`** — 18-slide team onboarding presentation covering the framework's value, structure, and step-by-step setup. Designed to match the Figma Cover aesthetic: dark/light slide balance, phase colors (01–06) used consistently throughout.
 
 ### Figma Template
 **[AI × UX Design Process Template](https://www.figma.com/design/mrHuD7sY7h6uKSVndTSIQE)** — A 10-page Figma file you duplicate per project:
