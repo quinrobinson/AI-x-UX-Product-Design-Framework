@@ -1,48 +1,48 @@
 import { useState, useCallback } from "react";
 
 const DEFAULT_TOKENS = {
-  brandName: "Starter DS",
-  // Colors
-  primary: "#2563EB",
-  primaryLight: "#DBEAFE",
-  primaryDark: "#1E40AF",
-  secondary: "#0F172A",
-  accent: "#F59E0B",
-  success: "#16A34A",
-  warning: "#EAB308",
-  error: "#DC2626",
-  info: "#0EA5E9",
-  neutral50: "#FAFAFA",
-  neutral100: "#F5F5F5",
-  neutral200: "#E5E5E5",
-  neutral300: "#D4D4D4",
-  neutral400: "#A3A3A3",
-  neutral500: "#737373",
-  neutral600: "#525252",
-  neutral700: "#404040",
-  neutral800: "#262626",
-  neutral900: "#171717",
-  // Typography
-  fontHeading: "'DM Sans', sans-serif",
-  fontBody: "'DM Sans', sans-serif",
-  fontMono: "'JetBrains Mono', monospace",
-  baseSize: 16,
-  scaleRatio: 1.25,
-  // Spacing
-  spaceUnit: 4,
-  // Shape
-  radiusSm: 6,
-  radiusMd: 10,
-  radiusLg: 16,
-  radiusFull: 9999,
-  // Elevation
-  shadowSm: "0 1px 2px rgba(0,0,0,0.06)",
-  shadowMd: "0 4px 12px rgba(0,0,0,0.08)",
-  shadowLg: "0 12px 32px rgba(0,0,0,0.12)",
+  brandName: "SDS",
+  // Colors — mapped from SDS Color Primitives
+  primary: "#2c2c2c",       // Brand/800
+  primaryLight: "#f5f5f5",  // Brand/100
+  primaryDark: "#1e1e1e",   // Brand/900
+  secondary: "#111111",     // Brand/1000
+  accent: "#444444",        // Brand/600
+  success: "#14ae5c",       // Green/500
+  warning: "#ffb800",       // Yellow/400 (from SDS)
+  error: "#e2483d",         // Red/500 (from SDS)
+  info: "#0c8ce9",          // Blue/500 (from SDS)
+  neutral50: "#ffffff",     // White/1000
+  neutral100: "#f5f5f5",    // Gray/100
+  neutral200: "#e6e6e6",    // Gray/200
+  neutral300: "#d9d9d9",    // Gray/300
+  neutral400: "#b3b3b3",    // Gray/400
+  neutral500: "#757575",    // Gray/500
+  neutral600: "#444444",    // Gray/600
+  neutral700: "#383838",    // Gray/700
+  neutral800: "#2c2c2c",    // Gray/800
+  neutral900: "#1e1e1e",    // Gray/900
+  // Typography — from Typography Primitives
+  fontHeading: "'Inter', sans-serif",
+  fontBody: "'Inter', sans-serif",
+  fontMono: "'Roboto Mono', monospace",
+  baseSize: 16,              // Scale 03
+  scaleRatio: 1.25,          // Scale progression: 12, 14, 16, 20, 24, 32
+  // Spacing — from Size/Space
+  spaceUnit: 4,              // Space/100 = 4px base
+  // Shape — from Size/Radius
+  radiusSm: 4,               // Radius/100
+  radiusMd: 8,               // Radius/200
+  radiusLg: 16,              // Radius/400
+  radiusFull: 9999,          // Radius/Full
+  // Elevation — from Size/Depth + Black opacity scale
+  shadowSm: "0 1px 4px rgba(12,12,13,0.05)",        // Depth/025 offset, Black/100
+  shadowMd: "0 4px 16px rgba(12,12,13,0.1)",         // Depth/100 offset, Depth/400 blur, Black/200
+  shadowLg: "0 16px 32px rgba(12,12,13,0.1), 0 4px 4px rgba(12,12,13,0.05)", // Drop Shadow/400
 };
 
 const PRESETS = {
-  default: { ...DEFAULT_TOKENS, brandName: "Starter DS" },
+  default: { ...DEFAULT_TOKENS, brandName: "SDS" },
   corporate: {
     ...DEFAULT_TOKENS,
     brandName: "CorpKit",
@@ -51,10 +51,10 @@ const PRESETS = {
     primaryDark: "#0F1F3D",
     secondary: "#2D3748",
     accent: "#C8102E",
-    fontHeading: "'Source Serif 4', serif",
-    fontBody: "'Source Sans 3', sans-serif",
+    fontHeading: "'Noto Serif', serif",
+    fontBody: "'Inter', sans-serif",
     radiusSm: 4,
-    radiusMd: 6,
+    radiusMd: 8,
     radiusLg: 8,
     scaleRatio: 1.2,
   },
@@ -66,23 +66,23 @@ const PRESETS = {
     primaryDark: "#5B21B6",
     secondary: "#111827",
     accent: "#06B6D4",
-    fontHeading: "'Space Grotesk', sans-serif",
-    fontBody: "'DM Sans', sans-serif",
+    fontHeading: "'Inter', sans-serif",
+    fontBody: "'Inter', sans-serif",
     radiusSm: 8,
-    radiusMd: 12,
-    radiusLg: 20,
+    radiusMd: 16,
+    radiusLg: 16,
     scaleRatio: 1.333,
   },
   minimal: {
     ...DEFAULT_TOKENS,
     brandName: "Mono",
-    primary: "#18181B",
-    primaryLight: "#F4F4F5",
-    primaryDark: "#09090B",
-    secondary: "#3F3F46",
-    accent: "#18181B",
-    fontHeading: "'DM Sans', sans-serif",
-    fontBody: "'DM Sans', sans-serif",
+    primary: "#1e1e1e",
+    primaryLight: "#f5f5f5",
+    primaryDark: "#111111",
+    secondary: "#383838",
+    accent: "#1e1e1e",
+    fontHeading: "'Inter', sans-serif",
+    fontBody: "'Inter', sans-serif",
     radiusSm: 0,
     radiusMd: 0,
     radiusLg: 0,
@@ -96,24 +96,24 @@ const PRESETS = {
     primaryDark: "#92400E",
     secondary: "#44403C",
     accent: "#059669",
-    fontHeading: "'Libre Baskerville', serif",
-    fontBody: "'DM Sans', sans-serif",
+    fontHeading: "'Noto Serif', serif",
+    fontBody: "'Inter', sans-serif",
     radiusSm: 8,
-    radiusMd: 14,
-    radiusLg: 24,
+    radiusMd: 16,
+    radiusLg: 16,
     scaleRatio: 1.25,
   },
 };
 
 const FONT_OPTIONS = [
+  "'Inter', sans-serif",
+  "'Noto Serif', serif",
+  "'Roboto Mono', monospace",
   "'DM Sans', sans-serif",
   "'Source Sans 3', sans-serif",
   "'Space Grotesk', sans-serif",
   "'Libre Baskerville', serif",
   "'Source Serif 4', serif",
-  "'DM Serif Display', serif",
-  "'JetBrains Mono', monospace",
-  "'Fira Code', monospace",
 ];
 
 const SECTIONS = ["tokens", "typography", "components", "audit", "export"];
@@ -216,68 +216,80 @@ export default function UniversalDesignSystem() {
 
   const space = (n) => tokens.spaceUnit * n;
 
-  const cssVarsOutput = `/* ${tokens.brandName} — Design Tokens */
+  const cssVarsOutput = `/* ${tokens.brandName} — Design Tokens (SDS Convention) */
 :root {
-  /* Color — Primary */
-  --color-primary: ${tokens.primary};
-  --color-primary-light: ${tokens.primaryLight};
-  --color-primary-dark: ${tokens.primaryDark};
-  --color-secondary: ${tokens.secondary};
-  --color-accent: ${tokens.accent};
+  /* sds-color — Background */
+  --sds-color-background-brand-default: ${tokens.primary};
+  --sds-color-background-brand-secondary: ${tokens.primaryLight};
+  --sds-color-background-brand-hover: ${tokens.primaryDark};
+  --sds-color-background-default-default: ${tokens.neutral50};
+  --sds-color-background-default-secondary: ${tokens.neutral100};
+  --sds-color-background-neutral-tertiary: ${tokens.neutral200};
 
-  /* Color — Semantic */
-  --color-success: ${tokens.success};
-  --color-warning: ${tokens.warning};
-  --color-error: ${tokens.error};
-  --color-info: ${tokens.info};
+  /* sds-color — Text */
+  --sds-color-text-default-default: ${tokens.neutral900};
+  --sds-color-text-default-secondary: ${tokens.neutral500};
+  --sds-color-text-default-tertiary: ${tokens.neutral400};
+  --sds-color-text-brand-default: ${tokens.primary};
+  --sds-color-text-brand-on-brand: ${tokens.primaryLight};
 
-  /* Color — Neutrals */
-  --color-neutral-50: ${tokens.neutral50};
-  --color-neutral-100: ${tokens.neutral100};
-  --color-neutral-200: ${tokens.neutral200};
-  --color-neutral-300: ${tokens.neutral300};
-  --color-neutral-400: ${tokens.neutral400};
-  --color-neutral-500: ${tokens.neutral500};
-  --color-neutral-600: ${tokens.neutral600};
-  --color-neutral-700: ${tokens.neutral700};
-  --color-neutral-800: ${tokens.neutral800};
-  --color-neutral-900: ${tokens.neutral900};
+  /* sds-color — Border */
+  --sds-color-border-default-default: ${tokens.neutral300};
+  --sds-color-border-brand-default: ${tokens.primary};
+  --sds-color-border-neutral-secondary: ${tokens.neutral500};
 
-  /* Typography */
-  --font-heading: ${tokens.fontHeading};
-  --font-body: ${tokens.fontBody};
-  --font-mono: ${tokens.fontMono};
-  --text-xs: ${sizes.xs}px;
-  --text-sm: ${sizes.sm}px;
-  --text-base: ${sizes.base}px;
-  --text-lg: ${sizes.lg}px;
-  --text-xl: ${sizes.xl}px;
-  --text-2xl: ${sizes["2xl"]}px;
-  --text-3xl: ${sizes["3xl"]}px;
-  --text-4xl: ${sizes["4xl"]}px;
+  /* sds-color — Semantic */
+  --sds-color-background-positive-default: ${tokens.success};
+  --sds-color-background-warning-default: ${tokens.warning};
+  --sds-color-background-danger-default: ${tokens.error};
 
-  /* Spacing (${tokens.spaceUnit}px base unit) */
-  --space-1: ${space(1)}px;
-  --space-2: ${space(2)}px;
-  --space-3: ${space(3)}px;
-  --space-4: ${space(4)}px;
-  --space-5: ${space(5)}px;
-  --space-6: ${space(6)}px;
-  --space-8: ${space(8)}px;
-  --space-10: ${space(10)}px;
-  --space-12: ${space(12)}px;
-  --space-16: ${space(16)}px;
+  /* sds-color — Neutral Scale (Gray Primitives) */
+  --sds-color-gray-100: ${tokens.neutral100};
+  --sds-color-gray-200: ${tokens.neutral200};
+  --sds-color-gray-300: ${tokens.neutral300};
+  --sds-color-gray-400: ${tokens.neutral400};
+  --sds-color-gray-500: ${tokens.neutral500};
+  --sds-color-gray-600: ${tokens.neutral600};
+  --sds-color-gray-700: ${tokens.neutral700};
+  --sds-color-gray-800: ${tokens.neutral800};
+  --sds-color-gray-900: ${tokens.neutral900};
 
-  /* Shape */
-  --radius-sm: ${tokens.radiusSm}px;
-  --radius-md: ${tokens.radiusMd}px;
-  --radius-lg: ${tokens.radiusLg}px;
-  --radius-full: ${tokens.radiusFull}px;
+  /* sds-typography */
+  --sds-typography-heading-font-family: ${tokens.fontHeading};
+  --sds-typography-body-font-family: ${tokens.fontBody};
+  --sds-typography-code-font-family: ${tokens.fontMono};
+  --sds-typography-body-size-small: ${sizes.sm}px;
+  --sds-typography-body-size-medium: ${sizes.base}px;
+  --sds-typography-body-size-large: ${sizes.lg}px;
+  --sds-typography-heading-size-small: ${sizes.xl}px;
+  --sds-typography-heading-size-base: ${sizes["2xl"]}px;
+  --sds-typography-heading-size-large: ${sizes["3xl"]}px;
+  --sds-typography-title-page-size: ${sizes["4xl"]}px;
 
-  /* Elevation */
-  --shadow-sm: ${tokens.shadowSm};
-  --shadow-md: ${tokens.shadowMd};
-  --shadow-lg: ${tokens.shadowLg};
+  /* sds-size — Space (${tokens.spaceUnit}px base) */
+  --sds-size-space-050: ${space(0.5)}px;
+  --sds-size-space-100: ${space(1)}px;
+  --sds-size-space-150: ${space(1.5)}px;
+  --sds-size-space-200: ${space(2)}px;
+  --sds-size-space-300: ${space(3)}px;
+  --sds-size-space-400: ${space(4)}px;
+  --sds-size-space-600: ${space(6)}px;
+  --sds-size-space-800: ${space(8)}px;
+  --sds-size-space-1200: ${space(12)}px;
+  --sds-size-space-1600: ${space(16)}px;
+
+  /* sds-size — Radius */
+  --sds-size-radius-100: ${tokens.radiusSm}px;
+  --sds-size-radius-200: ${tokens.radiusMd}px;
+  --sds-size-radius-400: ${tokens.radiusLg}px;
+  --sds-size-radius-full: ${tokens.radiusFull}px;
+
+  /* sds-size — Depth / Elevation */
+  --sds-shadow-sm: ${tokens.shadowSm};
+  --sds-shadow-md: ${tokens.shadowMd};
+  --sds-shadow-lg: ${tokens.shadowLg};
+  --sds-size-stroke-border: 1px;
+  --sds-size-stroke-focus-ring: 2px;
 }`;
 
   const aiCustomizationPrompt = `You are a design system architect. I have a universal starter design system with the following current tokens:
@@ -351,7 +363,7 @@ Return ONLY the updated :root {} block with comments explaining each choice.`;
   return (
     <div style={{ fontFamily: tokens.fontBody, background: "#FAFAF8", minHeight: "100vh", color: tokens.neutral900 }}>
       <link
-        href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;700&family=DM+Serif+Display&family=JetBrains+Mono:wght@400;500&family=Source+Sans+3:wght@300;400;600;700&family=Source+Serif+4:wght@400;600;700&family=Space+Grotesk:wght@400;500;700&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Fira+Code:wght@400;500&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Serif:ital,wght@0,400;0,600;0,700;1,400&family=Roboto+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;700&family=Source+Sans+3:wght@300;400;600;700&family=Source+Serif+4:wght@400;600;700&family=Space+Grotesk:wght@400;500;700&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&display=swap"
         rel="stylesheet"
       />
 
@@ -627,11 +639,11 @@ Return ONLY the updated :root {} block with comments explaining each choice.`;
                 <div style={{ fontSize: 10, fontFamily: tokens.fontMono, letterSpacing: 2, textTransform: "uppercase", color: "#999", marginBottom: 20 }}>Buttons</div>
                 <div style={{ display: "flex", gap: 12, flexWrap: "wrap", alignItems: "center" }}>
                   {[
-                    { label: "Primary", bg: tokens.primary, color: contrastOn(tokens.primary), border: "none" },
-                    { label: "Secondary", bg: tokens.secondary, color: contrastOn(tokens.secondary), border: "none" },
-                    { label: "Outline", bg: "transparent", color: tokens.primary, border: `2px solid ${tokens.primary}` },
-                    { label: "Ghost", bg: "transparent", color: tokens.neutral700, border: "none" },
-                    { label: "Danger", bg: tokens.error, color: "#fff", border: "none" },
+                    { label: "Brand", bg: tokens.primary, color: tokens.primaryLight, border: `1px solid ${tokens.primary}` },
+                    { label: "Neutral", bg: tokens.neutral200, color: tokens.neutral900, border: `1px solid ${tokens.neutral500}` },
+                    { label: "Outline", bg: "transparent", color: tokens.neutral900, border: `1px solid ${tokens.neutral300}` },
+                    { label: "Ghost", bg: "transparent", color: tokens.neutral700, border: "1px solid transparent" },
+                    { label: "Danger", bg: tokens.error, color: "#fff", border: `1px solid ${tokens.error}` },
                   ].map((btn) => (
                     <button
                       key={btn.label}
@@ -640,9 +652,9 @@ Return ONLY the updated :root {} block with comments explaining each choice.`;
                         color: btn.color,
                         border: btn.border,
                         borderRadius: tokens.radiusMd,
-                        padding: "10px 22px",
-                        fontSize: 14,
-                        fontWeight: 600,
+                        padding: "12px 24px",
+                        fontSize: 16,
+                        fontWeight: 400,
                         fontFamily: tokens.fontBody,
                         cursor: "pointer",
                       }}
@@ -678,37 +690,41 @@ Return ONLY the updated :root {} block with comments explaining each choice.`;
                 <div style={{ fontSize: 10, fontFamily: tokens.fontMono, letterSpacing: 2, textTransform: "uppercase", color: "#999", marginBottom: 20 }}>Inputs & Forms</div>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
                   <div>
-                    <label style={{ fontSize: 12, fontWeight: 600, display: "block", marginBottom: 6, color: tokens.neutral700 }}>Default Input</label>
+                    <label style={{ fontSize: 14, fontWeight: 400, display: "block", marginBottom: 8, color: tokens.neutral900 }}>Default Input</label>
                     <input
                       placeholder="Enter text..."
                       style={{
                         width: "100%",
-                        padding: "10px 14px",
+                        padding: "12px 16px",
                         borderRadius: tokens.radiusMd,
                         border: `1px solid ${tokens.neutral300}`,
-                        fontSize: 14,
+                        fontSize: 16,
                         fontFamily: tokens.fontBody,
                         boxSizing: "border-box",
                         outline: "none",
+                        color: tokens.neutral900,
+                        background: tokens.neutral50,
                       }}
                     />
                   </div>
                   <div>
-                    <label style={{ fontSize: 12, fontWeight: 600, display: "block", marginBottom: 6, color: tokens.error }}>Error State</label>
+                    <label style={{ fontSize: 14, fontWeight: 400, display: "block", marginBottom: 8, color: tokens.error }}>Error State</label>
                     <input
                       defaultValue="Invalid entry"
                       style={{
                         width: "100%",
-                        padding: "10px 14px",
+                        padding: "12px 16px",
                         borderRadius: tokens.radiusMd,
-                        border: `2px solid ${tokens.error}`,
-                        fontSize: 14,
+                        border: `1px solid ${tokens.error}`,
+                        fontSize: 16,
                         fontFamily: tokens.fontBody,
                         boxSizing: "border-box",
                         outline: "none",
+                        color: tokens.neutral900,
+                        background: tokens.neutral50,
                       }}
                     />
-                    <div style={{ fontSize: 11, color: tokens.error, marginTop: 4 }}>This field is required</div>
+                    <div style={{ fontSize: 14, color: tokens.error, marginTop: 6 }}>This field is required</div>
                   </div>
                 </div>
               </div>
@@ -718,15 +734,15 @@ Return ONLY the updated :root {} block with comments explaining each choice.`;
                 <div style={{ fontSize: 10, fontFamily: tokens.fontMono, letterSpacing: 2, textTransform: "uppercase", color: "#999", marginBottom: 20 }}>Cards</div>
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16 }}>
                   {[
-                    { title: "Flat", shadow: "none", border: `1px solid ${tokens.neutral200}` },
-                    { title: "Elevated", shadow: tokens.shadowMd, border: "1px solid transparent" },
-                    { title: "Prominent", shadow: tokens.shadowLg, border: "1px solid transparent" },
+                    { title: "Flat", shadow: "none", border: `1px solid ${tokens.neutral300}` },
+                    { title: "Elevated", shadow: tokens.shadowMd, border: `1px solid ${tokens.neutral300}` },
+                    { title: "Prominent", shadow: tokens.shadowLg, border: `1px solid ${tokens.neutral300}` },
                   ].map((card) => (
                     <div
                       key={card.title}
                       style={{
-                        padding: 20,
-                        borderRadius: tokens.radiusLg,
+                        padding: 32,
+                        borderRadius: tokens.radiusMd,
                         background: "#fff",
                         border: card.border,
                         boxShadow: card.shadow,
