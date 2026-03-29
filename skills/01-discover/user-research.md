@@ -144,3 +144,60 @@ Before delivering research outputs, verify:
 - [ ] Participant privacy is protected (anonymized quotes)
 - [ ] Recommendations are actionable, not vague
 - [ ] Limitations of the research are acknowledged
+
+---
+
+## Phase Handoff Block
+
+At the close of User Research, generate this block and paste it as the **opening message** when starting Problem Framing (02 — Define).
+
+```
+## Handoff: Discover → Define
+### From: User Research
+### Project: [PROJECT NAME]
+### Date: [DATE]
+
+---
+
+### Product / Problem Space
+[1–2 sentences on what you're designing and for whom]
+
+### Research Method & Participants
+- Method: [Interviews / Survey / Analytics / Mixed]
+- Participants: [N = X; roles/segments]
+- Data collected: [Date range]
+
+### Top 3 Themes
+1. **[Theme name]** — [1 sentence summary. Frequency: X/N participants]
+2. **[Theme name]** — [1 sentence summary. Frequency: X/N participants]
+3. **[Theme name]** — [1 sentence summary. Frequency: X/N participants]
+
+### Primary User Pain Points (ranked by severity)
+1. [Pain point] — Severity: Critical/Major/Minor
+2. [Pain point] — Severity: Critical/Major/Minor
+3. [Pain point] — Severity: Critical/Major/Minor
+
+### Unmet Needs & Opportunities
+- [Need] → [Potential opportunity]
+- [Need] → [Potential opportunity]
+
+### Key User Quote
+> "[Most representative quote that captures the core tension]"
+> — [Role/segment, anonymized]
+
+### Assumptions to Validate in Define
+- [Assumption 1 — what we believe but haven't confirmed]
+- [Assumption 2]
+
+### Constraints Surfaced in Research
+- Technical: [Any constraints users or stakeholders mentioned]
+- Business: [Budget, timeline, regulatory signals]
+- User: [Accessibility needs, device context, literacy level]
+
+### What Define Should Focus On
+[1–2 sentences directing the next phase — what problem statement to frame]
+
+---
+*Paste this block as your first message when opening the Problem Framing skill.*
+*Claude will use it as full project context for the Define phase.*
+```

@@ -287,3 +287,67 @@ Quick checks during prototyping:
 - [ ] Strings handle long text (truncation, wrapping)
 - [ ] Numbers handle extremes (0, 1, 999999)
 - [ ] All states covered: default, empty, loading, error, success, disabled
+
+---
+
+## Phase Handoff Block
+
+At the close of Prototyping, generate this block and paste it as the **opening message** when starting Usability Testing (05 — Validate).
+
+```
+## Handoff: Prototype → Validate
+### From: Prototyping
+### Project: [PROJECT NAME]
+### Date: [DATE]
+
+---
+
+### Carried Forward from Ideate
+- Concept: [Name + 1 sentence description]
+- Problem statement: [One sentence]
+- Primary user: [Persona / segment]
+
+### Prototype Summary
+- Fidelity: [Low / Medium / High]
+- Platform: [Web / iOS / Android]
+- Link / location: [Figma URL / hosted URL / file path]
+- Screens built: [List all screens]
+- Flows covered: [List key user flows]
+
+### Key Design Decisions Made in Prototype
+1. [Decision] — [Rationale]
+2. [Decision] — [Rationale]
+3. [Decision] — [Rationale]
+
+### States Built
+- [ ] Default / loaded
+- [ ] Empty state
+- [ ] Loading state
+- [ ] Error state
+- [ ] Success / confirmation
+- [ ] Edge cases: [list]
+
+### Known Gaps & Shortcuts
+[What was simplified, mocked, or not built — testers need to know]
+
+### Hypotheses to Test
+1. We believe [assumption]. We'll know it's validated if [observable behavior].
+2. We believe [assumption]. We'll know it's validated if [observable behavior].
+3. We believe [assumption]. We'll know it's validated if [observable behavior].
+
+### Riskiest Assumptions (highest priority to test)
+1. [The assumption most likely to be wrong — and most costly if it is]
+2. [Second riskiest]
+
+### Suggested Test Tasks (draft)
+- Task 1: [Scenario-based task covering the primary flow]
+- Task 2: [Scenario-based task covering the riskiest interaction]
+- Task 3: [Edge case or secondary flow]
+
+### Accessibility Notes for Testers
+[Known a11y gaps to be aware of during testing]
+
+---
+*Paste this block as your first message when opening the Usability Testing skill.*
+*Claude will use it to write a test plan grounded in the actual prototype.*
+```

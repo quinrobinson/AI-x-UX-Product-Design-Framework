@@ -282,3 +282,56 @@ Use a 4pt base unit. All values are multiples of 4.
 - [ ] Single icon library, consistent stroke width
 - [ ] Touch targets ≥ 44pt / 48dp
 - [ ] No emoji as icons
+
+---
+
+## Phase Handoff Block
+
+At the close of Visual Design Execution, generate this block. Combine it with the Concept Generation handoff, or use standalone when the visual system is defined separately before prototyping.
+
+```
+## Handoff: Visual Design → Prototype
+### From: Visual Design Execution
+### Project: [PROJECT NAME]
+### Date: [DATE]
+
+---
+
+### Design System Tokens (copy into prototype)
+
+#### Color
+- Brand primary: [hex] — [token name]
+- Brand secondary: [hex] — [token name]
+- Surface primary (light): [hex] | (dark): [hex]
+- Surface secondary (light): [hex] | (dark): [hex]
+- Text primary: [hex] | secondary: [hex]
+- Border default: [hex]
+- Success: [hex] | Warning: [hex] | Error: [hex]
+
+#### Typography
+- Heading font: [Font name] — weights: [600, 700]
+- Body font: [Font name] — weight: 400 (body), 500 (labels)
+- Base size: [16px web / 14sp Android]
+- Scale: xs [12] / sm [14] / base [16] / lg [18] / xl [20] / 2xl [24] / 3xl [30]
+
+#### Spacing & Shape
+- Base unit: 4px — scale: 4 / 8 / 12 / 16 / 24 / 32 / 48 / 64
+- Border radius: sm [4px] / md [8px] / lg [12px] / pill [9999px]
+- Elevation: L1 [shadow value] / L2 [shadow value]
+
+#### Motion
+- Fast: 100ms | Normal: 200ms | Slow: 300ms
+- Easing: ease-out (enter) / ease-in (exit)
+
+### Style Rules for Prototype
+- Visual style: [Chosen style]
+- Icon library: [Library name + stroke width]
+- Dark mode: [Supported yes/no — tokens defined yes/no]
+
+### What Prototype Should Enforce
+[1–2 sentences on the most important visual rules to get right in the prototype]
+
+---
+*Paste these tokens as context when opening the Prototyping skill.*
+*Claude will apply them consistently across all screens and components.*
+```

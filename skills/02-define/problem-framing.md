@@ -194,3 +194,58 @@ Could-haves and larger bets for later.
 - [ ] Requirements are prioritized with clear rationale, not just gut feel
 - [ ] Design brief has measurable success criteria
 - [ ] Scope boundaries are explicit — what's in AND what's out
+
+---
+
+## Phase Handoff Block
+
+At the close of Problem Framing, generate this block and paste it as the **opening message** when starting Concept Generation (03 — Ideate).
+
+```
+## Handoff: Define → Ideate
+### From: Problem Framing
+### Project: [PROJECT NAME]
+### Date: [DATE]
+
+---
+
+### Carried Forward from Discover
+[1–2 sentence summary of the key research finding that drove this problem statement]
+
+### Primary User
+- Who: [Persona name or segment]
+- Context: [When/where/why they encounter this problem]
+- Goal: [What they're ultimately trying to accomplish]
+
+### Validated Problem Statement
+> [The selected HMW / JTBD / user story — the single agreed framing]
+
+### Why This Framing (not the alternatives)
+[1 sentence rationale for the chosen framing over other options considered]
+
+### Key Constraints for Ideation
+- Technical: [Platform, stack, integrations to design within]
+- Business: [Timeline, budget, non-negotiables]
+- User: [Accessibility, device, literacy, trust requirements]
+- Brand: [Tone, visual language, existing system constraints]
+
+### User Journey Friction Points (top 3)
+1. [Stage]: [What frustrates the user here]
+2. [Stage]: [What frustrates the user here]
+3. [Stage]: [What frustrates the user here]
+
+### Success Criteria (how we'll know we solved it)
+1. [Measurable outcome]
+2. [Measurable outcome]
+
+### Scope
+- In scope: [What concepts should address]
+- Out of scope: [What to not design for in this round]
+
+### Provocation for Ideate
+[1 sentence challenge or "what if" to push ideation beyond the obvious]
+
+---
+*Paste this block as your first message when opening the Concept Generation skill.*
+*Claude will use it to generate concepts that are grounded in the validated problem.*
+```

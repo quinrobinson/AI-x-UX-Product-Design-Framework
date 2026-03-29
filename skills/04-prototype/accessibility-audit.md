@@ -358,3 +358,52 @@ Standard: WCAG 2.1 [A / AA]
 - [ ] Errors adjacent to fields with descriptive copy
 - [ ] Focus moves to first error field on submit failure
 - [ ] Required fields marked semantically (`aria-required`)
+
+---
+
+## Phase Handoff Block
+
+At the close of an Accessibility Audit, generate this block. It feeds into both Usability Testing (to flag known a11y gaps to test) and Design Delivery (to include in the handoff package).
+
+```
+## Handoff: Accessibility Audit → Validate / Deliver
+### From: Accessibility Audit
+### Project: [PROJECT NAME] — [COMPONENT / SCREEN / FLOW]
+### Date: [DATE]
+### Standard: WCAG 2.1 [A / AA]
+
+---
+
+### Audit Summary
+- Platform audited: [Web / iOS / Android]
+- Components / screens audited: [List]
+- Critical issues (block launch): [N]
+- Major issues (fix this sprint): [N]
+- Minor issues (fix next sprint): [N]
+- Overall status: [ ] Pass  [ ] Conditional pass  [ ] Fail
+
+### Critical Issues — Must Fix Before Launch
+| ID | Location | Issue | Fix |
+|----|----------|-------|-----|
+| A-001 | [Screen/component] | [What's wrong] | [Specific fix] |
+| A-002 | | | |
+
+### Major Issues — Fix This Sprint
+| ID | Location | Issue | Fix |
+|----|----------|-------|-----|
+| A-003 | | | |
+
+### Confirmed Passing
+- [Category]: [What was verified and is compliant]
+- [Category]: [What was verified and is compliant]
+
+### For Validate: What Testers Should Know
+[A11y gaps that may affect test sessions — things to flag or avoid]
+
+### For Deliver: What Engineers Need
+[Platform-specific a11y requirements to include in the handoff package]
+
+---
+*For Validate: paste into Usability Testing handoff under "Accessibility Notes".*
+*For Deliver: paste into the Design Delivery handoff under "Accessibility Package".*
+```

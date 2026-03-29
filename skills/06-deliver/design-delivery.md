@@ -382,3 +382,61 @@ Rules: lead with benefit (not feature), use the user's language, one line per it
 - [ ] Token names used throughout — no raw values (colors, spacing, typography)
 - [ ] Release notes written for the correct audience (internal vs external)
 - [ ] Acceptance criteria defined for engineering review
+
+---
+
+## Phase Handoff Block
+
+Design Delivery is the terminal phase. At close of delivery, generate this block as a **project retrospective and re-entry point** — used to brief Claude on any future iteration, v2 planning, or handoff to a new designer.
+
+```
+## Handoff: Deliver → [Next Iteration / v2 / Archive]
+### From: Design Delivery
+### Project: [PROJECT NAME]
+### Delivery date: [DATE]
+### Version: [v1.0 / Sprint X]
+
+---
+
+### What Was Built & Shipped
+- Features delivered: [List]
+- Screens / components: [List or Figma link]
+- Platform(s): [Web / iOS / Android]
+- Design system: [Link to tokens / Figma library]
+
+### The Full Chain (project memory)
+- Discovery insight that drove everything: [1 sentence]
+- Problem statement: [1 sentence]
+- Concept chosen: [Name + 1 sentence]
+- Key test finding that shaped delivery: [1 sentence]
+
+### Design Decisions Worth Preserving
+| Decision | Rationale | DDR |
+|----------|-----------|-----|
+| [Decision] | [Why] | DDR-[NNN] |
+| [Decision] | [Why] | DDR-[NNN] |
+
+### What Was Deliberately Left Out
+[Features, flows, or explorations that were scoped out — and why]
+
+### Technical Debt / Design Debt Flagged
+[Known shortcuts or compromises that should be addressed in v2]
+
+### Metrics to Watch Post-Launch
+| Metric | Baseline | Target | Signal |
+|--------|----------|--------|--------|
+| [Metric] | [Value from testing] | [Goal] | [What change means] |
+
+### What to Pick Up in v2 / Next Sprint
+1. [Unresolved issue or backlog item]
+2. [User need that wasn't addressed in v1]
+3. [Performance or a11y improvement deferred]
+
+### Re-entry Prompt for Future Work
+*If continuing this project in a new conversation, paste the full chain above (Discover through Deliver handoffs) and add:*
+> "We shipped [PROJECT NAME] v1 on [DATE]. The key decisions were [summary]. Now we're working on [NEXT GOAL]. Here's what users told us after launch: [feedback]. Pick up from here."
+
+---
+*This block closes the Discover → Deliver chain.*
+*Archive it alongside the Figma file and GitHub repo as the project's permanent design memory.*
+```

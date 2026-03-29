@@ -296,3 +296,67 @@ Evidence: [Is help available when needed?]
 - [ ] Every issue has a specific, actionable recommendation
 - [ ] Positive findings are documented, not just problems
 - [ ] Findings are supported by evidence (quotes, completion rates, observations)
+
+---
+
+## Phase Handoff Block
+
+At the close of Usability Testing, generate this block and paste it as the **opening message** when starting Design Delivery (06 — Deliver).
+
+```
+## Handoff: Validate → Deliver
+### From: Usability Testing
+### Project: [PROJECT NAME]
+### Date: [DATE]
+
+---
+
+### Carried Forward from Prototype
+- Concept: [Name + 1 sentence]
+- Prototype link: [URL / file]
+- Primary user tested: [Persona / segment]
+
+### Test Summary
+- Method: [Moderated / Unmoderated]
+- Participants: [N = X; roles/segments]
+- Sessions: [Date range]
+- Tasks tested: [N tasks]
+
+### Overall Verdict
+[Pass / Conditional pass / Fail] — [1 sentence explaining why]
+
+### What Worked (keep in delivery)
+1. [Finding] — [Evidence: completion rate or quote]
+2. [Finding] — [Evidence]
+3. [Finding] — [Evidence]
+
+### Issues to Fix Before Delivery (ranked)
+| Priority | Issue | Severity | Recommended Fix |
+|----------|-------|----------|-----------------|
+| 1 | [Issue] | Critical/Major/Minor | [Fix] |
+| 2 | | | |
+| 3 | | | |
+
+### Design Changes Made Post-Testing
+[List any iterations made to the prototype based on findings]
+
+### Validated Assumptions
+- [Assumption from Ideate] — Validated / Invalidated — [Evidence]
+- [Assumption from Ideate] — Validated / Invalidated — [Evidence]
+
+### Remaining Open Questions
+[What testing didn't answer — to flag for the engineering team or next round]
+
+### Accessibility Findings
+[Summary of a11y issues discovered during testing — carry into handoff]
+
+### Metrics Baseline (for post-launch measurement)
+- Task completion rate: [X%] on [task]
+- Time on task: [Xmin Xsec] for [task]
+- Error rate: [X errors per session]
+- SUS / satisfaction score: [X/10 or X/100]
+
+---
+*Paste this block as your first message when opening the Design Delivery skill.*
+*Claude will use it to write specs and handoff docs grounded in tested, validated design.*
+```

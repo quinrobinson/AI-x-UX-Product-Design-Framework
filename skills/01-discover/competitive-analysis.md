@@ -150,3 +150,50 @@ When researching competitors with web search:
 - [ ] Conventions clearly separated from opportunities
 - [ ] Recommendations are actionable with clear rationale
 - [ ] Analysis is current — products change rapidly
+
+---
+
+## Phase Handoff Block
+
+At the close of Competitive Analysis, generate this block. It can be combined with the User Research handoff or used standalone when starting Problem Framing.
+
+```
+## Handoff: Discover → Define
+### From: Competitive Analysis
+### Project: [PROJECT NAME]
+### Date: [DATE]
+
+---
+
+### Product Category & Scope
+[What category was analyzed and the scope of the competitive set]
+
+### Competitive Set
+- Direct: [Competitor A, B, C — same problem, same audience]
+- Indirect: [Competitor D, E — same problem, different approach]
+- Aspirational: [Competitor F — different category, relevant patterns]
+
+### Dominant UX Conventions
+[2–3 patterns that every competitor uses — what users will expect]
+1. [Convention + which competitors use it]
+2. [Convention + which competitors use it]
+3. [Convention + which competitors use it]
+
+### Competitive Gaps (Opportunities)
+1. [Gap] — [What nobody does well / what users complain about]
+2. [Gap] — [What nobody does well / what users complain about]
+
+### Standout Patterns Worth Adopting
+- [Pattern] from [Competitor] — [Why it works]
+- [Pattern] from [Competitor] — [Why it works]
+
+### Our Differentiation Opportunity
+[1–2 sentences on where we can genuinely be better or different]
+
+### Positioning Signal for Define
+[What problem statement angle the competitive landscape suggests we should pursue]
+
+---
+*Combine with User Research handoff when starting Problem Framing.*
+*Claude will use it to ground the problem statement in real market context.*
+```

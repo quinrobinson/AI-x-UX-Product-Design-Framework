@@ -327,3 +327,62 @@ How does the user arrive? [Navigation path / trigger]
 - [ ] Design system tokens are opinionated (not generic defaults)
 - [ ] Wireframe briefs include all states and edge cases
 - [ ] Concepts evaluated against the problem statement, not personal preference
+
+---
+
+## Phase Handoff Block
+
+At the close of Concept Generation, generate this block and paste it as the **opening message** when starting Prototyping (04 — Prototype).
+
+```
+## Handoff: Ideate → Prototype
+### From: Concept Generation
+### Project: [PROJECT NAME]
+### Date: [DATE]
+
+---
+
+### Carried Forward from Define
+- Problem statement: [One sentence]
+- Primary user: [Persona / segment]
+- Top constraint: [The most binding constraint on design]
+
+### Selected Concept
+- Name: [Concept name]
+- Core idea: [2–3 sentences describing the interaction model]
+- UX pattern: [The foundational pattern — wizard, feed, canvas, chat, etc.]
+- Why chosen: [What made this direction win over alternatives]
+
+### Rejected Concepts (and why)
+- [Concept name] — rejected because: [reason]
+- [Concept name] — rejected because: [reason]
+
+### Visual Direction
+- Style: [Chosen visual style — minimalism, dark mode, etc.]
+- Color mood: [Warm / cool / neutral / high-contrast]
+- Typography: [Heading font + body font pairing]
+- Density: [Information-dense / airy / balanced]
+- Reference: [1–2 products whose visual language to emulate]
+
+### Screens / Flows to Prototype
+1. [Screen name] — [What user action it supports]
+2. [Screen name] — [What user action it supports]
+3. [Screen name] — [What user action it supports]
+
+### Key Interactions to Nail
+- [Interaction 1] — [Why it's critical to the concept]
+- [Interaction 2] — [Why it's critical to the concept]
+
+### Platform & Stack
+- Platform: [Web / iOS / Android / Cross-platform]
+- Framework: [React / HTML / SwiftUI / Flutter / Figma prototype]
+- Breakpoints: [375 / 768 / 1280 or native device sizes]
+
+### Open Questions for Prototype Phase
+- [What to resolve through building / testing the prototype]
+- [Assumption to validate before committing to this concept]
+
+---
+*Paste this block as your first message when opening the Prototyping skill.*
+*Claude will use it to build a prototype grounded in the chosen concept and visual direction.*
+```

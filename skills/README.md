@@ -42,6 +42,7 @@ A collection of Claude skills for every phase of the product design process. Eac
 |-------|------|-------------|-------------|
 | Design Systems | `design-systems.md` | High | Design system audit & M3 token documentation — cross-system comparison, Figma variable setup |
 | Figma Playbook | `figma-playbook.md` | High | Execute design work directly in Figma via MCP — patterns for every phase |
+| Phase Handoff | `phase-handoff.md` | High | **NEW** — Skill chaining guide: generate close-of-phase summaries that become opening context for the next phase |
 
 ---
 
