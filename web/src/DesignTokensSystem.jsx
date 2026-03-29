@@ -363,26 +363,26 @@ Return ONLY the updated :root {} block with comments explaining each choice.`;
   return (
     <div style={{ fontFamily: tokens.fontBody, background: "#FAFAF8", minHeight: "100vh", color: tokens.neutral900 }}>
       <link
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Serif:ital,wght@0,400;0,600;0,700;1,400&family=Roboto+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;700&family=Source+Sans+3:wght@300;400;600;700&family=Source+Serif+4:wght@400;600;700&family=Space+Grotesk:wght@400;500;700&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Serif:ital,wght@0,400;0,600;0,700;1,400&family=Roboto+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;700&family=DM+Serif+Display:ital@0;1&family=Source+Sans+3:wght@300;400;600;700&family=Source+Serif+4:wght@400;600;700&family=Space+Grotesk:wght@400;500;700&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&display=swap"
         rel="stylesheet"
       />
 
       {/* Header */}
-      <div style={{ background: tokens.secondary, color: "#fff", padding: "32px 28px 28px" }}>
+      <div style={{ background: "#0F172A", color: "#fff", padding: "32px 28px 28px" }}>
         <div style={{ maxWidth: 1100, margin: "0 auto", display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
           <div>
-            <div style={{ fontSize: 10, fontFamily: tokens.fontMono, letterSpacing: 3, textTransform: "uppercase", color: "rgba(255,255,255,0.4)", marginBottom: 8 }}>
+            <div style={{ fontSize: 10, fontFamily: tokens.fontMono, letterSpacing: 3, textTransform: "uppercase", color: "#94A3B8", marginBottom: 8, opacity: 0.7 }}>
               Simple Design System
             </div>
-            <h1 style={{ fontFamily: tokens.fontHeading, fontSize: 32, fontWeight: 700, margin: "0 0 6px" }}>{tokens.brandName}</h1>
-            <p style={{ fontSize: 14, color: "rgba(255,255,255,0.6)", margin: 0 }}>Tune the knobs. Preview live. Export for your client.</p>
+            <h1 style={{ fontFamily: "'DM Serif Display', serif", fontSize: 32, fontWeight: 400, margin: "0 0 6px" }}>{tokens.brandName}</h1>
+            <p style={{ fontSize: 14, color: "#94A3B8", margin: 0 }}>Tune the knobs. Preview live. Export for your client.</p>
           </div>
           <button
             onClick={() => setShowPanel(!showPanel)}
             style={{
-              background: "rgba(255,255,255,0.1)",
-              color: "#fff",
-              border: "1px solid rgba(255,255,255,0.2)",
+              background: "transparent",
+              color: "#94A3B8",
+              border: "1px solid #334155",
               borderRadius: 8,
               padding: "8px 16px",
               fontSize: 12,
@@ -993,8 +993,8 @@ Return ONLY the updated :root {} block with comments explaining each choice.`;
               </div>
 
               {/* Packaging Guide */}
-              <div style={{ background: tokens.secondary, borderRadius: tokens.radiusLg, padding: 28, color: "#fff" }}>
-                <div style={{ fontSize: 10, fontFamily: tokens.fontMono, letterSpacing: 2, textTransform: "uppercase", color: "rgba(255,255,255,0.4)", marginBottom: 16 }}>Client Delivery Checklist</div>
+              <div style={{ background: "#0F172A", borderRadius: tokens.radiusLg, padding: 28, color: "#fff", border: "1px solid #334155" }}>
+                <div style={{ fontSize: 10, fontFamily: tokens.fontMono, letterSpacing: 2, textTransform: "uppercase", color: "#94A3B8", marginBottom: 16, opacity: 0.7 }}>Client Delivery Checklist</div>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
                   {[
                     { title: "Token File", desc: "Export CSS custom properties or JSON tokens for their tech stack (Tailwind config, Style Dictionary, Figma tokens)" },
@@ -1004,7 +1004,7 @@ Return ONLY the updated :root {} block with comments explaining each choice.`;
                   ].map((item) => (
                     <div key={item.title}>
                       <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 6 }}>{item.title}</div>
-                      <div style={{ fontSize: 12, color: "rgba(255,255,255,0.5)", lineHeight: 1.5 }}>{item.desc}</div>
+                      <div style={{ fontSize: 12, color: "#94A3B8", lineHeight: 1.5 }}>{item.desc}</div>
                     </div>
                   ))}
                 </div>

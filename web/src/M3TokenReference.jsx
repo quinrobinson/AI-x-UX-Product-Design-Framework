@@ -275,9 +275,9 @@ export default function M3TokenReference() {
               padding: "5px 14px",
               borderRadius: 20,
               border: "1px solid",
-              borderColor: activeComp === k ? "#4F46E5" : "#E5E7EB",
-              background: activeComp === k ? "#EEF2FF" : "white",
-              color: activeComp === k ? "#4338CA" : "#6B7280",
+              borderColor: activeComp === k ? "#0F172A" : "#E2E8F0",
+              background: activeComp === k ? "#F8FAFC" : "white",
+              color: activeComp === k ? "#0F172A" : "#64748B",
               cursor: "pointer",
               fontWeight: activeComp === k ? 600 : 400,
             }}
@@ -301,9 +301,9 @@ export default function M3TokenReference() {
                 padding: "3px 10px",
                 borderRadius: 10,
                 border: "1px solid",
-                borderColor: activeCat === c ? "#374151" : "#E5E7EB",
+                borderColor: activeCat === c ? "#0F172A" : "#E2E8F0",
                 background: activeCat === c ? "#F9FAFB" : "white",
-                color: activeCat === c ? "#111827" : "#6B7280",
+                color: activeCat === c ? "#0F172A" : "#64748B",
                 cursor: "pointer",
                 fontWeight: activeCat === c ? 600 : 400,
               }}
@@ -339,8 +339,8 @@ export default function M3TokenReference() {
             padding: "6px 14px",
             borderRadius: 8,
             border: "1px solid #E5E7EB",
-            background: copiedPrompt ? "#F0FDF4" : "white",
-            color: copiedPrompt ? "#16A34A" : "#6B7280",
+            background: copiedPrompt ? "#F0FDF4" : "#F8FAFC",
+            color: copiedPrompt ? "#16A34A" : "#64748B",
             cursor: "pointer",
           }}
         >
