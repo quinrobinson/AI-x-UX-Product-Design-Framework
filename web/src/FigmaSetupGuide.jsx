@@ -24,8 +24,8 @@ const PATH_A_STEPS = [
   {
     n: "03",
     title: "Connect Figma to Claude Desktop",
-    body: "Open Claude Desktop. Go to Settings → Integrations. Find Figma in the list and click Connect. This links your Figma account so Claude can read and write to your files.",
-    check: "Figma shows as Connected in Claude Desktop → Settings → Integrations",
+    body: "Open Claude Desktop. Go to Settings → Connectors. Find Figma in the list and click Connect. This links your Figma account so Claude can read and write to your files.",
+    check: "Figma shows as Connected in Claude Desktop → Settings → Connectors",
   },
   {
     n: "04",

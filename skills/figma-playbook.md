@@ -19,7 +19,7 @@ This skill requires **Claude Desktop** connected to the **Figma desktop app** vi
 |---|---|
 | Claude Desktop (not claude.ai) | You're using the installed desktop app, not a browser |
 | Figma desktop app (not browser) | Figma is open as an installed app, not figma.com |
-| Figma MCP connected | Claude Desktop → Settings → Integrations → Figma shows **Connected** |
+| Figma MCP connected | Claude Desktop → Settings → Connectors → Figma shows **Connected** |
 | Both apps open simultaneously | Claude Desktop and Figma are both running right now |
 | Edit access to your Figma file | You can make changes to the file (not view-only) |
 
