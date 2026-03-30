@@ -361,41 +361,65 @@ Based on my answers, respond with:
       <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,700;1,300&family=DM+Serif+Display:ital@0;1&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
 
       {/* HERO — dark */}
-      <div style={{ padding: "80px 60px 72px", maxWidth: 1160, margin: "0 auto" }}>
+      <div style={{ padding: "80px 60px 64px", maxWidth: 1160, margin: "0 auto" }}>
         <div style={{ fontSize: 10, fontFamily: "'JetBrains Mono', monospace", letterSpacing: 4, textTransform: "uppercase", color: DS.bodyLight, marginBottom: 28, opacity: 0.7 }}>
           AI × UX Product Design Framework
         </div>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 260px", gap: 60, alignItems: "end", marginBottom: 52 }}>
+
+        {/* Headline + How it works */}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 300px", gap: 64, alignItems: "start", marginBottom: 56 }}>
           <div>
             <h1 style={{ fontFamily: "'DM Serif Display', serif", fontSize: 60, fontWeight: 400, margin: "0 0 24px", lineHeight: 1.05, color: DS.white, letterSpacing: "-0.5px" }}>
               Design smarter.<br />
               <em style={{ fontStyle: "italic", color: DS.bodyLight }}>Ship with confidence.</em>
             </h1>
             <p style={{ fontSize: 16, color: DS.bodyLight, lineHeight: 1.75, margin: "0 0 36px", maxWidth: 480 }}>
-              An AI-integrated framework covering every phase of product and UX design. Eleven skill files, four interactive tools, and a Figma template built to scale with your practice.
+              A structured system for integrating AI into every phase of product and UX design — from research through delivery.
             </p>
             <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-              <a href={PPTX_URL} style={{ background: DS.white, color: DS.dark, padding: "12px 24px", borderRadius: 10, fontSize: 13, fontWeight: 600, textDecoration: "none" }}>Download Onboarding Deck</a>
-              <a href={FIGMA_URL} target="_blank" rel="noopener noreferrer" style={{ background: "transparent", color: DS.white, padding: "12px 24px", borderRadius: 10, fontSize: 13, fontWeight: 500, textDecoration: "none", border: `1px solid ${DS.darkBorder}` }}>Figma Template ↗</a>
-              <a href={REPO} target="_blank" rel="noopener noreferrer" style={{ background: "transparent", color: DS.bodyLight, padding: "12px 24px", borderRadius: 10, fontSize: 13, fontWeight: 500, textDecoration: "none", border: `1px solid ${DS.darkBorder}` }}>GitHub ↗</a>
+              {[
+                { label: "Onboarding Deck", href: PPTX_URL, external: false },
+                { label: "Figma Template ↗", href: FIGMA_URL, external: true },
+                { label: "GitHub ↗", href: REPO, external: true },
+              ].map(btn => (
+                <a key={btn.label} href={btn.href}
+                  {...(btn.external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+                  style={{ background: "transparent", color: DS.bodyLight, padding: "11px 22px", borderRadius: 8, fontSize: 13, fontWeight: 500, textDecoration: "none", border: `1px solid ${DS.darkBorder}`, transition: "border-color 0.15s, color 0.15s" }}
+                  onMouseEnter={e => { e.currentTarget.style.borderColor = DS.white; e.currentTarget.style.color = DS.white; }}
+                  onMouseLeave={e => { e.currentTarget.style.borderColor = DS.darkBorder; e.currentTarget.style.color = DS.bodyLight; }}
+                >{btn.label}</a>
+              ))}
             </div>
           </div>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-            {[{ n: "11", label: "Skills" }, { n: "6", label: "Phases" }, { n: "4", label: "Tools" }, { n: "∞", label: "Projects" }].map(s => (
-              <div key={s.n} style={{ background: DS.darkCard, border: `1px solid ${DS.darkBorder}`, borderRadius: 14, padding: "22px 24px", textAlign: "center" }}>
-                <div style={{ fontFamily: "'DM Serif Display', serif", fontSize: 42, color: DS.white, lineHeight: 1, marginBottom: 6 }}>{s.n}</div>
-                <div style={{ fontSize: 11, color: DS.bodyLight, fontFamily: "'JetBrains Mono', monospace" }}>{s.label}</div>
-              </div>
-            ))}
+
+          {/* How it works — right column */}
+          <div style={{ paddingTop: 8 }}>
+            <div style={{ fontSize: 10, fontFamily: "'JetBrains Mono', monospace", textTransform: "uppercase", letterSpacing: 3, color: DS.bodyLight, opacity: 0.5, marginBottom: 20 }}>How it works</div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
+              {[
+                { n: "01", label: "Upload a skill file", desc: "Paste any .md skill file into Claude to activate that phase's workflow" },
+                { n: "02", label: "Pick a phase prompt", desc: "Copy-ready prompts with [BRACKET] placeholders — replace and run" },
+                { n: "03", label: "Build in Figma", desc: "Claude executes Figma Playbook actions directly in your file via MCP" },
+                { n: "04", label: "Ship with specs", desc: "Component specs, handoff docs, and decision records — ready to go" },
+              ].map((step, i, arr) => (
+                <div key={step.n} style={{ display: "flex", gap: 16, paddingBottom: i < arr.length - 1 ? 20 : 0, marginBottom: i < arr.length - 1 ? 20 : 0, borderBottom: i < arr.length - 1 ? `1px solid ${DS.darkBorder}` : "none" }}>
+                  <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: DS.bodyLight, opacity: 0.35, paddingTop: 2, flexShrink: 0, width: 20 }}>{step.n}</div>
+                  <div>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: DS.white, marginBottom: 3 }}>{step.label}</div>
+                    <div style={{ fontSize: 12, color: DS.bodyLight, lineHeight: 1.55 }}>{step.desc}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
 
-        {/* Phase strip */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(6, 1fr)", gap: 8 }}>
-          {Object.entries(DS.phases).map(([key, p]) => (
-            <div key={key} style={{ background: "transparent", border: `1px solid ${p.color}55`, borderRadius: 10, padding: "14px 16px" }}>
-              <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: p.color, marginBottom: 4, opacity: 0.6 }}>{key}</div>
-              <div style={{ fontSize: 13, fontWeight: 600, color: p.color }}>{p.label}</div>
+        {/* Phase strip — bottom border only, 0 radius */}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(6, 1fr)" }}>
+          {Object.entries(DS.phases).map(([key, p], i, arr) => (
+            <div key={key} style={{ borderBottom: `1px solid ${p.color}`, borderRight: i < arr.length - 1 ? `1px solid ${DS.darkBorder}` : "none", padding: "12px 16px 14px" }}>
+              <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: p.color, marginBottom: 4, opacity: 0.5 }}>{key}</div>
+              <div style={{ fontSize: 12, fontWeight: 600, color: p.color }}>{p.label}</div>
             </div>
           ))}
         </div>
@@ -501,24 +525,6 @@ Based on my answers, respond with:
               </div>
             </div>
           )}
-        </div>
-      </div>
-
-      {/* HOW IT WORKS — dark strip */}
-      <div style={{ borderTop: `1px solid ${DS.darkBorder}`, borderBottom: `1px solid ${DS.darkBorder}` }}>
-        <div style={{ maxWidth: 1160, margin: "0 auto", padding: "26px 60px", display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 0 }}>
-          {[
-            { n: "01", label: "Pick a phase", desc: "Discover, Define, Ideate, Prototype, Validate, or Deliver" },
-            { n: "02", label: "Run an AI prompt", desc: "Copy-ready prompts with [BRACKET] placeholders for your project" },
-            { n: "03", label: "Build in Figma", desc: "Figma Playbook actions Claude executes directly in your file" },
-            { n: "04", label: "Ship with specs", desc: "Component specs, handoff docs, and decision records" },
-          ].map((step, i) => (
-            <div key={step.n} style={{ paddingLeft: i === 0 ? 0 : 28, paddingRight: i === 3 ? 0 : 28, borderRight: i < 3 ? `1px solid ${DS.darkBorder}` : "none" }}>
-              <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: DS.bodyLight, opacity: 0.4, marginBottom: 6 }}>{step.n}</div>
-              <div style={{ fontSize: 13, fontWeight: 600, color: DS.white, marginBottom: 4 }}>{step.label}</div>
-              <div style={{ fontSize: 12, color: DS.bodyLight, lineHeight: 1.55 }}>{step.desc}</div>
-            </div>
-          ))}
         </div>
       </div>
 
