@@ -389,10 +389,10 @@ Based on my answers, respond with:
           ))}
         </div>
 
-        {/* Phase strip — bottom border only, 0 radius */}
+        {/* Phase strip — bottom border only, no verticals */}
         <div style={{ display: "grid", gridTemplateColumns: "repeat(6, 1fr)" }}>
-          {Object.entries(DS.phases).map(([key, p], i, arr) => (
-            <div key={key} style={{ borderBottom: `1px solid ${p.color}`, borderRight: i < arr.length - 1 ? `1px solid ${DS.darkBorder}` : "none", padding: "12px 16px 14px" }}>
+          {Object.entries(DS.phases).map(([key, p]) => (
+            <div key={key} style={{ borderBottom: `1px solid ${p.color}`, padding: "12px 16px 14px" }}>
               <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: p.color, marginBottom: 4, opacity: 0.5 }}>{key}</div>
               <div style={{ fontSize: 12, fontWeight: 600, color: p.color }}>{p.label}</div>
             </div>
@@ -401,8 +401,12 @@ Based on my answers, respond with:
       </div>
 
       {/* HOW IT WORKS — dark strip */}
-      <div style={{ borderTop: `1px solid ${DS.darkBorder}`, borderBottom: `1px solid ${DS.darkBorder}`, marginTop: 0 }}>
-        <div style={{ maxWidth: 1160, margin: "0 auto", padding: "26px 60px", display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 0 }}>
+      <div style={{ borderTop: `1px solid ${DS.darkBorder}`, borderBottom: `1px solid ${DS.darkBorder}` }}>
+        <div style={{ maxWidth: 1160, margin: "0 auto", padding: "32px 60px" }}>
+          <div style={{ fontSize: 10, fontFamily: "'JetBrains Mono', monospace", letterSpacing: 4, textTransform: "uppercase", color: DS.bodyLight, opacity: 0.7, marginBottom: 24 }}>
+            How it works
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 0 }}>
           {[
             { n: "01", label: "Upload a skill file", desc: "Paste any .md skill file into Claude to activate that phase's workflow" },
             { n: "02", label: "Pick a phase prompt", desc: "Copy-ready prompts with [BRACKET] placeholders — replace and run" },
@@ -415,11 +419,12 @@ Based on my answers, respond with:
               <div style={{ fontSize: 12, color: DS.bodyLight, lineHeight: 1.55 }}>{step.desc}</div>
             </div>
           ))}
+          </div>
         </div>
       </div>
 
-      {/* KICKOFF PROMPT — dark, between hero and tools */}
-      <div style={{ background: DS.dark, padding: "0 60px 64px", maxWidth: 1160, margin: "0 auto" }}>
+      {/* KICKOFF PROMPT — dark, between how it works and tools */}
+      <div style={{ background: DS.dark, padding: "64px 60px 64px", maxWidth: 1160, margin: "0 auto" }}>
         <div
           style={{
             border: `1px solid ${kickoffOpen ? "#334155" : "#1E293B"}`,
