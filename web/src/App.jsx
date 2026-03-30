@@ -279,9 +279,9 @@ function PrimaryToolCard({ tool, onClick, onPhaseClick }) {
         </div>
 
         {/* Right — phase navigator */}
-        <div style={{ flexShrink: 0, width: 280, background: DS.light, borderRadius: 12, border: `1px solid ${DS.lightBorder}`, overflow: "hidden" }}>
+        <div style={{ flexShrink: 0, width: 300, background: DS.light, borderRadius: 12, border: `1px solid ${DS.lightBorder}`, overflow: "hidden" }}>
           {/* Column headers */}
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 64px 52px 20px", alignItems: "center", padding: "12px 18px 10px", borderBottom: `1px solid ${DS.lightBorder}`, gap: 8 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 72px 56px 20px", alignItems: "center", padding: "12px 18px 10px", borderBottom: `1px solid ${DS.lightBorder}` }}>
             <div style={{ fontSize: 10, fontFamily: "'JetBrains Mono', monospace", textTransform: "uppercase", letterSpacing: 2, color: DS.bodyDark, opacity: 0.6 }}>Phase</div>
             <div style={{ fontSize: 10, fontFamily: "'JetBrains Mono', monospace", textTransform: "uppercase", letterSpacing: 1, color: DS.bodyDark, opacity: 0.4, textAlign: "right" }}>Prompts</div>
             <div style={{ fontSize: 10, fontFamily: "'JetBrains Mono', monospace", textTransform: "uppercase", letterSpacing: 1, color: DS.bodyDark, opacity: 0.4, textAlign: "right" }}>Skills</div>
@@ -297,7 +297,7 @@ function PrimaryToolCard({ tool, onClick, onPhaseClick }) {
                 onMouseEnter={() => setHoveredPhase(ph.key)}
                 onMouseLeave={() => setHoveredPhase(null)}
                 style={{
-                  display: "grid", gridTemplateColumns: "1fr 64px 52px 20px", alignItems: "center", gap: 8,
+                  display: "grid", gridTemplateColumns: "1fr 72px 56px 20px", alignItems: "center",
                   width: "100%", padding: "10px 18px",
                   background: isHovered ? `${phaseData.color}08` : "transparent",
                   border: "none", borderBottom: i < PHASE_CONTENTS.length - 1 ? `1px solid ${DS.lightBorder}` : "none",
