@@ -502,8 +502,8 @@ const AI_LEVERAGE = {
   low: { label: "Low — your judgment", color: "#8C1A1A", bg: "#FDE8E8" },
 };
 
-export default function DesignProcessSystem() {
-  const [activePhase, setActivePhase] = useState(null);
+export default function DesignProcessSystem({ initialPhase }) {
+  const [activePhase, setActivePhase] = useState(initialPhase || null);
   const [activeTab, setActiveTab] = useState("prompts");
   const [expandedPrompt, setExpandedPrompt] = useState(null);
   const [copiedPrompt, setCopiedPrompt] = useState(null);

@@ -202,26 +202,38 @@ function ToolCard({ tool, onClick }) {
   );
 }
 
-function PrimaryToolCard({ tool, onClick }) {
+function PrimaryToolCard({ tool, onClick, onPhaseClick }) {
   const [hovered, setHovered] = useState(false);
+  const [hoveredPhase, setHoveredPhase] = useState(null);
   const p = DS.phases[tool.phase];
+
+  const PHASE_KEY_TO_ID = { "01": "discover", "02": "define", "03": "ideate", "04": "prototype", "05": "validate", "06": "deliver" };
+
+  const PHASE_CONTENTS = [
+    { key: "01", prompts: 3, skills: 2 },
+    { key: "02", prompts: 3, skills: 1 },
+    { key: "03", prompts: 5, skills: 3 },
+    { key: "04", prompts: 3, skills: 2 },
+    { key: "05", prompts: 3, skills: 1 },
+    { key: "06", prompts: 3, skills: 1 },
+  ];
+
   return (
-    <button
-      onClick={onClick}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
+    <div
       style={{
-        display: "block", width: "100%",
+        width: "100%",
         background: DS.white,
         border: `1px solid ${hovered ? p.color + "88" : p.color + "44"}`,
-        borderRadius: 16, padding: "32px 36px", cursor: "pointer", textAlign: "left",
-        transition: "all 0.2s ease", outline: "none",
-        transform: hovered ? "translateY(-2px)" : "none",
+        borderRadius: 16, padding: "32px 36px", textAlign: "left",
+        transition: "all 0.2s ease",
         boxShadow: hovered ? `0 16px 40px ${p.color}16` : `0 2px 8px ${p.color}0a`,
-        marginBottom: 12,
+        marginBottom: 12, boxSizing: "border-box",
       }}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
     >
       <div style={{ display: "flex", alignItems: "flex-start", gap: 40 }}>
+        {/* Left — title, desc, tags, CTA */}
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
             <span style={{
@@ -252,32 +264,70 @@ function PrimaryToolCard({ tool, onClick }) {
               <span key={tag} style={{ fontSize: 11, padding: "3px 10px", borderRadius: 20, background: "transparent", color: p.color, fontWeight: 500, border: `1px solid ${p.color}55` }}>{tag}</span>
             ))}
           </div>
-          <div style={{ marginTop: 20, display: "flex", alignItems: "center", gap: 8, color: p.color, fontSize: 13, fontWeight: 500, opacity: hovered ? 1 : 0.4, transition: "opacity 0.2s ease" }}>
+          <button
+            onClick={onClick}
+            style={{
+              marginTop: 20, display: "inline-flex", alignItems: "center", gap: 8,
+              background: "transparent", border: "none", padding: 0, cursor: "pointer",
+              color: p.color, fontSize: 13, fontWeight: 500,
+              opacity: hovered ? 1 : 0.4, transition: "opacity 0.2s ease",
+            }}
+          >
             Open tool
             <span style={{ transform: hovered ? "translateX(4px)" : "none", transition: "transform 0.2s ease", display: "inline-block" }}>→</span>
-          </div>
+          </button>
         </div>
-        <div style={{ flexShrink: 0, width: 220, background: DS.light, borderRadius: 12, padding: "20px 22px", border: `1px solid ${DS.lightBorder}` }}>
-          <div style={{ fontSize: 10, fontFamily: "'JetBrains Mono', monospace", textTransform: "uppercase", letterSpacing: 2, color: DS.bodyDark, marginBottom: 14 }}>How to use</div>
-          {[
-            { n: "1", text: "Select a design phase" },
-            { n: "2", text: "Copy an AI prompt" },
-            { n: "3", text: "Run it in Claude" },
-            { n: "4", text: "Build outputs in Figma" },
-          ].map(step => (
-            <div key={step.n} style={{ display: "flex", alignItems: "flex-start", gap: 10, marginBottom: 10 }}>
-              <span style={{ width: 20, height: 20, borderRadius: "50%", background: "transparent", border: `1px solid ${p.color}55`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontFamily: "'JetBrains Mono', monospace", color: p.color, flexShrink: 0 }}>{step.n}</span>
-              <span style={{ fontSize: 12, color: DS.bodyDark, lineHeight: 1.5 }}>{step.text}</span>
-            </div>
-          ))}
+
+        {/* Right — phase navigator */}
+        <div style={{ flexShrink: 0, width: 228, background: DS.light, borderRadius: 12, border: `1px solid ${DS.lightBorder}`, overflow: "hidden" }}>
+          <div style={{ fontSize: 10, fontFamily: "'JetBrains Mono', monospace", textTransform: "uppercase", letterSpacing: 2, color: DS.bodyDark, padding: "14px 18px 10px", borderBottom: `1px solid ${DS.lightBorder}` }}>
+            What's inside
+          </div>
+          {PHASE_CONTENTS.map((ph, i) => {
+            const phaseData = DS.phases[ph.key];
+            const isHovered = hoveredPhase === ph.key;
+            return (
+              <button
+                key={ph.key}
+                onClick={(e) => { e.stopPropagation(); onPhaseClick(ph.key); }}
+                onMouseEnter={() => setHoveredPhase(ph.key)}
+                onMouseLeave={() => setHoveredPhase(null)}
+                style={{
+                  display: "flex", alignItems: "center", justifyContent: "space-between",
+                  width: "100%", padding: "10px 18px",
+                  background: isHovered ? `${phaseData.color}08` : "transparent",
+                  border: "none", borderBottom: i < PHASE_CONTENTS.length - 1 ? `1px solid ${DS.lightBorder}` : "none",
+                  cursor: "pointer", textAlign: "left", transition: "background 0.15s",
+                }}
+              >
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <span style={{ width: 6, height: 6, borderRadius: "50%", background: phaseData.color, flexShrink: 0, opacity: isHovered ? 1 : 0.6 }} />
+                  <span style={{ fontSize: 12, fontWeight: 500, color: isHovered ? phaseData.color : "#0F172A", transition: "color 0.15s" }}>
+                    {phaseData.label}
+                  </span>
+                </div>
+                <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+                  <span style={{ fontSize: 10, fontFamily: "'JetBrains Mono', monospace", color: DS.bodyDark, opacity: 0.5 }}>
+                    {ph.prompts} prompts
+                  </span>
+                  <span style={{ fontSize: 10, fontFamily: "'JetBrains Mono', monospace", color: DS.bodyDark, opacity: 0.3 }}>·</span>
+                  <span style={{ fontSize: 10, fontFamily: "'JetBrains Mono', monospace", color: DS.bodyDark, opacity: 0.5 }}>
+                    {ph.skills} {ph.skills === 1 ? "skill" : "skills"}
+                  </span>
+                  <span style={{ fontSize: 10, color: phaseData.color, opacity: isHovered ? 1 : 0, transition: "opacity 0.15s" }}>→</span>
+                </div>
+              </button>
+            );
+          })}
         </div>
       </div>
-    </button>
+    </div>
   );
 }
 
 export default function App() {
   const [activeTool, setActiveTool] = useState(null);
+  const [activePhase, setActivePhase] = useState(null);
   const [mounted, setMounted] = useState(false);
   const [kickoffOpen, setKickoffOpen] = useState(false);
   const [kickoffCopied, setKickoffCopied] = useState(false);
@@ -347,7 +397,7 @@ Based on my answers, respond with:
             ))}
           </div>
         </div>
-        <ToolComponent />
+        <ToolComponent initialPhase={activeTool === "process" ? activePhase : null} />
       </div>
     );
   }
@@ -532,7 +582,11 @@ Based on my answers, respond with:
             </div>
             <span style={{ fontSize: 12, color: DS.bodyDark, opacity: 0.5, fontFamily: "'JetBrains Mono', monospace" }}>No install — runs in the browser</span>
           </div>
-          <PrimaryToolCard tool={TOOLS.find(t => t.primary)} onClick={() => setActiveTool("process")} />
+          <PrimaryToolCard
+            tool={TOOLS.find(t => t.primary)}
+            onClick={() => setActiveTool("process")}
+            onPhaseClick={(phaseKey) => { setActivePhase(PHASE_KEY_TO_ID[phaseKey]); setActiveTool("process"); }}
+          />
           <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
             {TOOLS.filter(t => !t.primary).map(t => <ToolCard key={t.id} tool={t} onClick={() => setActiveTool(t.id)} />)}
           </div>
