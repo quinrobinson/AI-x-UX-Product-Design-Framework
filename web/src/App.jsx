@@ -359,7 +359,7 @@ export default function App() {
   const [kickoffCopied, setKickoffCopied] = useState(false);
   useEffect(() => { setTimeout(() => setMounted(true), 60); }, []);
 
-  const KICKOFF_PROMPT = `You are a UX design assistant trained on the AI × UX Product Design Framework —
+  const KICKOFF_PROMPT = `You are a UX design assistant trained on the Agentic Product Design Framework —
 a six-phase system (Discover → Define → Ideate → Prototype → Validate → Deliver)
 with structured skill files, Figma templates, and AI-ready prompts for each phase.
 
@@ -439,7 +439,7 @@ Based on my answers, respond with:
       {/* HERO — dark */}
       <div style={{ padding: "80px 60px 0", maxWidth: 1160, margin: "0 auto" }}>
         <div style={{ fontSize: 10, fontFamily: "'JetBrains Mono', monospace", letterSpacing: 4, textTransform: "uppercase", color: DS.bodyLight, marginBottom: 28, opacity: 0.7 }}>
-          AI × UX Product Design Framework
+          Agentic Product Design Framework
         </div>
 
         {/* Headline — full width */}
@@ -697,7 +697,7 @@ Based on my answers, respond with:
       {/* FOOTER */}
       <div style={{ background: DS.dark }}>
       <div style={{ borderTop: `1px solid ${DS.darkBorder}`, maxWidth: 1160, margin: "0 auto", padding: "28px 60px 56px", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 16 }}>
-        <div style={{ fontSize: 11, color: DS.bodyLight, fontFamily: "'JetBrains Mono', monospace", opacity: 0.4 }}>AI × UX Product Design Framework</div>
+        <div style={{ fontSize: 11, color: DS.bodyLight, fontFamily: "'JetBrains Mono', monospace", opacity: 0.4 }}>Agentic Product Design Framework</div>
         <div style={{ display: "flex", gap: 24 }}>
           {[["GitHub", REPO], ["Figma Template", FIGMA_URL], ["Onboarding Deck", PPTX_URL]].map(([label, href]) => (
             <a key={label} href={href} target="_blank" rel="noopener noreferrer" style={{ fontSize: 12, color: DS.bodyLight, textDecoration: "none", opacity: 0.5, fontFamily: "'JetBrains Mono', monospace" }}>{label}</a>

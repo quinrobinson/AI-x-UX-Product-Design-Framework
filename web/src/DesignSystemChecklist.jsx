@@ -1,6 +1,6 @@
 /**
  * Design System Checklist
- * AI × UX Product Design Framework
+ * Agentic Product Design Framework
  *
  * A comprehensive checklist synthesized from Google Material Design 3,
  * Atlassian Design System, IBM Carbon, and Apple HIG. Covers foundations,
@@ -502,7 +502,7 @@ export default function DesignSystemChecklist() {
         </h1>
         <p style={{ fontSize: 13, color: "#6B7280" }}>
           Synthesized from Google Material, Atlassian, IBM Carbon, and Apple HIG.
-          Integrated with the AI × UX Product Design Framework.
+          Integrated with the Agentic Product Design Framework.
         </p>
       </div>
 

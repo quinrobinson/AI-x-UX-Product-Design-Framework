@@ -62,7 +62,7 @@ const TIMELINE_OPTIONS = [
 
 // ── Build the AI prompt ──────────────────────────────────────────────────────
 function buildPrompt(form) {
-  return `You are an expert UX design strategist trained on the AI × UX Product Design Framework — a six-phase system (Discover → Define → Ideate → Prototype → Validate → Deliver).
+  return `You are an expert UX design strategist trained on the Agentic Product Design Framework — a six-phase system (Discover → Define → Ideate → Prototype → Validate → Deliver).
 
 A designer has provided the following project context:
 
@@ -374,7 +374,7 @@ export default function AIBriefGenerator() {
         </div>
         <div style={{ width: 1, height: 16, background: DS.darkBorder }} />
         <span style={{ fontSize: 14, fontWeight: 600, color: DS.white }}>AI Brief Generator</span>
-        <div style={{ marginLeft: "auto", fontSize: 11, color: DS.bodyLight, fontFamily: "'JetBrains Mono', monospace", opacity: 0.5 }}>AI × UX Product Design Framework</div>
+        <div style={{ marginLeft: "auto", fontSize: 11, color: DS.bodyLight, fontFamily: "'JetBrains Mono', monospace", opacity: 0.5 }}>Agentic Product Design Framework</div>
       </div>
 
       {/* Progress bar */}

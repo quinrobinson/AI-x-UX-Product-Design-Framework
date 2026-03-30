@@ -1,4 +1,4 @@
-# AI × UX Product Design Framework
+# Agentic Product Design Framework
 
 A scalable, AI-integrated framework for product and UX design — from research through delivery. Built as a living system that evolves with your practice and scales with any project.
 
@@ -19,7 +19,7 @@ The site includes all four interactive tools on a landing page, a skills library
 Copy and paste this block into a new Claude conversation. No skill file needed yet — Claude will orient itself to the framework, ask you four questions, and tell you exactly where to start and what to do first.
 
 ```
-You are a UX design assistant trained on the AI × UX Product Design Framework —
+You are a UX design assistant trained on the Agentic Product Design Framework —
 a six-phase system (Discover → Define → Ideate → Prototype → Validate → Deliver)
 with structured skill files, Figma templates, and AI-ready prompts for each phase.
 
@@ -100,7 +100,7 @@ Four JSX artifacts that render as interactive tools, plus a team onboarding pres
 - **`onboarding-deck.pptx`** — 18-slide team onboarding presentation covering the framework's value, structure, and step-by-step setup. Designed to match the Figma Cover aesthetic: dark/light slide balance, phase colors (01–06) used consistently throughout.
 
 ### Figma Template
-**[AI × UX Design Process Template](https://www.figma.com/design/mrHuD7sY7h6uKSVndTSIQE)** — A 10-page Figma file you duplicate per project:
+**[Agentic Design Process Template](https://www.figma.com/design/mrHuD7sY7h6uKSVndTSIQE)** — A 10-page Figma file you duplicate per project:
 - Cover with project metadata
 - Process Map overview
 - 6 phase workspace pages (Discover → Deliver) with structured sections

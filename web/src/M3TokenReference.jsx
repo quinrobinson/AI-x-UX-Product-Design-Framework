@@ -1,6 +1,6 @@
 /**
  * Material Design 3 — Token Reference
- * AI × UX Product Design Framework
+ * Agentic Product Design Framework
  *
  * Interactive token documentation for four core M3 components:
  * Button, Card, Text Field, and Navigation Bar.

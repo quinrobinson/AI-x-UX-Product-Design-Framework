@@ -1,7 +1,7 @@
 # Figma Placement Spec — Kickoff Prompt on AI Toolkit Page
 
 ## Target
-**File:** AI × UX Design Process Template (`mrHuD7sY7h6uKSVndTSIQE`)
+**File:** Agentic Design Process Template (`mrHuD7sY7h6uKSVndTSIQE`)
 **Page:** `08 — AI Toolkit`
 **Position:** Top of page — the first frame a designer sees when landing on this page
 
@@ -55,7 +55,7 @@ A compact 2-column grid showing how answers map to skill files:
 ## Prompt content (exact copy for the frame)
 
 ```
-You are a UX design assistant trained on the AI × UX Product Design Framework —
+You are a UX design assistant trained on the Agentic Product Design Framework —
 a six-phase system (Discover → Define → Ideate → Prototype → Validate → Deliver)
 with structured skill files, Figma templates, and AI-ready prompts for each phase.
 

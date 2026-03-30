@@ -1,4 +1,4 @@
-# AI × UX Design Process — Skills Library
+# Agentic Design Process — Skills Library
 
 A collection of Claude skills for every phase of the product design process. Each skill provides structured workflows, templates, and quality checklists that can be used directly with Claude or as reference documentation for your design practice.
 
@@ -51,7 +51,7 @@ A collection of Claude skills for every phase of the product design process. Eac
 **Don't know which skill file to upload first?** Paste this into a new Claude conversation. Claude will orient itself to the framework and tell you exactly where to begin.
 
 ```
-You are a UX design assistant trained on the AI × UX Product Design Framework —
+You are a UX design assistant trained on the Agentic Product Design Framework —
 a six-phase system (Discover → Define → Ideate → Prototype → Validate → Deliver)
 with structured skill files, Figma templates, and AI-ready prompts for each phase.
 

@@ -402,7 +402,7 @@ Return ONLY the updated :root {} block with comments explaining each choice.`;
             <span style={{ fontSize: 20 }}>📘</span>
             <div>
               <div style={{ fontSize: 13, fontWeight: 600, color: "#333" }}>Onboarding Guide</div>
-              <div style={{ fontSize: 12, color: "#888" }}>New to the framework? Download the 18-slide team onboarding deck — covers the AI × UX philosophy, 6-phase framework, Figma setup, and Claude integration.</div>
+              <div style={{ fontSize: 12, color: "#888" }}>New to the framework? Download the 18-slide team onboarding deck — covers the Agentic design philosophy, 6-phase framework, Figma setup, and Claude integration.</div>
               <a href="https://github.com/quinrobinson/AI-x-UX-Product-Design-Framework#quick-start--kickoff-prompt"
                 target="_blank" rel="noopener noreferrer"
                 style={{ fontSize: 11, color: "#14B8A6", textDecoration: "none", fontWeight: 500, display: "inline-block", marginTop: 4 }}>

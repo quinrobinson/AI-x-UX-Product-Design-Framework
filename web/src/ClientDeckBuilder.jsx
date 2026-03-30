@@ -48,7 +48,7 @@ const TONE_OPTIONS = [
 ];
 
 function buildPrompt(form) {
-  return `You are an expert design strategist helping a UX designer build a client presentation deck using the AI × UX Product Design Framework.
+  return `You are an expert design strategist helping a UX designer build a client presentation deck using the Agentic Product Design Framework.
 
 Here is the context for this deck:
 
@@ -369,7 +369,7 @@ export default function ClientDeckBuilder() {
         </div>
         <div style={{ width: 1, height: 16, background: DS.darkBorder }} />
         <span style={{ fontSize: 14, fontWeight: 600, color: DS.white }}>Client Deck Builder</span>
-        <div style={{ marginLeft: "auto", fontSize: 11, color: DS.bodyLight, fontFamily: "'JetBrains Mono', monospace", opacity: 0.5 }}>AI × UX Product Design Framework</div>
+        <div style={{ marginLeft: "auto", fontSize: 11, color: DS.bodyLight, fontFamily: "'JetBrains Mono', monospace", opacity: 0.5 }}>Agentic Product Design Framework</div>
       </div>
 
       {/* Progress bar */}
