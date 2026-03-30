@@ -19,7 +19,7 @@ The framework is built around six phases — **Discover → Define → Ideate �
 1. **Pick your phase** — Start where your project is right now, or use the Kickoff Prompt below to get oriented
 2. **Upload a skill file** — Drop the relevant `.md` file into a Claude conversation to activate phase-specific workflows, templates, and quality checklists
 3. **Do the work** — Claude follows structured outputs; you review, direct, and decide
-4. **Carry context forward** — Each skill includes a Phase Handoff Block to pass structured outputs into the next phase without losing context
+4. **Start designing** — Open any phase and create. Research, concepts, wireframes, specs — the framework meets you where you are. Use the Phase Handoff Block at the end of each phase to carry full context into the next conversation.
 
 The [live site](https://quinrobinson.github.io/Agentic-Product-Design-Framework) has interactive tools for exploring the system, previewing design tokens, and auditing design systems. The [Figma template](https://www.figma.com/design/mrHuD7sY7h6uKSVndTSIQE) gives you a dedicated workspace per project.
 
