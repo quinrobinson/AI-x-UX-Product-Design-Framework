@@ -510,8 +510,33 @@ Based on my answers, respond with:
         </div>
       </div>
 
-      {/* KICKOFF PROMPT — dark, between how it works and tools */}
+      {/* BEFORE YOU START + KICKOFF PROMPT — dark */}
       <div style={{ background: DS.dark, padding: "64px 60px 64px", maxWidth: 1160, margin: "0 auto" }}>
+
+        {/* Before You Start */}
+        <div style={{ border: "1px solid #1E293B", borderRadius: 16, overflow: "hidden", background: "#0B1120", marginBottom: 12 }}>
+          <button
+            onClick={() => setShowSetup(true)}
+            style={{ width: "100%", display: "flex", justifyContent: "space-between", alignItems: "center", padding: "20px 28px", background: "none", border: "none", cursor: "pointer", textAlign: "left" }}
+          >
+            <div>
+              <div style={{ fontWeight: 700, fontSize: 15, color: "#F8FAFC", lineHeight: 1.3 }}>Before You Start</div>
+              <div style={{ fontSize: 12, color: "#64748B", marginTop: 3 }}>Set up Claude and Figma to work together — two paths depending on what you need.</div>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: 12, flexShrink: 0, marginLeft: 24 }}>
+              <div style={{ display: "flex", gap: 8 }}>
+                <span style={{ fontSize: 10, fontFamily: "'JetBrains Mono', monospace", fontWeight: 600, color: "#22C55E", letterSpacing: 1 }}>Path A</span>
+                <span style={{ fontSize: 10, color: "#334155" }}>·</span>
+                <span style={{ fontSize: 10, fontFamily: "'JetBrains Mono', monospace", fontWeight: 600, color: "#3B82F6", letterSpacing: 1 }}>Path B</span>
+              </div>
+              <div style={{ width: 28, height: 28, borderRadius: "50%", border: "1px solid #3B82F6", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                <span style={{ fontSize: 13, color: "#3B82F6", lineHeight: 1 }}>→</span>
+              </div>
+            </div>
+          </button>
+        </div>
+
+        {/* Kickoff Prompt */}
         <div
           style={{
             border: `1px solid ${kickoffOpen ? "#334155" : "#1E293B"}`,
@@ -614,26 +639,6 @@ Based on my answers, respond with:
       <div style={{ background: DS.light }}>
         <div style={{ maxWidth: 1160, margin: "0 auto", padding: "64px 60px" }}>
 
-          {/* Before you start callout */}
-          <div style={{ background: DS.dark, borderRadius: 12, padding: "16px 24px", marginBottom: 36, display: "flex", alignItems: "center", gap: 20, flexWrap: "wrap" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 10, flexShrink: 0 }}>
-              <span style={{ fontSize: 16 }}>⬡</span>
-              <span style={{ fontSize: 13, fontWeight: 700, color: DS.white }}>Before you start</span>
-            </div>
-            <div style={{ width: 1, height: 20, background: DS.darkBorder, flexShrink: 0 }} />
-            <div style={{ flex: 1, minWidth: 200, fontSize: 12, color: DS.bodyLight, lineHeight: 1.6 }}>
-              <span style={{ color: "#22C55E", fontWeight: 600 }}>Path A — Full power: </span>Claude Desktop + Figma desktop app (Claude executes directly in Figma).{'  '}
-              <span style={{ color: "#3B82F6", fontWeight: 600 }}>Path B — Zero setup: </span>claude.ai in any browser (apply Claude's output manually in Figma).
-            </div>
-            <button
-              onClick={() => setShowSetup(true)}
-              style={{ background: "transparent", border: `1px solid ${DS.darkBorder}`, borderRadius: 8, padding: "8px 16px", cursor: "pointer", fontSize: 12, color: DS.white, fontWeight: 600, fontFamily: "'DM Sans', sans-serif", whiteSpace: "nowrap", flexShrink: 0, transition: "border-color 0.15s" }}
-              onMouseEnter={e => e.currentTarget.style.borderColor = DS.white}
-              onMouseLeave={e => e.currentTarget.style.borderColor = DS.darkBorder}
-            >
-              Setup guide →
-            </button>
-          </div>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 28 }}>
             <div style={{ fontSize: 10, fontFamily: "'JetBrains Mono', monospace", textTransform: "uppercase", letterSpacing: 3, color: DS.bodyDark }}>
               AI-Powered Design Tools — 05
