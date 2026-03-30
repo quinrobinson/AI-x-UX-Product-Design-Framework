@@ -14,7 +14,7 @@ const DS = {
   },
 };
 
-const REPO = "https://github.com/quinrobinson/AI-x-UX-Product-Design-Framework";
+const REPO = "https://github.com/quinrobinson/Agentic-Product-Design-Framework";
 
 const SKILL_META = {
   "user-research.md": { phase: "01", leverage: "high", desc: "Turns raw interview transcripts, surveys, and analytics into a structured research brief — themes, pain points, unmet needs, and recommendations your team can act on." },

@@ -405,7 +405,7 @@ Return ONLY the updated :root {} block with comments explaining each choice.`;
               <div style={{ fontSize: 12, color: "#888" }}>New to the framework? Download the 18-slide team onboarding deck for Figma + Claude setup.</div>
             </div>
           </div>
-          <a href="https://github.com/quinrobinson/AI-x-UX-Product-Design-Framework/raw/main/artifacts/onboarding-deck.pptx"
+          <a href="https://github.com/quinrobinson/Agentic-Product-Design-Framework/raw/main/artifacts/onboarding-deck.pptx"
             style={{ background: tokens.primary, color: "#fff", padding: "8px 16px", borderRadius: 8, fontSize: 12, fontWeight: 600, textDecoration: "none", whiteSpace: "nowrap", flexShrink: 0, marginLeft: 16, fontFamily: tokens.fontBody }}>
             Download PPTX
           </a>

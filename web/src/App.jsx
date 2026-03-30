@@ -148,7 +148,7 @@ const SKILLS = [
   { phase: null, dir: "", files: ["design-systems.md", "figma-playbook.md", "phase-handoff.md", "skill-chaining.md"] },
 ];
 
-const REPO = "https://github.com/quinrobinson/AI-x-UX-Product-Design-Framework";
+const REPO = "https://github.com/quinrobinson/Agentic-Product-Design-Framework";
 const FIGMA_URL = "https://www.figma.com/design/mrHuD7sY7h6uKSVndTSIQE";
 const PPTX_URL = `${REPO}/raw/main/artifacts/onboarding-deck.pptx`;
 

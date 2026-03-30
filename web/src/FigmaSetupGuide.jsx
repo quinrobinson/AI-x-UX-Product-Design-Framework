@@ -53,7 +53,7 @@ const PATH_B_STEPS = [
     n: "02",
     title: "Download a skill file from GitHub",
     body: "Go to the framework's GitHub repo, open the /skills folder, find the skill file for your current phase, and copy the raw content.",
-    action: { label: "Browse skill files ↗", href: "https://github.com/quinrobinson/AI-x-UX-Product-Design-Framework/tree/main/skills" },
+    action: { label: "Browse skill files ↗", href: "https://github.com/quinrobinson/Agentic-Product-Design-Framework/tree/main/skills" },
     check: "You have a skill file's content copied or the file downloaded",
   },
   {
