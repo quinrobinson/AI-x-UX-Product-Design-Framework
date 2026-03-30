@@ -25,10 +25,10 @@ This skill requires **Claude Desktop** connected to the **Figma desktop app** vi
 
 ### Quick connection test
 
-In Claude Desktop, type: **"What files do I have open in Figma?"**
+Open your Figma file in the desktop app. Copy the file URL, then in Claude Desktop paste it and say: **"Read the structure of this Figma file: [URL]"**
 
-- ✅ Claude names your open file → you're ready to use this playbook
-- ❌ Claude says it can't see Figma → check the setup guide at the framework site or follow the steps below
+- ✅ Claude responds with the file name and page list → you're ready to use this playbook
+- ❌ Claude says it can't access the file → check the setup guide at the framework site or follow the steps below
 
 ### Not set up yet?
 

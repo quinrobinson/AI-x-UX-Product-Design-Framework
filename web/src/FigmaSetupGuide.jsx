@@ -36,8 +36,8 @@ const PATH_A_STEPS = [
   {
     n: "05",
     title: "Test the connection",
-    body: "In Claude Desktop, start a new conversation and type: \"What files do I have open in Figma?\" — Claude should respond with your open file name. If it does, you're ready.",
-    check: "Claude can see your open Figma file by name",
+    body: "Open your Figma file in the desktop app. Copy the file URL from the browser bar or from Figma → Share → Copy link. In Claude Desktop, paste it and say: \"Read the structure of this Figma file: [URL]\" — Claude should respond with the file name and page list.",
+    check: "Claude responds with the correct file name and page names from your Figma file",
   },
 ];
 
@@ -245,7 +245,7 @@ export default function FigmaSetupGuide({ onBack }) {
           </div>
           <div>
             <div style={{ fontSize: 14, fontWeight: 700, color: DS.white, marginBottom: 6 }}>
-              {activePath === "a" ? "You're ready when Claude can see your open Figma file by name." : "You're ready when Claude has responded to your uploaded skill file."}
+              {activePath === "a" ? "You're ready when Claude responds with the correct file name and pages from your Figma file." : "You're ready when Claude has responded to your uploaded skill file."}
             </div>
             <div style={{ fontSize: 13, color: DS.bodyLight, lineHeight: 1.65 }}>
               {activePath === "a"
