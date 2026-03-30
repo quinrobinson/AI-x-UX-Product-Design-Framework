@@ -44,29 +44,35 @@ const PATH_A_STEPS = [
 const PATH_B_STEPS = [
   {
     n: "01",
-    title: "Open claude.ai in your browser",
-    body: "Go to claude.ai and sign in. No downloads, no installs — this works in any modern browser on any device.",
+    title: "Sign into Claude.ai",
+    body: "Go to claude.ai and sign in. No downloads, no installs — works in any modern browser. Free, Pro, and Team plans all support skill uploads.",
     action: { label: "Open Claude.ai ↗", href: "https://claude.ai" },
     check: "You're signed into Claude.ai",
   },
   {
     n: "02",
-    title: "Download a skill file from GitHub",
-    body: "Go to the framework's GitHub repo, open the /skills folder, find the skill file for your current phase, and copy the raw content.",
-    action: { label: "Browse skill files ↗", href: "https://github.com/quinrobinson/Agentic-Product-Design-Framework/tree/main/skills" },
-    check: "You have a skill file's content copied or the file downloaded",
+    title: "Enable Skills in settings",
+    body: "Go to Settings → Customize → Skills. Make sure Code execution and file creation is enabled under Capabilities. This unlocks the ability to upload and use skill files persistently.",
+    check: "Skills is enabled and you can see the Skills section in Customize",
   },
   {
     n: "03",
-    title: "Paste the skill file into Claude",
-    body: "Start a new conversation in Claude.ai. Paste the full skill file content as your first message, then describe your project. Claude will follow the structured workflow from the skill file.",
-    check: "Claude has responded acknowledging the skill and asking about your project",
+    title: "Download skill files from GitHub",
+    body: "Go to the framework's GitHub repo and download the skill files for the phases you need. Each file is a .md file — download the ones relevant to your project. You'll package them as a ZIP in the next step.",
+    action: { label: "Browse skill files ↗", href: "https://github.com/quinrobinson/Agentic-Product-Design-Framework/tree/main/skills" },
+    check: "You have the skill .md files downloaded locally",
   },
   {
     n: "04",
-    title: "Use Claude's output in Figma",
-    body: "Claude will generate content — research findings, wireframe specs, component descriptions, copy. You apply it manually in your Figma file. The Figma Playbook skill file tells Claude what to suggest.",
-    check: "You're working between Claude and your Figma file",
+    title: "Upload skills to Claude",
+    body: "In Settings → Customize → Skills, click the + button and select Upload a skill. Each skill needs to be a ZIP file containing a folder with the .md file inside. Once uploaded, it's available in every conversation — no pasting required.",
+    check: "Your uploaded skills appear in the Skills list and are toggled on",
+  },
+  {
+    n: "05",
+    title: "Start a conversation and use your skills",
+    body: "Open a new Claude conversation. Your enabled skills are automatically active — just describe your project and the phase you're in. Claude will follow the framework's structured workflow and generate phase-specific content.",
+    check: "Claude responds with a structured workflow output for your phase",
   },
 ];
 
@@ -194,9 +200,9 @@ export default function FigmaSetupGuide({ onBack }) {
               {
                 id: "b", color: pathBColor,
                 label: "Path B — Claude.ai in the browser",
-                sub: "Zero setup, works today",
-                badges: ["No install needed", "Free plan compatible"],
-                detail: "Use claude.ai in any browser. Upload skill files, get structured AI output, then apply it manually in Figma. All the framework's thinking tools work — just no direct Figma execution.",
+                sub: "Upload skills once, use in every conversation",
+                badges: ["No install needed", "All plans supported"],
+                detail: "Upload skill files once in Claude settings — they persist across all conversations. Use the AI tools, generate structured design content, and apply it in Figma. No terminal, no config files.",
               },
             ].map(path => (
               <button
@@ -245,12 +251,12 @@ export default function FigmaSetupGuide({ onBack }) {
           </div>
           <div>
             <div style={{ fontSize: 14, fontWeight: 700, color: DS.white, marginBottom: 6 }}>
-              {activePath === "a" ? "You're ready when Claude responds with the correct file name and pages from your Figma file." : "You're ready when Claude has responded to your uploaded skill file."}
+              {activePath === "a" ? "You're ready when Claude responds with the correct file name and pages from your Figma file." : "You're ready when your skills appear in Settings → Customize → Skills and are toggled on."}
             </div>
             <div style={{ fontSize: 13, color: DS.bodyLight, lineHeight: 1.65 }}>
               {activePath === "a"
                 ? "Once the connection is confirmed, open the Design Process System tool, pick your phase, and copy the Figma Playbook prompt. Paste it into your Claude Code session with your Figma file open — Claude will start executing."
-                : "Once Claude acknowledges the skill file, describe your project context. Claude will follow the structured workflow and generate phase-specific content you can bring into Figma manually."}
+                : "Open a new conversation — your uploaded skills are already active. Describe your project and the phase you're working in. Claude will follow the framework's structured workflow and generate content you can bring into Figma."}
             </div>
           </div>
         </div>
