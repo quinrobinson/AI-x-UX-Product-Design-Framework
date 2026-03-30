@@ -35,6 +35,8 @@ jobs:
       - name: Build
         run: npm run build
         working-directory: web
+        env:
+          VITE_ANTHROPIC_KEY: ${{ secrets.VITE_ANTHROPIC_KEY }}
 
       - name: Setup Pages
         uses: actions/configure-pages@v5

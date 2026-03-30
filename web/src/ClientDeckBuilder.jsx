@@ -325,12 +325,19 @@ export default function ClientDeckBuilder() {
     setError(null);
     topRef.current?.scrollIntoView({ behavior: "smooth" });
     try {
+      const apiKey = import.meta.env.VITE_ANTHROPIC_KEY;
+      if (!apiKey) throw new Error("API key not configured — add VITE_ANTHROPIC_KEY to GitHub Secrets");
       const res = await fetch("https://api.anthropic.com/v1/messages", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "x-api-key": apiKey,
+          "anthropic-version": "2023-06-01",
+          "anthropic-dangerous-direct-browser-access": "true",
+        },
         body: JSON.stringify({
           model: "claude-sonnet-4-20250514",
-          max_tokens: 1000,
+          max_tokens: 2000,
           messages: [{ role: "user", content: buildPrompt(form) }],
         }),
       });
