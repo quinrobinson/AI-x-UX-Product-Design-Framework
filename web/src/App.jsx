@@ -69,6 +69,61 @@ const TOOLS = [
   },
 ];
 
+const SKILL_META = {
+  "user-research.md": {
+    leverage: "high",
+    desc: "Turns raw interview transcripts, surveys, and analytics into a structured research brief — themes, pain points, unmet needs, and recommendations your team can act on.",
+  },
+  "competitive-analysis.md": {
+    leverage: "high",
+    desc: "Maps your competitive landscape across direct, indirect, and aspirational competitors — UX patterns, strengths, gaps, and differentiation opportunities in one structured output.",
+  },
+  "problem-framing.md": {
+    leverage: "medium",
+    desc: "Converts fuzzy research into a sharp problem statement using HMW, JTBD, and user story framings — with assumptions surfaced and a prioritized requirements roadmap.",
+  },
+  "concept-generation.md": {
+    leverage: "high",
+    desc: "Generates five concept directions from conventional to moonshot, with chart type recommendations, UI pattern suggestions, and visual system scaffolding ready to paste into the Design Tokens tool.",
+  },
+  "visual-design-execution.md": {
+    leverage: "high",
+    desc: "Selects a visual style, builds a semantic color token architecture with light/dark pairing, defines type scale and spacing, and specifies motion timing and icon standards.",
+  },
+  "prototyping.md": {
+    leverage: "high",
+    desc: "Builds functional React or HTML prototypes with correct touch targets, interaction timing, gesture safety, UX copy, and a pre-delivery QA checklist across iOS, Android, and web.",
+  },
+  "accessibility-audit.md": {
+    leverage: "high",
+    desc: "Runs a systematic WCAG 2.1 AA audit — color contrast, keyboard navigation, focus management, screen reader behavior, and touch targets — with severity-ranked issues and specific fixes.",
+  },
+  "usability-testing.md": {
+    leverage: "high",
+    desc: "Plans moderated and unmoderated tests, writes non-leading task scenarios, and synthesizes raw session notes into a severity-ranked findings report with actionable recommendations.",
+  },
+  "design-delivery.md": {
+    leverage: "high",
+    desc: "Produces component specs, platform-specific handoff packages for iOS/Android/Web, design decision records, and release notes — everything a developer needs to build it right.",
+  },
+  "design-systems.md": {
+    leverage: "high",
+    desc: "Audits any product against Material Design 3, Atlassian, IBM Carbon, and Apple HIG — then documents tokens using M3 naming conventions and sets up Figma variable collections.",
+  },
+  "figma-playbook.md": {
+    leverage: "high",
+    desc: "Gives Claude step-by-step Figma MCP execution patterns for every phase — research boards, journey maps, wireframes, components, spec annotations, and decision records in your file.",
+  },
+  "phase-handoff.md": {
+    leverage: "high",
+    desc: "Generates a structured handoff block at the close of each phase that you paste into the next conversation — so Claude carries full project context across all six phases without re-briefing.",
+  },
+  "skill-chaining.md": {
+    leverage: "high",
+    desc: "Chains all six phases into one continuous AI-assisted workflow using handoff blocks — turning separate Claude conversations into a single thread from research through delivery.",
+  },
+};
+
 const SKILLS = [
   { phase: "01", dir: "01-discover", files: ["user-research.md", "competitive-analysis.md"] },
   { phase: "02", dir: "02-define", files: ["problem-framing.md"] },
@@ -76,7 +131,7 @@ const SKILLS = [
   { phase: "04", dir: "04-prototype", files: ["prototyping.md", "accessibility-audit.md"] },
   { phase: "05", dir: "05-validate", files: ["usability-testing.md"] },
   { phase: "06", dir: "06-deliver", files: ["design-delivery.md"] },
-  { phase: null, dir: "", files: ["design-systems.md", "figma-playbook.md"] },
+  { phase: null, dir: "", files: ["design-systems.md", "figma-playbook.md", "phase-handoff.md", "skill-chaining.md"] },
 ];
 
 const REPO = "https://github.com/quinrobinson/AI-x-UX-Product-Design-Framework";
@@ -486,26 +541,39 @@ Based on my answers, respond with:
       {/* SKILLS — light */}
       <div style={{ background: DS.light, borderTop: `1px solid ${DS.lightBorder}` }}>
         <div style={{ maxWidth: 1160, margin: "0 auto", padding: "64px 60px" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 28 }}>
+
+          {/* Section header */}
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 24 }}>
             <div>
-              <div style={{ fontSize: 10, fontFamily: "'JetBrains Mono', monospace", textTransform: "uppercase", letterSpacing: 3, color: DS.bodyDark, marginBottom: 6 }}>Claude Skills Library — 11 files</div>
-              <div style={{ fontSize: 13, color: DS.bodyDark }}>Upload a skill file into any Claude conversation to activate phase-specific AI workflows.</div>
+              <div style={{ fontSize: 10, fontFamily: "'JetBrains Mono', monospace", textTransform: "uppercase", letterSpacing: 3, color: DS.bodyDark, marginBottom: 8 }}>Claude Skills Library — 13 files</div>
+              <div style={{ fontSize: 15, fontWeight: 600, color: "#0F172A", marginBottom: 6 }}>Structured AI workflows for every design phase</div>
+              <div style={{ fontSize: 13, color: DS.bodyDark, lineHeight: 1.65, maxWidth: 540 }}>Each file loads a phase-specific workflow into Claude — structured prompts, templates, and quality checks. Upload it at the start of a conversation and Claude follows the process.</div>
             </div>
-            <a href={`${REPO}/tree/main/skills`} target="_blank" rel="noopener noreferrer" style={{ fontSize: 12, color: DS.bodyDark, textDecoration: "none", fontFamily: "'JetBrains Mono', monospace", opacity: 0.5, whiteSpace: "nowrap", marginLeft: 32 }}>View on GitHub ↗</a>
+            <a href={`${REPO}/tree/main/skills`} target="_blank" rel="noopener noreferrer"
+              style={{ fontSize: 12, color: DS.bodyDark, textDecoration: "none", fontFamily: "'JetBrains Mono', monospace", opacity: 0.5, whiteSpace: "nowrap", marginLeft: 40 }}>
+              View on GitHub ↗
+            </a>
           </div>
+
+          {/* How to use callout */}
+          <div style={{ background: DS.dark, borderRadius: 12, padding: "15px 22px", marginBottom: 24, display: "flex", alignItems: "center", gap: 16 }}>
+            <div style={{ width: 26, height: 26, borderRadius: 8, background: "#1E293B", border: "1px solid #334155", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: 13 }}>↑</div>
+            <div style={{ fontSize: 13, color: DS.bodyLight, lineHeight: 1.55 }}>
+              <span style={{ color: DS.white, fontWeight: 600 }}>How to use: </span>
+              Open any skill file on GitHub → copy the raw content → paste into a new Claude conversation as your first message. Works in Claude.ai and Claude Desktop.
+            </div>
+          </div>
+
+          {/* Skills table */}
           <div style={{ background: DS.white, border: `1px solid ${DS.lightBorder}`, borderRadius: 16, overflow: "hidden", boxShadow: "0 1px 4px rgba(0,0,0,0.05)" }}>
             {SKILLS.map((row, i) => {
               const p = row.phase ? DS.phases[row.phase] : null;
               return (
-                <div key={i} style={{ display: "grid", gridTemplateColumns: "200px 1fr", borderBottom: i < SKILLS.length - 1 ? `1px solid ${DS.lightBorder}` : "none" }}>
-                  <div style={{ padding: "16px 20px", borderRight: `1px solid ${DS.lightBorder}`, display: "flex", alignItems: "center", background: "#FAFAF8" }}>
+                <div key={i} style={{ display: "grid", gridTemplateColumns: "180px 1fr", borderBottom: i < SKILLS.length - 1 ? `1px solid ${DS.lightBorder}` : "none" }}>
+                  {/* Phase label */}
+                  <div style={{ padding: "20px", borderRight: `1px solid ${DS.lightBorder}`, display: "flex", alignItems: "flex-start", paddingTop: 24, background: "#FAFAF8" }}>
                     {p ? (
-                      <span style={{
-                        display: "inline-flex", alignItems: "center", gap: 4,
-                        background: "transparent", border: `1px solid ${p.color}55`, borderRadius: 999,
-                        padding: "2px 8px", fontSize: 10, fontFamily: "'JetBrains Mono', monospace",
-                        fontWeight: 500, color: p.color, whiteSpace: "nowrap",
-                      }}>
+                      <span style={{ display: "inline-flex", alignItems: "center", gap: 4, background: "transparent", border: `1px solid ${p.color}55`, borderRadius: 999, padding: "2px 8px", fontSize: 10, fontFamily: "'JetBrains Mono', monospace", fontWeight: 500, color: p.color, whiteSpace: "nowrap" }}>
                         <span style={{ width: 5, height: 5, borderRadius: "50%", background: p.color, flexShrink: 0 }} />
                         {row.phase} — {p.label}
                       </span>
@@ -513,13 +581,30 @@ Based on my answers, respond with:
                       <span style={{ fontSize: 10, fontFamily: "'JetBrains Mono', monospace", color: DS.bodyDark, opacity: 0.5 }}>Cross-phase</span>
                     )}
                   </div>
-                  <div style={{ padding: "14px 20px", display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center" }}>
-                    {row.files.map(file => (
-                      <a key={file} href={`${REPO}/tree/main/skills/${row.dir ? row.dir + "/" : ""}${file}`} target="_blank" rel="noopener noreferrer"
-                        style={{ fontSize: 11, padding: "5px 12px", borderRadius: 8, background: "transparent", color: p ? p.color : DS.bodyDark, textDecoration: "none", fontFamily: "'JetBrains Mono', monospace", border: `1px solid ${p ? p.color + "55" : DS.lightBorder}` }}>
-                        {file}
-                      </a>
-                    ))}
+                  {/* Files + descriptions */}
+                  <div style={{ padding: "20px 24px" }}>
+                    {row.files.map((file, fi) => {
+                      const meta = SKILL_META[file];
+                      return (
+                        <div key={file} style={{ marginBottom: fi < row.files.length - 1 ? 18 : 0 }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 5 }}>
+                            <a href={`${REPO}/tree/main/skills/${row.dir ? row.dir + "/" : ""}${file}`}
+                              target="_blank" rel="noopener noreferrer"
+                              style={{ fontSize: 11, padding: "3px 10px", borderRadius: 7, background: "transparent", color: p ? p.color : DS.bodyDark, textDecoration: "none", fontFamily: "'JetBrains Mono', monospace", border: `1px solid ${p ? p.color + "55" : DS.lightBorder}`, whiteSpace: "nowrap" }}>
+                              {file}
+                            </a>
+                            {meta?.leverage && (
+                              <span style={{ fontSize: 10, fontFamily: "'JetBrains Mono', monospace", color: DS.bodyDark, opacity: 0.4 }}>
+                                {meta.leverage === "high" ? "High AI leverage" : meta.leverage === "medium" ? "Medium AI leverage" : "Low AI leverage"}
+                              </span>
+                            )}
+                          </div>
+                          {meta?.desc && (
+                            <div style={{ fontSize: 12, color: DS.bodyDark, lineHeight: 1.65, maxWidth: 680 }}>{meta.desc}</div>
+                          )}
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               );
