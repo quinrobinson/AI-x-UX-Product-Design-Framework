@@ -53,8 +53,63 @@ const PHASE_FILTERS = [
   { id: "cross", label: "Cross-phase" },
 ];
 
+const RAW = "https://raw.githubusercontent.com/quinrobinson/Agentic-Product-Design-Framework/main/skills";
+
+const ALL_SKILL_FILES = [
+  { path: "01-discover/user-research.md" },
+  { path: "01-discover/competitive-analysis.md" },
+  { path: "02-define/problem-framing.md" },
+  { path: "03-ideate/concept-generation.md" },
+  { path: "03-ideate/visual-design-execution.md" },
+  { path: "04-prototype/prototyping.md" },
+  { path: "04-prototype/accessibility-audit.md" },
+  { path: "05-validate/usability-testing.md" },
+  { path: "06-deliver/design-delivery.md" },
+  { path: "06-deliver/design-system-audit.md" },
+  { path: "design-systems.md" },
+  { path: "figma-playbook.md" },
+  { path: "phase-handoff.md" },
+  { path: "skill-chaining.md" },
+];
+
 export default function SkillsLibrary({ onBack }) {
   const [activeFilter, setActiveFilter] = useState("all");
+  const [zipState, setZipState] = useState("idle"); // idle | loading | done | error
+
+  async function downloadAllSkills() {
+    setZipState("loading");
+    try {
+      const JSZip = (await import("https://cdn.jsdelivr.net/npm/jszip@3.10.1/+esm")).default;
+      const zip = new JSZip();
+      const folder = zip.folder("agentic-design-framework-skills");
+
+      await Promise.all(
+        ALL_SKILL_FILES.map(async ({ path }) => {
+          const res = await fetch(`${RAW}/${path}`);
+          if (!res.ok) throw new Error(`Failed to fetch ${path}`);
+          const text = await res.text();
+          folder.file(path, text);
+        })
+      );
+
+      const blob = await zip.generateAsync({ type: "blob" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "agentic-design-framework-skills.zip";
+      a.click();
+      URL.revokeObjectURL(url);
+      setZipState("done");
+      setTimeout(() => setZipState("idle"), 3000);
+    } catch (e) {
+      console.error(e);
+      setZipState("error");
+      setTimeout(() => setZipState("idle"), 3000);
+    }
+  }
+
+  const zipLabel = { idle: "Download all skills (.zip)", loading: "Preparing zip…", done: "✓ Downloaded", error: "Download failed — retry" }[zipState];
+  const zipDisabled = zipState === "loading";
 
   const filteredSkills = SKILLS.filter(row => {
     if (activeFilter === "all") return true;
@@ -74,7 +129,21 @@ export default function SkillsLibrary({ onBack }) {
         <div style={{ width: 1, height: 20, background: DS.darkBorder }} />
         <span style={{ fontSize: 14, fontWeight: 600, color: DS.white }}>Claude Skills Library</span>
         <span style={{ fontSize: 11, color: DS.bodyDark, fontFamily: "'JetBrains Mono', monospace" }}>{totalFiles} files</span>
-        <div style={{ marginLeft: "auto" }}>
+        <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 16 }}>
+          <button
+            onClick={downloadAllSkills}
+            disabled={zipDisabled}
+            style={{
+              background: zipState === "done" ? "#22C55E22" : zipState === "error" ? "#EF444422" : "transparent",
+              border: `1px solid ${zipState === "done" ? "#22C55E" : zipState === "error" ? "#EF4444" : DS.darkBorder}`,
+              borderRadius: 8, padding: "6px 14px", cursor: zipDisabled ? "default" : "pointer",
+              fontSize: 11, color: zipState === "done" ? "#22C55E" : zipState === "error" ? "#EF4444" : DS.bodyLight,
+              fontFamily: "'JetBrains Mono', monospace", opacity: zipDisabled ? 0.6 : 1,
+              transition: "all 0.2s", whiteSpace: "nowrap",
+            }}
+          >
+            {zipLabel}
+          </button>
           <a href={`${REPO}/tree/main/skills`} target="_blank" rel="noopener noreferrer"
             style={{ fontSize: 11, color: DS.bodyLight, textDecoration: "none", fontFamily: "'JetBrains Mono', monospace", opacity: 0.5 }}>
             View on GitHub ↗
@@ -96,12 +165,30 @@ export default function SkillsLibrary({ onBack }) {
           </p>
 
           {/* How to use */}
-          <div style={{ background: "#0B1120", border: "1px solid #1E293B", borderRadius: 12, padding: "16px 22px", display: "flex", alignItems: "flex-start", gap: 16, maxWidth: 680 }}>
-            <div style={{ width: 28, height: 28, borderRadius: 7, background: "#1E293B", border: "1px solid #334155", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: 12, color: DS.bodyLight }}>↑</div>
-            <div style={{ fontSize: 13, color: DS.bodyLight, lineHeight: 1.65 }}>
-              <span style={{ color: DS.white, fontWeight: 600 }}>How to use: </span>
-              Open any skill file on GitHub → copy the raw content → paste into a new Claude conversation as your first message. Claude will follow the structured workflow for that phase.
+          <div style={{ display: "flex", gap: 12, flexWrap: "wrap", alignItems: "stretch", maxWidth: 760 }}>
+            <div style={{ background: "#0B1120", border: "1px solid #1E293B", borderRadius: 12, padding: "16px 22px", display: "flex", alignItems: "flex-start", gap: 16, flex: "1 1 400px" }}>
+              <div style={{ width: 28, height: 28, borderRadius: 7, background: "#1E293B", border: "1px solid #334155", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: 12, color: DS.bodyLight }}>↑</div>
+              <div style={{ fontSize: 13, color: DS.bodyLight, lineHeight: 1.65 }}>
+                <span style={{ color: DS.white, fontWeight: 600 }}>How to use: </span>
+                Download all skill files as a zip, or open any file on GitHub and copy the raw content. Paste into a new Claude conversation as your first message.
+              </div>
             </div>
+            <button
+              onClick={downloadAllSkills}
+              disabled={zipDisabled}
+              style={{
+                background: zipState === "done" ? "#22C55E18" : zipState === "error" ? "#EF444418" : "#0B1120",
+                border: `1px solid ${zipState === "done" ? "#22C55E55" : zipState === "error" ? "#EF444455" : "#1E293B"}`,
+                borderRadius: 12, padding: "16px 22px", cursor: zipDisabled ? "default" : "pointer",
+                fontSize: 12, color: zipState === "done" ? "#22C55E" : zipState === "error" ? "#EF4444" : DS.white,
+                fontFamily: "'JetBrains Mono', monospace", fontWeight: 600,
+                opacity: zipDisabled ? 0.7 : 1, transition: "all 0.2s",
+                display: "flex", alignItems: "center", gap: 10, whiteSpace: "nowrap", flexShrink: 0,
+              }}
+            >
+              <span style={{ fontSize: 16 }}>{zipState === "loading" ? "⟳" : zipState === "done" ? "✓" : zipState === "error" ? "✕" : "↓"}</span>
+              {zipLabel}
+            </button>
           </div>
         </div>
       </div>
