@@ -219,7 +219,8 @@ export default function SkillsLibrary({ onBack }) {
                 display: "flex", alignItems: "center", gap: 10, whiteSpace: "nowrap", flexShrink: 0,
               }}
             >
-              <span style={{ fontSize: 16 }}>{allState === "loading" ? "⟳" : allState === "done" ? "✓" : allState === "error" ? "✕" : "↓"}</span>
+              {allState === "idle" && <span style={{ fontSize: 16 }}>↓</span>}
+              {allState === "loading" && <span style={{ fontSize: 16 }}>⟳</span>}
               {allLabel}
             </button>
           </div>
