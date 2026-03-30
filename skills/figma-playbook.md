@@ -11,32 +11,33 @@ A comprehensive guide for Claude to execute design work directly in Figma via MC
 
 ## Prerequisites — Read this before anything else
 
-This skill requires **Claude Desktop** connected to the **Figma desktop app** via MCP. It will not work in claude.ai in a browser.
+This skill requires **Claude Code** connected to the **Figma desktop app** via MCP. It will not work in claude.ai in a browser or in Claude Desktop chat.
 
 ### What you need running
 
 | Requirement | How to confirm |
 |---|---|
-| Claude Desktop (not claude.ai) | You're using the installed desktop app, not a browser |
+| Claude Code installed | `claude --version` returns a version number in your terminal |
 | Figma desktop app (not browser) | Figma is open as an installed app, not figma.com |
-| Figma MCP connected | Claude Desktop → Settings → Connectors → Figma shows **Connected** |
-| Both apps open simultaneously | Claude Desktop and Figma are both running right now |
+| Figma MCP connected | `claude mcp list` shows the Figma MCP entry |
+| Figma desktop app open | Figma desktop (not browser) is running with your file open |
 | Edit access to your Figma file | You can make changes to the file (not view-only) |
 
 ### Quick connection test
 
-Open your Figma file in the desktop app. Copy the file URL, then in Claude Desktop paste it and say: **"Read the structure of this Figma file: [URL]"**
+Open your Figma file in the desktop app. Start a Claude Code session (`claude` in your terminal), paste your file URL and say: **"Read the structure of this Figma file: [URL]"**
 
 - ✅ Claude responds with the file name and page list → you're ready to use this playbook
 - ❌ Claude says it can't access the file → check the setup guide at the framework site or follow the steps below
 
 ### Not set up yet?
 
-**Option A — Set up Claude Desktop + Figma MCP** (5–10 minutes):
-1. Download Claude Desktop from [claude.ai/download](https://claude.ai/download)
+**Option A — Set up Claude Code + Figma MCP** (5–10 minutes):
+1. Install Claude Code: `npm install -g @anthropic-ai/claude-code`
 2. Download Figma desktop from [figma.com/downloads](https://www.figma.com/downloads)
-3. Open Claude Desktop → Settings → Integrations → Connect Figma
-4. Open both apps and run the connection test above
+3. Get a Figma personal access token: Profile → Settings → Security → Personal access tokens
+4. Add the MCP: `claude mcp add figma-developer-mcp --env FIGMA_API_KEY=your_token`
+5. Run `claude mcp list` to confirm, then test with a file URL
 
 **Option B — Use claude.ai in the browser instead** (zero setup):
 Upload this skill file to a claude.ai conversation. Claude will generate the same structured content — research boards, wireframe specs, component descriptions — but you'll apply it manually in Figma rather than Claude executing it directly. The Figma Playbook becomes a guide for what to build rather than an automated executor.

@@ -9,35 +9,35 @@ const DS = {
 const PATH_A_STEPS = [
   {
     n: "01",
-    title: "Download Claude Desktop",
-    body: "Claude Desktop is the app version of Claude — it supports MCP connections that claude.ai in the browser doesn't. Download it for Mac or Windows.",
-    action: { label: "Download Claude Desktop ↗", href: "https://claude.ai/download" },
-    check: "Claude Desktop is installed and you can open it",
+    title: "Install Claude Code",
+    body: "Claude Code is a command-line tool that supports MCP connections — including Figma. It requires Node.js 18+ first. Once Node is ready, install Claude Code globally: npm install -g @anthropic-ai/claude-code",
+    action: { label: "Claude Code docs ↗", href: "https://docs.anthropic.com/en/docs/claude-code/getting-started" },
+    check: "Running 'claude --version' in your terminal returns a version number",
   },
   {
     n: "02",
     title: "Install the Figma desktop app",
-    body: "The Figma MCP works with the Figma desktop app, not the browser version. If you're already using Figma in the browser, download the desktop app.",
+    body: "The Figma MCP works with the Figma desktop app, not the browser version. If you're currently using Figma in the browser, download the desktop app — you can use both with the same account.",
     action: { label: "Download Figma Desktop ↗", href: "https://www.figma.com/downloads/" },
     check: "Figma desktop app is installed and you're logged in",
   },
   {
     n: "03",
-    title: "Connect Figma to Claude Desktop",
-    body: "Open Claude Desktop. Go to Settings → Connectors. Find Figma in the list and click Connect. This links your Figma account so Claude can read and write to your files.",
-    check: "Figma shows as Connected in Claude Desktop → Settings → Connectors",
+    title: "Get your Figma personal access token",
+    body: "In Figma, go to your profile icon → Settings → Security → Personal access tokens → Generate new token. Copy it — you'll need it in the next step. Keep it private, treat it like a password.",
+    check: "You have a Figma personal access token copied",
   },
   {
     n: "04",
-    title: "Open both apps side by side",
-    body: "For Claude to execute actions in Figma, both apps need to be running at the same time. Open your Figma file in the desktop app, then switch to Claude Desktop to start your conversation.",
-    check: "Both Figma desktop and Claude Desktop are open",
+    title: "Add Figma MCP to Claude Code",
+    body: "In your terminal, run: claude mcp add figma-developer-mcp --env FIGMA_API_KEY=your_token_here — replacing 'your_token_here' with the token from step 03. Then run 'claude mcp list' to confirm it was added.",
+    check: "Figma MCP appears when you run 'claude mcp list' in your terminal",
   },
   {
     n: "05",
     title: "Test the connection",
-    body: "Open your Figma file in the desktop app. Copy the file URL from the browser bar or from Figma → Share → Copy link. In Claude Desktop, paste it and say: \"Read the structure of this Figma file: [URL]\" — Claude should respond with the file name and page list.",
-    check: "Claude responds with the correct file name and page names from your Figma file",
+    body: "Open your Figma file in the desktop app. In your terminal, start a Claude Code session by running 'claude'. Paste your Figma file URL and say: \"Read the structure of this Figma file: [URL]\" — Claude should respond with the file name and page list.",
+    check: "Claude Code responds with the correct file name and pages from your Figma file",
   },
 ];
 
@@ -72,24 +72,24 @@ const PATH_B_STEPS = [
 
 const TROUBLESHOOT = [
   {
-    q: "Claude can't see my Figma file",
-    a: "Make sure you're using Claude Desktop (not claude.ai in the browser). The Figma MCP only works in the desktop app. Also confirm both Figma and Claude Desktop are open at the same time.",
+    q: "Claude Code can't see my Figma file",
+    a: "Run 'claude mcp list' to confirm the Figma MCP is registered. Also make sure the Figma desktop app is open — the MCP needs it running, not the browser version.",
   },
   {
-    q: "The Figma integration isn't showing in Claude Desktop settings",
-    a: "Update Claude Desktop to the latest version — MCP integrations were added in a recent release. Go to Help → Check for Updates.",
+    q: "Figma MCP isn't showing in 'claude mcp list'",
+    a: "Re-run the 'claude mcp add' command and make sure your API key is correct. You can also check ~/.claude.json to verify the entry was saved.",
   },
   {
-    q: "Claude can see my file but can't make changes",
+    q: "Claude Code can see my file but can't make changes",
     a: "Check that you have edit access to the Figma file (not just view access). Claude can only modify files you have permission to edit.",
   },
   {
     q: "I'm on the free Claude plan — does this work?",
-    a: "The Figma MCP integration requires a Claude Pro or Team plan. Claude.ai (browser path) works on the free plan — you just apply Claude's output to Figma manually.",
+    a: "Claude Code requires a Claude Pro plan or API access. Claude.ai in the browser (Path B) works on the free plan — you just apply Claude's output to Figma manually.",
   },
   {
-    q: "I use Figma in the browser, not the desktop app",
-    a: "The Figma MCP requires the Figma desktop app. Download it from figma.com/downloads — you can use both the browser and desktop versions with the same account.",
+    q: "I don't use the command line — is there another way?",
+    a: "Path B (claude.ai in the browser) requires no terminal or installation. You lose direct Figma execution, but all the skill files, AI Brief Generator, and Deck Builder work fully in the browser.",
   },
 ];
 
@@ -187,9 +187,9 @@ export default function FigmaSetupGuide({ onBack }) {
               {
                 id: "a", color: pathAColor,
                 label: "Path A — Full MCP integration",
-                sub: "Claude executes directly in Figma",
+                sub: "Claude Code executes directly in Figma",
                 badges: ["Most powerful", "Requires Claude Pro"],
-                detail: "Claude Desktop + Figma desktop app. Claude can read your file, create frames, build components, and write annotations — all without you switching apps.",
+                detail: "Claude Code (CLI) + Figma desktop app. Claude can read your file, create frames, build components, and write annotations — all from your terminal alongside Figma.",
               },
               {
                 id: "b", color: pathBColor,
@@ -249,7 +249,7 @@ export default function FigmaSetupGuide({ onBack }) {
             </div>
             <div style={{ fontSize: 13, color: DS.bodyLight, lineHeight: 1.65 }}>
               {activePath === "a"
-                ? "Once the connection is confirmed, open the Design Process System tool, pick your phase, and copy the Figma Playbook prompt. Paste it into Claude Desktop with your Figma file open — Claude will start executing."
+                ? "Once the connection is confirmed, open the Design Process System tool, pick your phase, and copy the Figma Playbook prompt. Paste it into your Claude Code session with your Figma file open — Claude will start executing."
                 : "Once Claude acknowledges the skill file, describe your project context. Claude will follow the structured workflow and generate phase-specific content you can bring into Figma manually."}
             </div>
           </div>
