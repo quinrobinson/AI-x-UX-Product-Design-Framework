@@ -279,51 +279,60 @@ function PrimaryToolCard({ tool, onClick, onPhaseClick }) {
         </div>
 
         {/* Right — phase navigator */}
-        <div style={{ flexShrink: 0, width: 300, background: DS.light, borderRadius: 12, border: `1px solid ${DS.lightBorder}`, overflow: "hidden" }}>
-          {/* Column headers */}
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 72px 56px 20px", alignItems: "center", padding: "12px 18px 10px", borderBottom: `1px solid ${DS.lightBorder}` }}>
-            <div style={{ fontSize: 10, fontFamily: "'JetBrains Mono', monospace", textTransform: "uppercase", letterSpacing: 2, color: DS.bodyDark, opacity: 0.6 }}>Phase</div>
-            <div style={{ fontSize: 10, fontFamily: "'JetBrains Mono', monospace", textTransform: "uppercase", letterSpacing: 1, color: DS.bodyDark, opacity: 0.4, textAlign: "right" }}>Prompts</div>
-            <div style={{ fontSize: 10, fontFamily: "'JetBrains Mono', monospace", textTransform: "uppercase", letterSpacing: 1, color: DS.bodyDark, opacity: 0.4, textAlign: "right" }}>Skills</div>
-            <div />
-          </div>
-          {PHASE_CONTENTS.map((ph, i) => {
-            const phaseData = DS.phases[ph.key];
-            const isHovered = hoveredPhase === ph.key;
-            return (
-              <button
-                key={ph.key}
-                onClick={(e) => { e.stopPropagation(); onPhaseClick(ph.key); }}
-                onMouseEnter={() => setHoveredPhase(ph.key)}
-                onMouseLeave={() => setHoveredPhase(null)}
-                style={{
-                  display: "grid", gridTemplateColumns: "1fr 72px 56px 20px", alignItems: "center",
-                  width: "100%", padding: "10px 18px",
-                  background: isHovered ? `${phaseData.color}08` : "transparent",
-                  border: "none", borderBottom: i < PHASE_CONTENTS.length - 1 ? `1px solid ${DS.lightBorder}` : "none",
-                  cursor: "pointer", textAlign: "left", transition: "background 0.15s", boxSizing: "border-box",
-                }}
-              >
-                {/* Phase name + dot */}
-                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <span style={{ width: 6, height: 6, borderRadius: "50%", background: phaseData.color, flexShrink: 0, opacity: isHovered ? 1 : 0.55 }} />
-                  <span style={{ fontSize: 12, fontWeight: 500, color: isHovered ? phaseData.color : "#0F172A", transition: "color 0.15s", whiteSpace: "nowrap" }}>
-                    {phaseData.label}
-                  </span>
-                </div>
-                {/* Prompts count */}
-                <span style={{ fontSize: 11, fontFamily: "'JetBrains Mono', monospace", color: DS.bodyDark, opacity: 0.5, textAlign: "right" }}>
-                  {ph.prompts}
-                </span>
-                {/* Skills count */}
-                <span style={{ fontSize: 11, fontFamily: "'JetBrains Mono', monospace", color: DS.bodyDark, opacity: 0.5, textAlign: "right" }}>
-                  {ph.skills}
-                </span>
-                {/* Hover arrow */}
-                <span style={{ fontSize: 11, color: phaseData.color, opacity: isHovered ? 1 : 0, transition: "opacity 0.15s", textAlign: "right" }}>→</span>
-              </button>
-            );
-          })}
+        <div style={{ flexShrink: 0, width: 320, background: DS.light, borderRadius: 12, border: `1px solid ${DS.lightBorder}`, overflow: "hidden" }}>
+          <table style={{ width: "100%", borderCollapse: "collapse", tableLayout: "fixed" }}>
+            <colgroup>
+              <col style={{ width: "auto" }} />
+              <col style={{ width: 72 }} />
+              <col style={{ width: 56 }} />
+              <col style={{ width: 28 }} />
+            </colgroup>
+            <thead>
+              <tr style={{ borderBottom: `1px solid ${DS.lightBorder}` }}>
+                <th style={{ padding: "11px 18px 10px", textAlign: "left", fontSize: 10, fontFamily: "'JetBrains Mono', monospace", textTransform: "uppercase", letterSpacing: 2, color: DS.bodyDark, opacity: 0.6, fontWeight: 500 }}>Phase</th>
+                <th style={{ padding: "11px 0 10px", textAlign: "right", fontSize: 10, fontFamily: "'JetBrains Mono', monospace", textTransform: "uppercase", letterSpacing: 1, color: DS.bodyDark, opacity: 0.4, fontWeight: 500 }}>Prompts</th>
+                <th style={{ padding: "11px 0 10px", textAlign: "right", fontSize: 10, fontFamily: "'JetBrains Mono', monospace", textTransform: "uppercase", letterSpacing: 1, color: DS.bodyDark, opacity: 0.4, fontWeight: 500 }}>Skills</th>
+                <th />
+              </tr>
+            </thead>
+            <tbody>
+              {PHASE_CONTENTS.map((ph, i) => {
+                const phaseData = DS.phases[ph.key];
+                const isHovered = hoveredPhase === ph.key;
+                return (
+                  <tr
+                    key={ph.key}
+                    onClick={(e) => { e.stopPropagation(); onPhaseClick(ph.key); }}
+                    onMouseEnter={() => setHoveredPhase(ph.key)}
+                    onMouseLeave={() => setHoveredPhase(null)}
+                    style={{
+                      background: isHovered ? `${phaseData.color}08` : "transparent",
+                      borderBottom: i < PHASE_CONTENTS.length - 1 ? `1px solid ${DS.lightBorder}` : "none",
+                      cursor: "pointer", transition: "background 0.15s",
+                    }}
+                  >
+                    <td style={{ padding: "10px 18px", verticalAlign: "middle" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                        <span style={{ width: 6, height: 6, borderRadius: "50%", background: phaseData.color, flexShrink: 0, display: "inline-block", opacity: isHovered ? 1 : 0.55 }} />
+                        <span style={{ fontSize: 12, fontWeight: 500, color: isHovered ? phaseData.color : "#0F172A", transition: "color 0.15s", whiteSpace: "nowrap" }}>
+                          {phaseData.label}
+                        </span>
+                      </div>
+                    </td>
+                    <td style={{ textAlign: "right", verticalAlign: "middle", fontSize: 11, fontFamily: "'JetBrains Mono', monospace", color: DS.bodyDark, opacity: 0.5 }}>
+                      {ph.prompts}
+                    </td>
+                    <td style={{ textAlign: "right", verticalAlign: "middle", fontSize: 11, fontFamily: "'JetBrains Mono', monospace", color: DS.bodyDark, opacity: 0.5 }}>
+                      {ph.skills}
+                    </td>
+                    <td style={{ textAlign: "right", verticalAlign: "middle", paddingRight: 14, fontSize: 11, color: phaseData.color, opacity: isHovered ? 1 : 0, transition: "opacity 0.15s" }}>
+                      →
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
         </div>
       </div>
     </div>
