@@ -1,848 +1,1022 @@
-import { useState, useRef, useCallback } from "react";
+import { useState, useCallback } from "react";
 
-// ── Design tokens (matches site system) ─────────────────────────────────────
-const DS = {
-  dark: "#0F172A",
-  darkCard: "#1E293B",
-  darkBorder: "#334155",
-  white: "#FFFFFF",
-  bodyLight: "#94A3B8",
-  bodyDark: "#64748B",
-  light: "#F8FAFC",
-  lightBorder: "#E2E8F0",
+const DEFAULT_TOKENS = {
+  brandName: "SDS",
+  // Colors — mapped from SDS Color Primitives
+  primary: "#2c2c2c",       // Brand/800
+  primaryLight: "#f5f5f5",  // Brand/100
+  primaryDark: "#1e1e1e",   // Brand/900
+  secondary: "#111111",     // Brand/1000
+  accent: "#444444",        // Brand/600
+  success: "#14ae5c",       // Green/500
+  warning: "#ffb800",       // Yellow/400 (from SDS)
+  error: "#e2483d",         // Red/500 (from SDS)
+  info: "#0c8ce9",          // Blue/500 (from SDS)
+  neutral50: "#ffffff",     // White/1000
+  neutral100: "#f5f5f5",    // Gray/100
+  neutral200: "#e6e6e6",    // Gray/200
+  neutral300: "#d9d9d9",    // Gray/300
+  neutral400: "#b3b3b3",    // Gray/400
+  neutral500: "#757575",    // Gray/500
+  neutral600: "#444444",    // Gray/600
+  neutral700: "#383838",    // Gray/700
+  neutral800: "#2c2c2c",    // Gray/800
+  neutral900: "#1e1e1e",    // Gray/900
+  // Typography — from Typography Primitives
+  fontHeading: "'Inter', sans-serif",
+  fontBody: "'Inter', sans-serif",
+  fontMono: "'Roboto Mono', monospace",
+  baseSize: 16,              // Scale 03
+  scaleRatio: 1.25,          // Scale progression: 12, 14, 16, 20, 24, 32
+  // Spacing — from Size/Space
+  spaceUnit: 4,              // Space/100 = 4px base
+  // Shape — from Size/Radius
+  radiusSm: 4,               // Radius/100
+  radiusMd: 8,               // Radius/200
+  radiusLg: 16,              // Radius/400
+  radiusFull: 9999,          // Radius/Full
+  // Elevation — from Size/Depth + Black opacity scale
+  shadowSm: "0 1px 4px rgba(12,12,13,0.05)",        // Depth/025 offset, Black/100
+  shadowMd: "0 4px 16px rgba(12,12,13,0.1)",         // Depth/100 offset, Depth/400 blur, Black/200
+  shadowLg: "0 16px 32px rgba(12,12,13,0.1), 0 4px 4px rgba(12,12,13,0.05)", // Drop Shadow/400
 };
 
-const PHASE_COLOR = "#F59E0B"; // Ideate phase
+const PRESETS = {
+  default: { ...DEFAULT_TOKENS, brandName: "SDS" },
+  corporate: {
+    ...DEFAULT_TOKENS,
+    brandName: "CorpKit",
+    primary: "#1B365D",
+    primaryLight: "#E8EDF4",
+    primaryDark: "#0F1F3D",
+    secondary: "#2D3748",
+    accent: "#C8102E",
+    fontHeading: "'Noto Serif', serif",
+    fontBody: "'Inter', sans-serif",
+    radiusSm: 4,
+    radiusMd: 8,
+    radiusLg: 8,
+    scaleRatio: 1.2,
+  },
+  startup: {
+    ...DEFAULT_TOKENS,
+    brandName: "LaunchKit",
+    primary: "#7C3AED",
+    primaryLight: "#EDE9FE",
+    primaryDark: "#5B21B6",
+    secondary: "#111827",
+    accent: "#06B6D4",
+    fontHeading: "'Inter', sans-serif",
+    fontBody: "'Inter', sans-serif",
+    radiusSm: 8,
+    radiusMd: 16,
+    radiusLg: 16,
+    scaleRatio: 1.333,
+  },
+  minimal: {
+    ...DEFAULT_TOKENS,
+    brandName: "Mono",
+    primary: "#1e1e1e",
+    primaryLight: "#f5f5f5",
+    primaryDark: "#111111",
+    secondary: "#383838",
+    accent: "#1e1e1e",
+    fontHeading: "'Inter', sans-serif",
+    fontBody: "'Inter', sans-serif",
+    radiusSm: 0,
+    radiusMd: 0,
+    radiusLg: 0,
+    scaleRatio: 1.2,
+  },
+  warm: {
+    ...DEFAULT_TOKENS,
+    brandName: "Hearth",
+    primary: "#B45309",
+    primaryLight: "#FEF3C7",
+    primaryDark: "#92400E",
+    secondary: "#44403C",
+    accent: "#059669",
+    fontHeading: "'Noto Serif', serif",
+    fontBody: "'Inter', sans-serif",
+    radiusSm: 8,
+    radiusMd: 16,
+    radiusLg: 16,
+    scaleRatio: 1.25,
+  },
+};
 
-// ── Carbon component library (all 46) ────────────────────────────────────────
-const CARBON_COMPONENTS = [
-  { id:"accordion", name:"Accordion", category:"Navigation", variants:["Default","Flush","Align start/end"], sizes:["sm","md","lg"], tokens:[["$layer-01","Container bg"],["$border-subtle-01","Item dividers"],["$text-primary","Header text"],["$icon-primary","Chevron"]], rule:"Never nest accordions. Flush variant removes border-radius." },
-  { id:"breadcrumb", name:"Breadcrumb", category:"Navigation", variants:["Default","With overflow menu"], sizes:["sm","md","lg"], tokens:[["$link-primary","Link color"],["$text-primary","Current page (non-link)"],["$text-secondary","Separator"]], rule:"Show only when 3+ levels of hierarchy exist. Current page is never a link." },
-  { id:"button", name:"Button", category:"Actions", variants:["Primary","Secondary","Tertiary","Ghost","Danger","Danger tertiary","Danger ghost"], sizes:["sm (32px)","md (40px)","lg (48px)","xl (64px)","2xl (80px)"], tokens:[["$button-primary","Primary fill"],["$text-on-color","Label on filled"],["$button-secondary","Secondary fill"],["$button-tertiary","Tertiary border"],["$focus","Focus ring"]], rule:"One primary per visible context. Danger only for destructive operations." },
-  { id:"checkbox", name:"Checkbox", category:"Forms", variants:["Default","Indeterminate","Disabled","Read-only"], sizes:["sm","md"], tokens:[["$interactive","Checked fill"],["$border-strong-01","Unchecked border"],["$text-primary","Label"]], rule:"Use for multiple selection. Single binary toggle use Toggle instead." },
-  { id:"code-snippet", name:"Code Snippet", category:"Content", variants:["Single line","Multi-line","Inline"], sizes:["sm","md","lg"], tokens:[["$layer-01","Code bg"],["$text-primary","Code text"],["$border-subtle-01","Snippet border"]], rule:"Always include copy button. Inline variant lives within body text flow." },
-  { id:"combo-box", name:"Combo Box", category:"Forms", variants:["Default","With filtering"], sizes:["sm","md","lg"], tokens:[["$field-01","Input bg"],["$border-strong-01","Active border"],["$layer-01","Menu bg"]], rule:"Use over Dropdown when list is 10+ items and type-ahead filtering helps." },
-  { id:"contained-list", name:"Contained List", category:"Content", variants:["Default","Disclosed","Inset","On page"], sizes:["sm","md","lg"], tokens:[["$layer-01","List bg"],["$layer-accent-01","Header bg"],["$border-subtle-01","Row dividers"]], rule:"Use for dense data lists. Not a nav pattern." },
-  { id:"content-switcher", name:"Content Switcher", category:"Navigation", variants:["Default","Icon only"], sizes:["sm","md","lg"], tokens:[["$layer-selected-01","Active segment bg"],["$text-primary","Active label"],["$border-strong-01","Container border"]], rule:"2 to 5 options max. Use for in-page view switching, not global navigation." },
-  { id:"copy-button", name:"Copy Button", category:"Actions", variants:["Default","Icon only"], sizes:["sm","md","lg"], tokens:[["$icon-primary","Copy icon"],["$background-hover","Hover"],["$layer-01","Feedback tooltip bg"]], rule:"Always provide visual feedback on copy (checkmark and tooltip)." },
-  { id:"data-table", name:"Data Table", category:"Data Display", variants:["Default","Sortable","Selectable","Expandable","With toolbar","Batch actions","Inline edit"], sizes:["xs (24px)","sm (32px)","md (40px)","lg (48px)","xl (64px)"], tokens:[["$layer-01","Table bg"],["$layer-accent-01","Header bg"],["$layer-hover-01","Row hover"],["$layer-selected-01","Selected row"],["$border-subtle-01","Row dividers"]], rule:"Header row never scrolls out of view. Batch actions appear above table." },
-  { id:"date-picker", name:"Date Picker", category:"Forms", variants:["Simple","Single","Range"], sizes:["sm","md","lg"], tokens:[["$field-01","Input bg"],["$border-strong-01","Active border"],["$layer-02","Calendar bg"],["$interactive","Selected date fill"]], rule:"Range picker uses two inputs. Always show format mask." },
-  { id:"definition-tooltip", name:"Definition Tooltip", category:"Overlays", variants:["Default"], sizes:["sm","md","lg"], tokens:[["$background-inverse","Tooltip bg"],["$text-inverse","Tooltip text"],["$border-interactive","Trigger underline"]], rule:"Triggered by hover or focus on underlined term only." },
-  { id:"dropdown", name:"Dropdown", category:"Forms", variants:["Default","Inline"], sizes:["sm","md","lg"], tokens:[["$field-01","Trigger bg (layer-aware)"],["$border-strong-01","Trigger border"],["$layer-01","Menu bg"],["$layer-hover-01","Option hover"]], rule:"Menus float one layer above trigger. Use Combo Box for 10+ items." },
-  { id:"file-uploader", name:"File Uploader", category:"Forms", variants:["Button","Drag and drop"], sizes:["sm","md","lg"], tokens:[["$field-01","Drop zone bg"],["$border-interactive","Drop zone border"],["$support-error","Error state"]], rule:"Show file list with status after upload. Always validate file type and size." },
-  { id:"form", name:"Form", category:"Forms", variants:["Default","With sections","Inline"], sizes:["sm","md","lg"], tokens:[["$field-01","Field bg"],["$layer-01","Form bg"],["$support-error","Error"],["$text-helper","Helper text"]], rule:"Form is a layout container. Left-align labels above fields. 640px max-width." },
-  { id:"inline-loading", name:"Inline Loading", category:"Feedback", variants:["Loading","Error","Finished","Inactive"], sizes:["sm","md"], tokens:[["$interactive","Spinner color"],["$support-error","Error state"],["$support-success","Finished state"]], rule:"Use for actions 1 to 9 seconds. Over 10s use Loading overlay." },
-  { id:"link", name:"Link", category:"Navigation", variants:["Default","Inline","Standalone","Paired"], sizes:["sm","md","lg"], tokens:[["$link-primary","Default link"],["$link-primary-hover","Hover"],["$link-visited","Visited"]], rule:"External links need warning icon. Never use link color for non-link text." },
-  { id:"list", name:"List", category:"Content", variants:["Unordered","Ordered","Nested"], sizes:["sm","md","lg"], tokens:[["$text-primary","List text"],["$text-secondary","Nested items"]], rule:"Max 2 nesting levels. For interactive items use Contained List." },
-  { id:"loading", name:"Loading", category:"Feedback", variants:["Overlay","Small","Large"], sizes:["sm","lg"], tokens:[["$interactive","Spinner stroke"],["$overlay","Overlay backdrop"],["$layer-01","Inner circle fill"]], rule:"Small for inline context. Overlay for full page. Always label with text." },
-  { id:"menu", name:"Menu", category:"Navigation", variants:["Default","With dividers","With icons"], sizes:["sm","md","lg"], tokens:[["$layer-01","Menu bg"],["$layer-hover-01","Item hover"],["$border-subtle-01","Dividers"]], rule:"Max 2 levels of nesting. Dividers group related actions." },
-  { id:"menu-button", name:"Menu Button", category:"Actions", variants:["Default","Ghost","Tertiary"], sizes:["sm","md","lg"], tokens:[["$button-primary","Trigger fill"],["$layer-01","Menu bg"]], rule:"Use when a button reveals a set of actions. Not for navigation." },
-  { id:"modal", name:"Modal", category:"Overlays", variants:["Passive","Transactional","Danger","Input/Form","Acknowledgment"], sizes:["xs (400px)","sm (520px)","md (672px)","lg (800px)","full-width"], tokens:[["$overlay","Backdrop"],["$layer-01","Modal bg"],["$layer-accent-01","Header area"],["$focus","Focus trap ring"]], rule:"Always implement focus trap. Danger modal uses red primary. Max 3 footer actions." },
-  { id:"multiselect", name:"Multiselect", category:"Forms", variants:["Default","Filterable"], sizes:["sm","md","lg"], tokens:[["$field-01","Trigger bg"],["$layer-01","Menu bg"],["$interactive","Checkbox fill"]], rule:"Show selected count in trigger. Filterable variant for 10+ items." },
-  { id:"notification", name:"Notification", category:"Feedback", variants:["Inline","Toast","Actionable"], sizes:["sm","lg"], tokens:[["$support-error","Error"],["$support-success","Success"],["$support-warning","Warning"],["$support-info","Info"]], rule:"Never use color alone, always pair with icon. Toast auto-dismisses after 5s." },
-  { id:"number-input", name:"Number Input", category:"Forms", variants:["Default","With helper","Disabled","Read-only"], sizes:["sm","md","lg"], tokens:[["$field-01","Input bg"],["$border-strong-01","Border"],["$interactive","Stepper buttons"]], rule:"Always provide min, max, step values. Steppers do not replace keyboard input." },
-  { id:"overflow-menu", name:"Overflow Menu", category:"Actions", variants:["Default","With icons","Danger items"], sizes:["sm","md","lg"], tokens:[["$layer-01","Menu bg"],["$layer-hover-01","Item hover"],["$support-error","Danger items"]], rule:"Use for 3+ secondary actions. Danger actions go last with a divider." },
-  { id:"pagination", name:"Pagination", category:"Navigation", variants:["Default","With page size"], sizes:["sm","md","lg"], tokens:[["$layer-01","Control bg"],["$interactive","Active page"],["$border-subtle-01","Dividers"]], rule:"Always show total count. Allow user to set page size when data is large." },
-  { id:"popover", name:"Popover", category:"Overlays", variants:["Default","With caret","Tab tip"], sizes:["sm","md","lg"], tokens:[["$layer-01","Popover bg"],["$border-subtle-01","Popover border"]], rule:"Non-modal. Closes on outside click. Use for rich non-tooltip content." },
-  { id:"progress-bar", name:"Progress Bar", category:"Feedback", variants:["Default","Indeterminate","Finished","Error"], sizes:["sm","md"], tokens:[["$interactive","Fill color"],["$border-subtle-01","Track bg"],["$support-error","Error"],["$support-success","Finished"]], rule:"Show percentage or step label. Indeterminate for unknown duration." },
-  { id:"progress-indicator", name:"Progress Indicator", category:"Navigation", variants:["Horizontal","Vertical"], sizes:["sm","md","lg"], tokens:[["$interactive","Active step"],["$border-subtle-01","Incomplete"],["$support-success","Complete"]], rule:"Use for multi-step workflows. Always show current step and total count." },
-  { id:"radio-button", name:"Radio Button", category:"Forms", variants:["Default","Horizontal group","Vertical group","Disabled","Read-only"], sizes:["sm","md"], tokens:[["$interactive","Selected fill"],["$border-strong-01","Unselected ring"],["$text-primary","Label"]], rule:"One selected at all times in a group. Vertical layout for 4+ options." },
-  { id:"search", name:"Search", category:"Forms", variants:["Default","Expandable","Toolbar"], sizes:["sm","md","lg"], tokens:[["$field-01","Search bg"],["$border-strong-01","Active border"],["$icon-primary","Search/clear icons"]], rule:"Clear button appears when input has value. Expandable for space-constrained toolbars." },
-  { id:"select", name:"Select", category:"Forms", variants:["Default","With helper","Disabled","Read-only","Invalid"], sizes:["sm","md","lg"], tokens:[["$field-01","Select bg"],["$border-strong-01","Select border"],["$icon-primary","Chevron"]], rule:"Native HTML select. For custom styling use Dropdown instead." },
-  { id:"slider", name:"Slider", category:"Forms", variants:["Default","Range","With input"], sizes:["sm","md","lg"], tokens:[["$interactive","Track fill + thumb"],["$border-subtle-01","Track bg"],["$field-01","Attached input bg"]], rule:"Always show current value. Range slider uses two thumbs for min/max." },
-  { id:"stack", name:"Stack", category:"Layout", variants:["Horizontal","Vertical"], sizes:["sm","md","lg"], tokens:[["$spacing-01 through $spacing-13","Gap between children"]], rule:"Stack is a spacing utility. Use gap token, not margin on children." },
-  { id:"structured-list", name:"Structured List", category:"Content", variants:["Default","Selectable","Flush"], sizes:["sm","md","lg"], tokens:[["$layer-01","Row bg"],["$layer-hover-01","Row hover"],["$interactive","Selected fill"],["$border-subtle-01","Row dividers"]], rule:"For simple key-value pairs. Use DataTable when sorting or filtering is needed." },
-  { id:"tabs", name:"Tabs", category:"Navigation", variants:["Line","Contained","Vertical","Icon only"], sizes:["sm","md","lg"], tokens:[["$border-interactive","Active tab underline"],["$text-primary","Active label"],["$text-secondary","Inactive label"],["$layer-selected-01","Contained active bg"]], rule:"Never nest tabs. Line for most UI. Contained for dense toolbars." },
-  { id:"tag", name:"Tag", category:"Content", variants:["Read-only","Dismissible","Selectable","Operational"], sizes:["sm (16px)","md (24px)","lg (32px)"], tokens:[["$tag-color-[type]","Tag fill"],["$tag-border-[type]","Tag border"],["$tag-hover-[type]","Tag hover"]], rule:"Document color-to-meaning mappings. Dismissible needs aria-label on close." },
-  { id:"text-area", name:"Text Area", category:"Forms", variants:["Default","With helper","Disabled","Read-only","Invalid"], sizes:["md","lg"], tokens:[["$field-01","Input bg"],["$border-strong-01","Active border"],["$text-placeholder","Placeholder"],["$support-error","Error state"]], rule:"Layer-aware like Text Input. Show character count when a limit exists." },
-  { id:"text-input", name:"Text Input", category:"Forms", variants:["Default","With helper","Password","Disabled","Read-only","Invalid"], sizes:["sm","md","lg"], tokens:[["$field-01 / $field-02","Input bg (layer-aware)"],["$border-strong-01","Active border"],["$text-placeholder","Placeholder"],["$support-error","Error border"]], rule:"Layer-aware: use $field-01 on $layer-01, $field-02 on $layer-02." },
-  { id:"tile", name:"Tile", category:"Content", variants:["Default","Clickable","Selectable","Expandable"], sizes:["sm","md","lg"], tokens:[["$layer-01","Tile bg"],["$layer-hover-01","Clickable hover"],["$layer-selected-01","Selected state"],["$border-subtle-01","Tile border"]], rule:"Selectable tiles for choosing configurations. Clickable tiles navigate away." },
-  { id:"toggle", name:"Toggle", category:"Forms", variants:["Default","Small","Read-only"], sizes:["sm","md"], tokens:[["$interactive","On fill"],["$ui-03","Off fill"],["$text-primary","Label"]], rule:"Immediate effect, no form submission needed. For deferred use Checkbox." },
-  { id:"toggletip", name:"Toggletip", category:"Overlays", variants:["Default","With actions"], sizes:["sm","md","lg"], tokens:[["$background-inverse","Tooltip bg"],["$text-inverse","Tooltip text"]], rule:"Triggered by click, not hover. Keyboard accessible. For complex tips." },
-  { id:"tooltip", name:"Tooltip", category:"Overlays", variants:["Default","Icon button tooltip"], sizes:["sm","md","lg"], tokens:[["$background-inverse","Tooltip bg"],["$text-inverse","Tooltip text"]], rule:"Hover and focus only. Never include interactive elements inside a tooltip." },
-  { id:"tree-view", name:"Tree View", category:"Navigation", variants:["Default","With checkboxes","With icons"], sizes:["sm","md","lg"], tokens:[["$layer-01","Tree bg"],["$layer-selected-01","Selected node"],["$layer-hover-01","Hover"]], rule:"For hierarchical data navigation. Max 4 nesting levels recommended." },
-  { id:"ui-shell", name:"UI Shell", category:"Navigation", variants:["Header","Side nav","Panel"], sizes:["sm","md","lg"], tokens:[["$background-brand","Shell header bg"],["$text-on-color","Header text"],["$layer-01","Side nav bg"],["$layer-selected-01","Active nav item"]], rule:"Always persistent. Header 48px. Side nav 256px. Never hide on desktop." },
+const FONT_OPTIONS = [
+  "'Inter', sans-serif",
+  "'Noto Serif', serif",
+  "'Roboto Mono', monospace",
+  "'DM Sans', sans-serif",
+  "'Source Sans 3', sans-serif",
+  "'Space Grotesk', sans-serif",
+  "'Libre Baskerville', serif",
+  "'Source Serif 4', serif",
 ];
 
-const CATEGORIES = ["All", ...new Set(CARBON_COMPONENTS.map(c => c.category))].sort((a,b) => a==="All"?-1:b==="All"?1:a.localeCompare(b));
+const SECTIONS = ["tokens", "typography", "components", "audit", "export"];
 
+// ─── Audit Checklist Data ────────────────────────────────────────────────────
 
-// ── Output generators ─────────────────────────────────────────────────────────
-const buildMarkdown = (ds) => {
-  const ids = ds.selectedComponents || CARBON_COMPONENTS.map(c => c.id);
-  const selected = CARBON_COMPONENTS.filter(c => ids.includes(c.id));
-  const sp = ds.spacing || 8;
-  const r = ds.radius || 0;
-  const fs = ds.baseFontSize || 14;
-  const sc = ds.typeScale || 1.2;
-  const sizes = Array.from({length:7},(_,i) => Math.round(fs * Math.pow(sc, i)));
-  const h = {compact:32,regular:40,comfortable:48}[ds.density||"regular"];
-  return `# ${ds.name || "Custom Design System"} — Claude Context Block
-> Structured following the Carbon Design System schema for AI agent consumption.
-
-## Agent Entry Point
-
-**System:** ${ds.name || "Custom Design System"}
-Read this file first. Then reference Tokens, Components, and Patterns below.
-
-### Agent Rules (non-negotiable)
-1. Use design tokens from this file never hardcode raw values
-2. Font family: ${ds.fontFamily || "IBM Plex Sans"} for UI, monospace for code
-3. Spacing: use the scale below, no arbitrary pixel values
-4. All interactive elements must meet WCAG 2.1 AA (4.5:1 text, 3:1 UI)
-5. Component decision: check Components then Patterns then custom
-6. Figma MCP: bind all fills/strokes to variable collections, never hardcode
-
----
-
-## Foundations
-
-### Brand Colors
-| Token | Value | Role |
-|-------|-------|------|
-| --color-primary | ${ds.primary || "#0f62fe"} | Primary actions, key UI |
-| --color-accent | ${ds.accent || "#6929c4"} | Accent, secondary brand |
-| --color-danger | ${ds.danger || "#da1e28"} | Destructive actions, errors |
-| --color-success | ${ds.success || "#198038"} | Success states |
-| --color-warning | ${ds.warning || "#f1c21b"} | Warning states |
-
-### Surface and Layer
-| Token | Value | Role |
-|-------|-------|------|
-| --background | ${ds.background || "#ffffff"} | Page background |
-| --layer-01 | ${ds.layer01 || "#f4f4f4"} | First layer container |
-| --layer-02 | ${ds.layer02 || "#ffffff"} | Second layer nested cards |
-| --text-primary | ${ds.textPrimary || "#161616"} | Headings, labels, body |
-| --text-secondary | ${ds.textSecondary || "#525252"} | Descriptions, captions |
-| --border-subtle | ${ds.borderSubtle || "#e0e0e0"} | Dividers, row lines |
-| --border-strong | ${ds.borderStrong || "#8d8d8d"} | Active input borders |
-
-### Typography
-| Token | Value |
-|-------|-------|
-| --font-family | "${ds.fontFamily || "IBM Plex Sans"}", system-ui |
-| --font-size-base | ${fs}px |
-| --type-scale | ${sc} |
-| --text-xs | ${sizes[0]}px |
-| --text-sm | ${sizes[1]}px |
-| --text-base | ${fs}px |
-| --text-lg | ${sizes[2]}px |
-| --text-xl | ${sizes[3]}px |
-| --text-2xl | ${sizes[4]}px |
-| --text-3xl | ${sizes[5]}px |
-
-### Spacing Scale (${sp}px base unit)
-| Token | Value | Usage |
-|-------|-------|-------|
-| --spacing-1 | ${sp/2}px | Micro gaps |
-| --spacing-2 | ${sp}px | Internal padding |
-| --spacing-3 | ${Math.round(sp*1.5)}px | Small padding |
-| --spacing-4 | ${sp*2}px | Standard padding |
-| --spacing-6 | ${sp*3}px | Card padding |
-| --spacing-8 | ${sp*4}px | Between sections |
-| --spacing-12 | ${sp*6}px | Major breaks |
-| --spacing-16 | ${sp*8}px | Page-level spacing |
-
-### Shape and Density
-| Token | Value |
-|-------|-------|
-| --radius | ${r}px |
-| --radius-sm | ${Math.max(0,r-2)}px |
-| --radius-lg | ${r+4}px |
-| --height-sm | ${h-8}px |
-| --height-md | ${h}px |
-| --height-lg | ${h+8}px |
-
----
-
-## Components (${selected.length} of ${CARBON_COMPONENTS.length})
-
-${selected.map(c => `### ${c.name}
-Category: ${c.category} | Variants: ${c.variants.join(", ")} | Sizes: ${c.sizes.join(", ")}
-
-Tokens:
-${c.tokens.map(([t,r]) => `- ${t}: ${r}`).join("\n")}
-
-Rule: ${c.rule}
-`).join("\n")}
----
-
-## Patterns
-
-### Forms
-Use Form as layout container. Labels above fields, left-aligned. Max 640px width. Validate inline.
-
-### Dialogs
-Use Modal for focused tasks. Passive: no required action. Transactional: primary plus cancel. Danger: red primary.
-
-### Notifications
-Inline for contextual feedback. Toast for transient messages (auto-dismiss 5s). Always pair status color with icon.
-
-### Empty States
-Always include: icon or illustration, headline, body explanation, primary action.
-
-### Loading
-Inline Loading for 1 to 9 second actions. Overlay for full-page. Skeleton for initial data load.
-
----
-
-## Accessibility
-- Text contrast: 4.5:1 minimum (WCAG 2.1 AA)
-- Large text and UI elements: 3:1 minimum
-- All interactive elements keyboard-operable
-- Focus ring visible on every interactive element
-- Touch targets: 44x44px minimum
-- Never communicate state by color alone
-
----
-
-## Figma MCP Variable Bindings
-Collection: Color — bind via setBoundVariableForPaint
-Collection: Spacing — bind via setBoundVariable for padding and gap
-Collection: Typography — bind fontFamily via setBoundVariable
-Never hardcode any value in a layer property.
-`;
+const AUDIT_COLORS = {
+  google:    { bg: "#E8F0FE", text: "#1A56DB", border: "#BFDBFE" },
+  atlassian: { bg: "#E3FCEF", text: "#006644", border: "#ABF5D1" },
+  carbon:    { bg: "#F2F4F8", text: "#21272A", border: "#DDE1E6" },
+  apple:     { bg: "#FFF8E6", text: "#7D4E00", border: "#FFD580" },
+  figma:     { bg: "#F0EFFE", text: "#4C3FB1", border: "#C4B5FD" },
+  ai:        { bg: "#FEF0E7", text: "#7C2D12", border: "#FDC093" },
+  a11y:      { bg: "#ECFDF5", text: "#065F46", border: "#6EE7B7" },
 };
 
-const buildTokensJSON = (ds) => {
-  const sp = ds.spacing || 8;
-  const r = ds.radius || 0;
-  const fs = ds.baseFontSize || 14;
-  const sc = ds.typeScale || 1.2;
-  const sizes = Array.from({length:7},(_,i) => Math.round(fs * Math.pow(sc,i)));
-  const h = {compact:32,regular:40,comfortable:48}[ds.density||"regular"];
-  return {
-    color: { primary:ds.primary||"#0f62fe", accent:ds.accent||"#6929c4", danger:ds.danger||"#da1e28", success:ds.success||"#198038", warning:ds.warning||"#f1c21b", background:ds.background||"#ffffff", "layer-01":ds.layer01||"#f4f4f4", "layer-02":ds.layer02||"#ffffff", "text-primary":ds.textPrimary||"#161616", "text-secondary":ds.textSecondary||"#525252", "border-subtle":ds.borderSubtle||"#e0e0e0", "border-strong":ds.borderStrong||"#8d8d8d" },
-    typography: { fontFamily:ds.fontFamily||"IBM Plex Sans", baseFontSize:`${fs}px`, typeScale:sc, "text-xs":`${sizes[0]}px`, "text-sm":`${sizes[1]}px`, "text-base":`${fs}px`, "text-lg":`${sizes[2]}px`, "text-xl":`${sizes[3]}px`, "text-2xl":`${sizes[4]}px` },
-    spacing: { base:`${sp}px`, 1:`${sp/2}px`, 2:`${sp}px`, 3:`${Math.round(sp*1.5)}px`, 4:`${sp*2}px`, 6:`${sp*3}px`, 8:`${sp*4}px`, 12:`${sp*6}px`, 16:`${sp*8}px` },
-    shape: { radius:`${r}px`, "radius-sm":`${Math.max(0,r-2)}px`, "radius-lg":`${r+4}px`, "radius-full":"9999px" },
-    components: { density:ds.density||"regular", "height-sm":`${h-8}px`, "height-md":`${h}px`, "height-lg":`${h+8}px` },
-  };
-};
+const AUDIT_SECTIONS = [
+  { id: "foundations", label: "Foundations", icon: "◆", items: [
+    { label: "Design tokens defined", sub: "Color, spacing, radius, elevation, shadow — all expressed as named tokens, not hard-coded values.", systems: ["google","atlassian","carbon","apple"], tags: ["figma","a11y"], prompt: "List all design tokens following Material Design 3 naming conventions, including color roles, elevation, and shape." },
+    { label: "Color system documented", sub: "Primary, secondary, neutral, semantic palettes with light and dark mode variants.", systems: ["google","atlassian","carbon","apple"], tags: ["a11y"], prompt: "Generate a complete color system using Material You dynamic color with primary, secondary, tertiary, and surface roles for both light and dark mode." },
+    { label: "Typography scale established", sub: "Type ramp covers display, headline, title, body, label — each with size, weight, line-height, and letter-spacing.", systems: ["google","atlassian","carbon","apple"], tags: ["figma"], prompt: "Create a typography scale covering all levels: display large/medium/small, headline, title, body, label." },
+    { label: "Spacing & layout grid defined", sub: "4px or 8px base grid. Column, margin, and gutter values for each breakpoint.", systems: ["google","atlassian","carbon","apple"], tags: ["figma"], prompt: "Set up a responsive layout grid: 4px base unit, 12-column desktop, 8-column tablet, 4-column mobile." },
+    { label: "Elevation & shadow system defined", sub: "Layering model — resting, raised, floating, overlay.", systems: ["google","atlassian","carbon"], tags: [], prompt: "Define elevation tokens for 5 levels: flat, raised, sticky, overlay, dialog." },
+    { label: "Motion & animation principles", sub: "Duration scales, easing curves, and principles for how elements enter, exit, and transition.", systems: ["google","atlassian","apple"], tags: ["figma"], prompt: "Document the animation system: define 4 duration tokens (fast 100ms, standard 200ms, complex 400ms, gentle 600ms) and map them to easing presets." },
+    { label: "Iconography system established", sub: "Icon set defined, usage rules for size (16/20/24px), weight, style, and icon-only vs. icon+label patterns.", systems: ["google","atlassian","carbon","apple"], tags: ["figma"], prompt: "Create an icon usage guide: show icon-only, icon+label, and leading/trailing icon patterns for 16, 20, and 24px sizes." },
+  ]},
+  { id: "core-components", label: "Core Components", icon: "■", items: [
+    { label: "Button hierarchy complete", sub: "Primary, secondary, tertiary, ghost, destructive, icon-only — all with hover, focus, disabled, and loading states.", systems: ["google","atlassian","carbon","apple"], tags: ["figma","a11y"], prompt: "Build a button component with variants: type (primary/secondary/tertiary/destructive), size (sm/md/lg), state (default/hover/focus/disabled/loading)." },
+    { label: "Form inputs fully specified", sub: "Text field, textarea, select, checkbox, radio, toggle — with label, helper text, validation states.", systems: ["google","atlassian","carbon","apple"], tags: ["figma","a11y"], prompt: "Create a complete form input set: text input, textarea, select — each with label, placeholder, helper text, and states: default, focus, error, success, disabled." },
+    { label: "Navigation patterns defined", sub: "Top nav, side nav, breadcrumbs, tabs, pagination. Responsive behavior and active/selected states documented.", systems: ["google","atlassian","carbon","apple"], tags: ["figma"], prompt: "Design a navigation system: top nav bar, collapsible side nav, breadcrumbs, and bottom tab bar for mobile." },
+    { label: "Data display components", sub: "Tables, lists, cards, data grids — with sorting, filtering, empty states, and pagination.", systems: ["atlassian","carbon","google"], tags: ["figma"], prompt: "Build a data table component with: sortable headers, row hover, row selection, empty state, and pagination controls." },
+    { label: "Overlay patterns covered", sub: "Modal, drawer, tooltip, popover, toast — with opening/closing behavior and focus trap documentation.", systems: ["google","atlassian","carbon","apple"], tags: ["figma","a11y"], prompt: "Create components for: modal dialog, bottom sheet/drawer, tooltip (light/dark), and toast notification." },
+    { label: "Status & feedback components", sub: "Alerts, banners, inline messages, progress indicators, badges, empty states.", systems: ["google","atlassian","carbon","apple"], tags: ["figma","a11y"], prompt: "Design a feedback set: alert banner (info/warning/success/error), progress bar, circular spinner, badge counter, and inline validation message." },
+  ]},
+  { id: "accessibility", label: "Accessibility", icon: "●", items: [
+    { label: "Color contrast meets WCAG AA", sub: "All text/background combos pass 4.5:1 (normal text) or 3:1 (large text).", systems: ["google","atlassian","carbon","apple"], tags: ["a11y"], prompt: "Audit all color combinations for WCAG AA contrast compliance. Flag any text/background pairs that fail 4.5:1." },
+    { label: "Focus states documented", sub: "Visible focus ring on every interactive element, meeting WCAG 2.4.11.", systems: ["google","atlassian","carbon","apple"], tags: ["a11y","figma"], prompt: "Add focus state variants to all interactive components: 2px offset focus ring using the system focus color token." },
+    { label: "Touch target minimums met", sub: "44×44px minimum touch target for mobile patterns.", systems: ["google","apple"], tags: ["a11y"], prompt: "Annotate all interactive elements for touch target size. Flag anything below 44×44px." },
+    { label: "Error messaging accessible", sub: "Errors not communicated by color alone. Icon + text label + aria-describedby annotations present.", systems: ["google","atlassian","carbon","apple"], tags: ["a11y","figma"], prompt: "Create error state annotations: error icon + red border + error message text below input. Add aria-describedby spec." },
+    { label: "Screen reader annotations", sub: "Component specs include aria roles, labels, and keyboard interaction patterns.", systems: ["atlassian","carbon"], tags: ["a11y"], prompt: "Generate accessibility annotations for this modal: include aria-modal, aria-labelledby, focus trap boundary, and keyboard pattern." },
+  ]},
+  { id: "documentation", label: "Documentation & Handoff", icon: "◉", items: [
+    { label: "Component usage guidelines", sub: "When to use, when not to use, do/don't examples.", systems: ["google","atlassian","carbon","apple"], tags: ["figma","ai"], prompt: "Write component usage guidelines: when to use, when not to use, and do/don't examples." },
+    { label: "Design tokens mapped to code", sub: "Token names in Figma match token names in code (CSS custom properties, JSON, Tailwind).", systems: ["google","atlassian","carbon"], tags: ["figma"], prompt: "Generate a design token export spec: map each token to its CSS custom property name following W3C Design Tokens format." },
+    { label: "Figma component anatomy annotated", sub: "Each component includes a spec frame showing measurements, spacing, and token references.", systems: ["google","atlassian","carbon"], tags: ["figma"], prompt: "Create a component anatomy frame: annotate padding, corner radius token, shadow level, and typography tokens." },
+    { label: "Variant & property matrix complete", sub: "All component variants exposed as Figma component properties with consistent naming.", systems: ["google","atlassian","carbon","apple"], tags: ["figma"], prompt: "Audit component properties: list all variants, boolean props, and instance-swap slots. Flag hidden layers that should be properties." },
+    { label: "Changelog maintained", sub: "Version history documents what changed, what was deprecated, and migration notes.", systems: ["atlassian","carbon"], tags: [], prompt: "Write a changelog entry: new components, deprecated patterns, token renames, and migration steps." },
+  ]},
+  { id: "ai-acceleration", label: "AI Acceleration", icon: "✦", items: [
+    { label: "AI prompt library per component", sub: "Each component has validated prompts for generating variants in Figma or code.", systems: ["google","atlassian","carbon","apple"], tags: ["ai","figma"], prompt: "Build a reusable prompt template for this component: generate Figma variants, write docs, or scaffold production code." },
+    { label: "Component generation tested", sub: "Core components validated against AI generation pipelines for token fidelity.", systems: ["google","atlassian","carbon"], tags: ["ai","figma"], prompt: "Using the design system as reference, generate a product card component in React with proper token usage." },
+    { label: "System prompt crafted", sub: "A project-level system prompt defines which design system, token naming, and component patterns AI should follow.", systems: ["google","atlassian","carbon","apple"], tags: ["ai"], prompt: "Write a system prompt that instructs AI to generate UI specs following the design system: include token references, component anatomy, and accessibility annotations." },
+    { label: "Design-to-dev handoff accelerated", sub: "AI-assisted redlines, token extraction, and code snippet generation validated for accuracy.", systems: ["atlassian","carbon","google"], tags: ["ai","figma"], prompt: "Given the component spec, generate a React component with TypeScript props, inline CSS tokens, and JSDoc prop documentation." },
+  ]},
+];
 
-const buildCSS = (ds) => {
-  const sp = ds.spacing || 8;
-  const r = ds.radius || 0;
-  const fs = ds.baseFontSize || 14;
-  const sc = ds.typeScale || 1.2;
-  const sizes = Array.from({length:7},(_,i) => Math.round(fs * Math.pow(sc,i)));
-  const h = {compact:32,regular:40,comfortable:48}[ds.density||"regular"];
-  return `:root {
-  /* Brand */
-  --color-primary:   ${ds.primary||"#0f62fe"};
-  --color-accent:    ${ds.accent||"#6929c4"};
-  --color-danger:    ${ds.danger||"#da1e28"};
-  --color-success:   ${ds.success||"#198038"};
-  --color-warning:   ${ds.warning||"#f1c21b"};
-  /* Surfaces */
-  --background:      ${ds.background||"#ffffff"};
-  --layer-01:        ${ds.layer01||"#f4f4f4"};
-  --layer-02:        ${ds.layer02||"#ffffff"};
-  /* Text */
-  --text-primary:    ${ds.textPrimary||"#161616"};
-  --text-secondary:  ${ds.textSecondary||"#525252"};
-  /* Borders */
-  --border-subtle:   ${ds.borderSubtle||"#e0e0e0"};
-  --border-strong:   ${ds.borderStrong||"#8d8d8d"};
-  /* Typography */
-  --font-family:     '${ds.fontFamily||"IBM Plex Sans"}', system-ui, sans-serif;
-  --text-xs:         ${sizes[0]}px;
-  --text-sm:         ${sizes[1]}px;
-  --text-base:       ${fs}px;
-  --text-lg:         ${sizes[2]}px;
-  --text-xl:         ${sizes[3]}px;
-  --text-2xl:        ${sizes[4]}px;
-  /* Spacing */
-  --spacing-1:       ${sp/2}px;
-  --spacing-2:       ${sp}px;
-  --spacing-3:       ${Math.round(sp*1.5)}px;
-  --spacing-4:       ${sp*2}px;
-  --spacing-6:       ${sp*3}px;
-  --spacing-8:       ${sp*4}px;
-  --spacing-12:      ${sp*6}px;
-  --spacing-16:      ${sp*8}px;
-  /* Shape */
-  --radius:          ${r}px;
-  --radius-sm:       ${Math.max(0,r-2)}px;
-  --radius-lg:       ${r+4}px;
-  --radius-full:     9999px;
-  /* Component heights */
-  --height-sm:       ${h-8}px;
-  --height-md:       ${h}px;
-  --height-lg:       ${h+8}px;
-}`;
-};
-
-// ── Reusable UI components (all match site DS) ────────────────────────────────
-function TabBtn({ active, onClick, children }) {
-  return (
-    <button onClick={onClick} style={{
-      padding: "10px 20px", fontSize: 13, fontWeight: active ? 600 : 400,
-      fontFamily: "'DM Sans', sans-serif", cursor: "pointer", border: "none",
-      background: "none", color: active ? "#0F172A" : DS.bodyDark,
-      borderBottom: `2px solid ${active ? PHASE_COLOR : "transparent"}`,
-      marginBottom: -1, transition: "all 0.15s",
-    }}>{children}</button>
-  );
+function typeScale(base, ratio, step) {
+  return Math.round(base * Math.pow(ratio, step) * 100) / 100;
 }
 
-function SectionLabel({ children }) {
-  return (
-    <div style={{ fontSize: 10, fontFamily: "'JetBrains Mono', monospace", textTransform: "uppercase", letterSpacing: 3, color: DS.bodyDark, marginBottom: 12 }}>
-      {children}
-    </div>
-  );
+function hexToRgb(hex) {
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  return { r, g, b };
 }
 
-function Card({ children, style={} }) {
-  return (
-    <div style={{ background: DS.white, border: `1px solid ${DS.lightBorder}`, borderRadius: 12, padding: "20px 22px", marginBottom: 14, ...style }}>
-      {children}
-    </div>
-  );
+function contrastOn(hex) {
+  const { r, g, b } = hexToRgb(hex);
+  const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+  return luminance > 0.5 ? "#000" : "#fff";
 }
 
-function FieldRow({ label, children }) {
-  return (
-    <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 12 }}>
-      <div style={{ fontSize: 12, color: DS.bodyDark, minWidth: 130, fontFamily: "'DM Sans', sans-serif" }}>{label}</div>
-      <div style={{ flex: 1, display: "flex", alignItems: "center", gap: 8 }}>{children}</div>
-    </div>
-  );
-}
+export default function UniversalDesignSystem() {
+  const [tokens, setTokens] = useState({ ...DEFAULT_TOKENS });
+  const [activeSection, setActiveSection] = useState("tokens");
+  const [showPanel, setShowPanel] = useState(true);
+  const [aiPromptCopied, setAiPromptCopied] = useState(false);
+  const [auditChecked, setAuditChecked] = useState({});
+  const [auditFilter, setAuditFilter] = useState("all");
+  const [expandedAuditPrompt, setExpandedAuditPrompt] = useState(null);
+  const [copiedAuditPrompt, setCopiedAuditPrompt] = useState(null);
 
-function DSSelect({ value, onChange, children }) {
-  return (
-    <select value={value} onChange={e => onChange(e.target.value)} style={{
-      flex: 1, fontSize: 13, padding: "7px 10px", border: `1px solid ${DS.lightBorder}`,
-      borderRadius: 8, background: DS.white, color: "#0F172A",
-      fontFamily: "'DM Sans', sans-serif", cursor: "pointer", outline: "none",
-    }}>
-      {children}
-    </select>
-  );
-}
-
-function Chip({ selected, onClick, children }) {
-  return (
-    <button onClick={onClick} style={{
-      display: "inline-flex", alignItems: "center", gap: 5,
-      padding: "7px 14px", borderRadius: 999, cursor: "pointer",
-      fontFamily: "'DM Sans', sans-serif", fontSize: 12, fontWeight: 500,
-      border: selected ? `1.5px solid ${PHASE_COLOR}` : `1px solid ${DS.lightBorder}`,
-      background: selected ? `${PHASE_COLOR}12` : DS.white,
-      color: selected ? PHASE_COLOR : DS.bodyDark,
-      transition: "all 0.15s", outline: "none",
-    }}>{children}</button>
-  );
-}
-
-function PrimaryBtn({ onClick, disabled, children }) {
-  return (
-    <button onClick={onClick} disabled={disabled} style={{
-      background: disabled ? DS.lightBorder : DS.dark,
-      color: disabled ? DS.bodyDark : DS.white,
-      border: "none", borderRadius: 10, padding: "12px 24px",
-      fontSize: 13, fontWeight: 600, cursor: disabled ? "default" : "pointer",
-      fontFamily: "'DM Sans', sans-serif", transition: "all 0.15s",
-    }}>{children}</button>
-  );
-}
-
-function GhostBtn({ onClick, children }) {
-  return (
-    <button onClick={onClick} style={{
-      background: DS.white, border: `1px solid ${DS.lightBorder}`, borderRadius: 10,
-      padding: "12px 20px", fontSize: 13, fontWeight: 500, color: DS.bodyDark,
-      cursor: "pointer", fontFamily: "'DM Sans', sans-serif",
-    }}>{children}</button>
-  );
-}
-
-function SliderRow({ label, min, max, step, value, onChange }) {
-  return (
-    <FieldRow label={label}>
-      <input type="range" min={min} max={max} step={step} value={value}
-        onChange={e => onChange(Number(e.target.value))} style={{ flex: 1 }} />
-      <span style={{ fontSize: 13, fontWeight: 600, color: "#0F172A", minWidth: 42, fontFamily: "'JetBrains Mono', monospace" }}>{value}px</span>
-    </FieldRow>
-  );
-}
-
-function ColorRow({ label, value, onChange }) {
-  return (
-    <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "7px 0", borderBottom: `1px solid ${DS.lightBorder}` }}>
-      <input type="color" value={value} onChange={e => onChange(e.target.value)}
-        style={{ width: 28, height: 28, border: `1px solid ${DS.lightBorder}`, borderRadius: 6, padding: 2, cursor: "pointer", background: "none", flexShrink: 0 }} />
-      <div style={{ flex: 1 }}>
-        <div style={{ fontSize: 12, color: "#0F172A", fontWeight: 500, fontFamily: "'DM Sans', sans-serif" }}>{label}</div>
-        <input value={value} onChange={e => /^#[0-9a-fA-F]{0,6}$/.test(e.target.value) && onChange(e.target.value)}
-          style={{ fontSize: 11, fontFamily: "'JetBrains Mono', monospace", border: "none", background: "transparent", color: DS.bodyDark, padding: 0, width: "100%", outline: "none" }} />
-      </div>
-    </div>
-  );
-}
-
-function MonoBlock({ children }) {
-  return (
-    <div style={{ background: DS.light, border: `1px solid ${DS.lightBorder}`, borderRadius: 10, padding: "16px 18px", fontFamily: "'JetBrains Mono', monospace", fontSize: 11, lineHeight: 1.8, color: "#0F172A", whiteSpace: "pre-wrap", wordBreak: "break-all", maxHeight: 340, overflowY: "auto", marginTop: 10 }}>
-      {children}
-    </div>
-  );
-}
-
-function Badge({ color, children }) {
-  const colors = { green:{ bg:"#F0FDF4",text:"#15803D",border:"#BBF7D0" }, amber:{ bg:"#FFFBEB",text:"#D97706",border:"#FDE68A" }, red:{ bg:"#FEF2F2",text:"#DC2626",border:"#FECACA" } };
-  const c = colors[color] || colors.amber;
-  return (
-    <span style={{ display: "inline-flex", padding: "3px 10px", borderRadius: 999, fontSize: 11, fontWeight: 600, background: c.bg, color: c.text, border: `1px solid ${c.border}`, fontFamily: "'DM Sans', sans-serif" }}>{children}</span>
-  );
-}
-
-// ── Main export ───────────────────────────────────────────────────────────────
-export default function DesignSystemBuilder() {
-  const [tab, setTab] = useState("upload");
-  const [uploadStage, setUploadStage] = useState("idle");
-  const [uploadSummary, setUploadSummary] = useState(null);
-  const [uploadFile, setUploadFile] = useState(null);
-  const [aiProcessing, setAiProcessing] = useState(false);
-  const fileRef = useRef();
-
-  const [bs, setBs] = useState({
-    name:"My Design System",
-    primary:"#0f62fe", accent:"#6929c4", danger:"#da1e28",
-    success:"#198038", warning:"#f1c21b",
-    background:"#ffffff", layer01:"#f4f4f4", layer02:"#ffffff",
-    textPrimary:"#161616", textSecondary:"#525252",
-    borderSubtle:"#e0e0e0", borderStrong:"#8d8d8d",
-    fontFamily:"IBM Plex Sans", baseFontSize:14, typeScale:1.2,
-    spacing:8, radius:0, density:"regular",
-    selectedComponents: CARBON_COMPONENTS.map(c => c.id),
-  });
-
-  const [exportFormat, setExportFormat] = useState("markdown");
-  const [copied, setCopied] = useState(false);
-  const [catFilter, setCatFilter] = useState("All");
-  const [compSearch, setCompSearch] = useState("");
-
-  const upd = (k, v) => setBs(p => ({ ...p, [k]: v }));
-  const toggleComp = (id) => setBs(p => ({
-    ...p,
-    selectedComponents: p.selectedComponents.includes(id)
-      ? p.selectedComponents.filter(c => c !== id)
-      : [...p.selectedComponents, id],
-  }));
-
-  const h = {compact:32,regular:40,comfortable:48}[bs.density];
-  const fs = bs.baseFontSize;
-  const sc = bs.typeScale;
-  const sizes = Array.from({length:5},(_,i) => Math.round(fs * Math.pow(sc, i)));
-  const filteredComps = CARBON_COMPONENTS.filter(c =>
-    (catFilter === "All" || c.category === catFilter) &&
-    c.name.toLowerCase().includes(compSearch.toLowerCase())
-  );
-
-  const handleFile = useCallback(async (file) => {
-    if (!file) return;
-    setUploadFile(file);
-    setUploadStage("parsing");
-    setAiProcessing(true);
-    const isZip  = file.name.toLowerCase().endsWith(".zip");
-    const sizeKB = Math.round(file.size / 1024);
-    let rawText  = "";
-    try { if (!isZip) rawText = await file.text(); } catch(e) {}
-    try {
-      const prompt = isZip
-        ? `A designer uploaded a design system ZIP named "${file.name}" (${sizeKB}KB). Analyze what it likely contains and return ONLY JSON: { "name": string, "type": "zip", "detectedSections": string[], "detectedComponents": string[], "detectedTokens": string[], "missingVsCarbon": string[], "recommendations": string[], "confidence": "high|medium|low" }`
-        : `A designer uploaded "${file.name}" (${sizeKB}KB). Content:\n\n${rawText.slice(0,3500)}\n\nAnalyze and return ONLY JSON: { "name": string, "type": string, "detectedSections": string[], "detectedComponents": string[], "detectedTokens": string[], "missingVsCarbon": string[], "recommendations": string[], "confidence": "high|medium|low" }`;
-      const res  = await fetch("https://api.anthropic.com/v1/messages", {
-        method:"POST", headers:{"Content-Type":"application/json"},
-        body: JSON.stringify({ model:"claude-sonnet-4-20250514", max_tokens:1000, messages:[{role:"user",content:prompt}] }),
-      });
-      const data = await res.json();
-      const text = data.content?.map(b => b.text||"").join("") || "";
-      const parsed = JSON.parse(text.replace(/```json|```/g,"").trim());
-      setUploadSummary({ ...parsed, fileName:file.name, sizeKB });
-      upd("name", parsed.name || file.name.replace(/\.(zip|md|json|css)$/i,"").replace(/[-_]/g," "));
-    } catch(e) {
-      setUploadSummary({
-        name: file.name.replace(/\.(zip|md|json|css)$/i,"").replace(/[-_]/g," "),
-        type: isZip ? "zip" : "unknown",
-        detectedSections: rawText ? ["Content detected — review manually"] : ["ZIP — contents not readable in browser"],
-        detectedComponents:[], detectedTokens:[],
-        missingVsCarbon:["Could not auto-detect — review manually"],
-        recommendations:["Structure your ZIP with /tokens, /components, /patterns, /guidelines folders and a CLAUDE.md entry point"],
-        confidence:"low", fileName:file.name, sizeKB,
-      });
-    }
-    setAiProcessing(false);
-    setUploadStage("review");
+  const update = useCallback((key, val) => {
+    setTokens((prev) => ({ ...prev, [key]: val }));
   }, []);
 
-  const onDrop = (e) => { e.preventDefault(); handleFile(e.dataTransfer.files[0]); };
+  const applyPreset = (name) => setTokens({ ...PRESETS[name] });
 
-  const exportContent = () => {
-    if (exportFormat === "json") return JSON.stringify(buildTokensJSON(bs), null, 2);
-    if (exportFormat === "css")  return buildCSS(bs);
-    return buildMarkdown(bs);
+  const sizes = {
+    xs: typeScale(tokens.baseSize, tokens.scaleRatio, -2),
+    sm: typeScale(tokens.baseSize, tokens.scaleRatio, -1),
+    base: tokens.baseSize,
+    lg: typeScale(tokens.baseSize, tokens.scaleRatio, 1),
+    xl: typeScale(tokens.baseSize, tokens.scaleRatio, 2),
+    "2xl": typeScale(tokens.baseSize, tokens.scaleRatio, 3),
+    "3xl": typeScale(tokens.baseSize, tokens.scaleRatio, 4),
+    "4xl": typeScale(tokens.baseSize, tokens.scaleRatio, 5),
   };
 
-  const copy = () => { navigator.clipboard.writeText(exportContent()).then(() => { setCopied(true); setTimeout(() => setCopied(false), 2000); }); };
-  const download = () => {
-    const ext = exportFormat === "json" ? "json" : exportFormat === "css" ? "css" : "md";
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(new Blob([exportContent()], {type:"text/plain"}));
-    a.download = `${(bs.name||"design-system").toLowerCase().replace(/\s+/g,"-")}.${ext}`;
-    a.click();
-  };
+  const space = (n) => tokens.spaceUnit * n;
+
+  const cssVarsOutput = `/* ${tokens.brandName} — Design Tokens (SDS Convention) */
+:root {
+  /* sds-color — Background */
+  --sds-color-background-brand-default: ${tokens.primary};
+  --sds-color-background-brand-secondary: ${tokens.primaryLight};
+  --sds-color-background-brand-hover: ${tokens.primaryDark};
+  --sds-color-background-default-default: ${tokens.neutral50};
+  --sds-color-background-default-secondary: ${tokens.neutral100};
+  --sds-color-background-neutral-tertiary: ${tokens.neutral200};
+
+  /* sds-color — Text */
+  --sds-color-text-default-default: ${tokens.neutral900};
+  --sds-color-text-default-secondary: ${tokens.neutral500};
+  --sds-color-text-default-tertiary: ${tokens.neutral400};
+  --sds-color-text-brand-default: ${tokens.primary};
+  --sds-color-text-brand-on-brand: ${tokens.primaryLight};
+
+  /* sds-color — Border */
+  --sds-color-border-default-default: ${tokens.neutral300};
+  --sds-color-border-brand-default: ${tokens.primary};
+  --sds-color-border-neutral-secondary: ${tokens.neutral500};
+
+  /* sds-color — Semantic */
+  --sds-color-background-positive-default: ${tokens.success};
+  --sds-color-background-warning-default: ${tokens.warning};
+  --sds-color-background-danger-default: ${tokens.error};
+
+  /* sds-color — Neutral Scale (Gray Primitives) */
+  --sds-color-gray-100: ${tokens.neutral100};
+  --sds-color-gray-200: ${tokens.neutral200};
+  --sds-color-gray-300: ${tokens.neutral300};
+  --sds-color-gray-400: ${tokens.neutral400};
+  --sds-color-gray-500: ${tokens.neutral500};
+  --sds-color-gray-600: ${tokens.neutral600};
+  --sds-color-gray-700: ${tokens.neutral700};
+  --sds-color-gray-800: ${tokens.neutral800};
+  --sds-color-gray-900: ${tokens.neutral900};
+
+  /* sds-typography */
+  --sds-typography-heading-font-family: ${tokens.fontHeading};
+  --sds-typography-body-font-family: ${tokens.fontBody};
+  --sds-typography-code-font-family: ${tokens.fontMono};
+  --sds-typography-body-size-small: ${sizes.sm}px;
+  --sds-typography-body-size-medium: ${sizes.base}px;
+  --sds-typography-body-size-large: ${sizes.lg}px;
+  --sds-typography-heading-size-small: ${sizes.xl}px;
+  --sds-typography-heading-size-base: ${sizes["2xl"]}px;
+  --sds-typography-heading-size-large: ${sizes["3xl"]}px;
+  --sds-typography-title-page-size: ${sizes["4xl"]}px;
+
+  /* sds-size — Space (${tokens.spaceUnit}px base) */
+  --sds-size-space-050: ${space(0.5)}px;
+  --sds-size-space-100: ${space(1)}px;
+  --sds-size-space-150: ${space(1.5)}px;
+  --sds-size-space-200: ${space(2)}px;
+  --sds-size-space-300: ${space(3)}px;
+  --sds-size-space-400: ${space(4)}px;
+  --sds-size-space-600: ${space(6)}px;
+  --sds-size-space-800: ${space(8)}px;
+  --sds-size-space-1200: ${space(12)}px;
+  --sds-size-space-1600: ${space(16)}px;
+
+  /* sds-size — Radius */
+  --sds-size-radius-100: ${tokens.radiusSm}px;
+  --sds-size-radius-200: ${tokens.radiusMd}px;
+  --sds-size-radius-400: ${tokens.radiusLg}px;
+  --sds-size-radius-full: ${tokens.radiusFull}px;
+
+  /* sds-size — Depth / Elevation */
+  --sds-shadow-sm: ${tokens.shadowSm};
+  --sds-shadow-md: ${tokens.shadowMd};
+  --sds-shadow-lg: ${tokens.shadowLg};
+  --sds-size-stroke-border: 1px;
+  --sds-size-stroke-focus-ring: 2px;
+}`;
+
+  const aiCustomizationPrompt = `You are a design system architect. I have a universal starter design system with the following current tokens:
+
+${cssVarsOutput}
+
+I need you to customize this for a client with the following brand:
+- Brand name: [CLIENT NAME]
+- Industry: [INDUSTRY]
+- Brand personality: [DESCRIBE: e.g., professional yet approachable, bold and disruptive, warm and trustworthy]
+- Existing brand colors (if any): [HEX VALUES]
+- Existing brand fonts (if any): [FONT NAMES]
+- Target audience: [DESCRIBE]
+
+Generate a complete replacement set of CSS custom properties that:
+1. Maps their brand colors into the primary/secondary/accent system
+2. Recommends a type scale and font pairing appropriate for their industry
+3. Adjusts border-radius to match their brand personality (sharp = corporate, round = friendly)
+4. Keeps semantic colors (success/warning/error/info) accessible and conventional
+5. Adjusts elevation/shadow style to match overall aesthetic
+
+Return ONLY the updated :root {} block with comments explaining each choice.`;
+
+  const ColorSwatch = ({ color, label, size = 48 }) => (
+    <div style={{ textAlign: "center" }}>
+      <div
+        style={{
+          width: size,
+          height: size,
+          borderRadius: tokens.radiusSm,
+          background: color,
+          border: "1px solid rgba(0,0,0,0.08)",
+          marginBottom: 6,
+        }}
+      />
+      <div style={{ fontSize: 10, fontFamily: tokens.fontMono, color: "#888" }}>{label}</div>
+      <div style={{ fontSize: 9, fontFamily: tokens.fontMono, color: "#bbb" }}>{color}</div>
+    </div>
+  );
+
+  const SectionNav = () => (
+    <div style={{ display: "flex", borderBottom: "1px solid #eee", marginBottom: 24 }}>
+      {[
+        { id: "tokens", label: "Design Tokens" },
+        { id: "typography", label: "Type Scale" },
+        { id: "components", label: "Components" },
+        { id: "audit", label: "System Audit" },
+        { id: "export", label: "Export & AI" },
+      ].map((s) => (
+        <button
+          key={s.id}
+          onClick={() => setActiveSection(s.id)}
+          style={{
+            background: "none",
+            border: "none",
+            borderBottom: activeSection === s.id ? `2px solid ${tokens.primary}` : "2px solid transparent",
+            color: activeSection === s.id ? tokens.primary : "#888",
+            padding: "10px 20px",
+            fontSize: 13,
+            fontWeight: activeSection === s.id ? 600 : 400,
+            cursor: "pointer",
+            fontFamily: tokens.fontBody,
+          }}
+        >
+          {s.label}
+        </button>
+      ))}
+    </div>
+  );
 
   return (
-    <div style={{ minHeight:"100vh", background:DS.light, fontFamily:"'DM Sans', sans-serif" }}>
-      <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Serif+Display&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
-      <style>{`@keyframes fadeIn { from { opacity:0; transform:translateY(8px) } to { opacity:1; transform:none } } input[type=range] { accent-color: ${PHASE_COLOR}; }`}</style>
+    <div style={{ fontFamily: tokens.fontBody, background: "#FAFAF8", minHeight: "100vh", color: tokens.neutral900 }}>
+      <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Serif:ital,wght@0,400;0,600;0,700;1,400&family=Roboto+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;700&family=Source+Sans+3:wght@300;400;600;700&family=Source+Serif+4:wght@400;600;700&family=Space+Grotesk:wght@400;500;700&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&display=swap"
+        rel="stylesheet"
+      />
 
-      {/* Top bar — matches all other tools */}
-      <div style={{ background:DS.dark, borderBottom:`1px solid #334155`, padding:"16px 40px", display:"flex", alignItems:"center", gap:14 }}>
-        <div style={{ display:"flex", gap:6, alignItems:"center" }}>
-          <span style={{ width:8, height:8, borderRadius:"50%", background:PHASE_COLOR, display:"block" }} />
-          <span style={{ fontFamily:"'JetBrains Mono', monospace", fontSize:10, color:PHASE_COLOR, letterSpacing:2, textTransform:"uppercase" }}>Ideate — Design System</span>
+      {/* Header */}
+      <div style={{ background: tokens.secondary, color: "#fff", padding: "32px 28px 28px" }}>
+        <div style={{ maxWidth: 1100, margin: "0 auto", display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+          <div>
+            <div style={{ fontSize: 10, fontFamily: tokens.fontMono, letterSpacing: 3, textTransform: "uppercase", color: "rgba(255,255,255,0.4)", marginBottom: 8 }}>
+              Simple Design System
+            </div>
+            <h1 style={{ fontFamily: tokens.fontHeading, fontSize: 32, fontWeight: 700, margin: "0 0 6px" }}>{tokens.brandName}</h1>
+            <p style={{ fontSize: 14, color: "rgba(255,255,255,0.6)", margin: 0 }}>Tune the knobs. Preview live. Export for your client.</p>
+          </div>
+          <button
+            onClick={() => setShowPanel(!showPanel)}
+            style={{
+              background: "rgba(255,255,255,0.1)",
+              color: "#fff",
+              border: "1px solid rgba(255,255,255,0.2)",
+              borderRadius: 8,
+              padding: "8px 16px",
+              fontSize: 12,
+              cursor: "pointer",
+              fontFamily: tokens.fontMono,
+            }}
+          >
+            {showPanel ? "Hide" : "Show"} Controls
+          </button>
         </div>
-        <div style={{ width:1, height:16, background:"#334155" }} />
-        <span style={{ fontSize:14, fontWeight:600, color:DS.white }}>Design System Builder</span>
-        <div style={{ marginLeft:"auto", fontSize:11, color:DS.bodyLight, fontFamily:"'JetBrains Mono', monospace", opacity:0.5 }}>Agentic Product Design Framework</div>
       </div>
 
-      {/* Progress bar */}
-      <div style={{ height:2, background:"#334155" }}>
-        <div style={{ height:"100%", background:PHASE_COLOR, width: tab==="export" ? "100%" : tab==="bootstrap" ? "66%" : "33%", transition:"width 0.4s ease" }} />
+      {/* Onboarding Guide Banner */}
+      <div style={{ maxWidth: 1100, margin: "0 auto", padding: "16px 28px 0" }}>
+        <div style={{ background: "#fff", borderRadius: 12, padding: "14px 20px", border: "1px solid #eee", borderLeft: `4px solid ${tokens.primary}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <span style={{ fontSize: 20 }}>📘</span>
+            <div>
+              <div style={{ fontSize: 13, fontWeight: 600, color: "#333" }}>Onboarding Guide</div>
+              <div style={{ fontSize: 12, color: "#888" }}>New to the framework? Download the 21-slide team onboarding deck — covers the Agentic design philosophy, 6-phase framework, skill chaining, Figma setup, and Claude integration.</div>
+              <a href="https://github.com/quinrobinson/AI-x-UX-Product-Design-Framework#quick-start--kickoff-prompt"
+                target="_blank" rel="noopener noreferrer"
+                style={{ fontSize: 11, color: "#14B8A6", textDecoration: "none", fontWeight: 500, display: "inline-block", marginTop: 4 }}>
+                Not sure where to start? Use the Kickoff Prompt →
+              </a>
+            </div>
+          </div>
+          <a href="https://github.com/quinrobinson/Agentic-Product-Design-Framework/raw/main/artifacts/onboarding-deck.pptx"
+            style={{ background: tokens.primary, color: "#fff", padding: "8px 16px", borderRadius: 8, fontSize: 12, fontWeight: 600, textDecoration: "none", whiteSpace: "nowrap", flexShrink: 0, marginLeft: 16, fontFamily: tokens.fontBody }}>
+            Download PPTX
+          </a>
+        </div>
       </div>
 
-      {/* Content */}
-      <div style={{ maxWidth:800, margin:"0 auto", padding:"44px 40px" }}>
-
-        {/* Tabs */}
-        <div style={{ display:"flex", borderBottom:`1px solid ${DS.lightBorder}`, marginBottom:32 }}>
-          <TabBtn active={tab==="upload"}    onClick={() => setTab("upload")}>Upload Design System</TabBtn>
-          <TabBtn active={tab==="bootstrap"} onClick={() => setTab("bootstrap")}>Bootstrap Builder</TabBtn>
-          <TabBtn active={tab==="export"}    onClick={() => setTab("export")}>Export for Claude</TabBtn>
-        </div>
-
-        {/* ── UPLOAD ── */}
-        {tab === "upload" && (
-          <div style={{ animation:"fadeIn 0.3s ease" }}>
-            {uploadStage === "idle" && (
-              <>
-                <Card>
-                  <SectionLabel>Upload your design system</SectionLabel>
-                  <div
-                    onClick={() => fileRef.current.click()} onDrop={onDrop} onDragOver={e=>e.preventDefault()}
-                    style={{ border:`1.5px dashed ${DS.lightBorder}`, borderRadius:10, padding:"32px 24px", textAlign:"center", cursor:"pointer", transition:"all 0.15s" }}
-                    onMouseEnter={e=>{ e.currentTarget.style.borderColor=PHASE_COLOR; e.currentTarget.style.background=`${PHASE_COLOR}08`; }}
-                    onMouseLeave={e=>{ e.currentTarget.style.borderColor=DS.lightBorder; e.currentTarget.style.background="transparent"; }}
+      <div style={{ maxWidth: 1100, margin: "0 auto", padding: "24px 28px 48px", display: "grid", gridTemplateColumns: showPanel ? "280px 1fr" : "1fr", gap: 24 }}>
+        {/* Control Panel */}
+        {showPanel && (
+          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+            {/* Presets */}
+            <div style={{ background: "#fff", borderRadius: 12, padding: 20, border: "1px solid #eee" }}>
+              <div style={{ fontSize: 10, fontFamily: tokens.fontMono, letterSpacing: 2, textTransform: "uppercase", color: "#999", marginBottom: 12 }}>Presets</div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 }}>
+                {Object.entries(PRESETS).map(([key, preset]) => (
+                  <button
+                    key={key}
+                    onClick={() => applyPreset(key)}
+                    style={{
+                      background: tokens.brandName === preset.brandName ? tokens.primary : "#f5f5f5",
+                      color: tokens.brandName === preset.brandName ? "#fff" : "#555",
+                      border: "none",
+                      borderRadius: 8,
+                      padding: "10px 12px",
+                      fontSize: 11,
+                      fontWeight: 600,
+                      cursor: "pointer",
+                      textTransform: "capitalize",
+                    }}
                   >
-                    <div style={{ fontFamily:"'DM Serif Display', serif", fontSize:20, color:"#0F172A", marginBottom:6 }}>Drop your file here</div>
-                    <div style={{ fontSize:13, color:DS.bodyDark, marginBottom:16 }}>or click to browse</div>
-                    <div style={{ display:"inline-flex", gap:6, flexWrap:"wrap", justifyContent:"center" }}>
-                      {["ZIP (recommended)",".md",".json",".css"].map(f => (
-                        <span key={f} style={{ fontSize:11, fontFamily:"'JetBrains Mono', monospace", padding:"3px 10px", background:DS.light, border:`1px solid ${DS.lightBorder}`, borderRadius:6, color:DS.bodyDark }}>{f}</span>
-                      ))}
-                    </div>
-                    <input ref={fileRef} type="file" accept=".zip,.md,.json,.css" style={{ display:"none" }} onChange={e=>handleFile(e.target.files[0])} />
-                  </div>
-                </Card>
-
-                <Card>
-                  <SectionLabel>Recommended ZIP structure</SectionLabel>
-                  <p style={{ fontSize:13, color:DS.bodyDark, lineHeight:1.6, margin:"0 0 12px" }}>
-                    For best results, structure your ZIP like this. The{" "}
-                    <span style={{ fontFamily:"'JetBrains Mono', monospace", fontSize:11, background:DS.light, padding:"1px 6px", borderRadius:4 }}>CLAUDE.md</span>
-                    {" "}entry point is the most important file — it is the AI agent starting point.
-                  </p>
-                  <MonoBlock>{`your-design-system/
-├── CLAUDE.md          ← AI agent entry point (required)
-├── tokens/
-│   ├── color-tokens.md
-│   ├── spacing-tokens.md
-│   ├── type-tokens.md
-│   └── motion-tokens.md
-├── components/
-│   ├── button.md
-│   ├── text-input.md
-│   └── modal.md
-├── patterns/
-│   ├── forms.md
-│   └── notifications.md
-└── guidelines/
-    ├── accessibility.md
-    └── typography.md`}</MonoBlock>
-                </Card>
-
-                <div style={{ background:DS.dark, borderRadius:12, padding:"20px 24px", display:"flex", justifyContent:"space-between", alignItems:"center", gap:16 }}>
-                  <div>
-                    <div style={{ fontSize:14, fontWeight:600, color:DS.white, marginBottom:4 }}>Don't have a structured file yet?</div>
-                    <div style={{ fontSize:13, color:DS.bodyLight, lineHeight:1.5 }}>Use the Bootstrap Builder to generate a fully structured design system — all 46 Carbon components pre-documented with your tokens.</div>
-                  </div>
-                  <button onClick={() => setTab("bootstrap")} style={{ background:PHASE_COLOR, color:DS.dark, border:"none", borderRadius:8, padding:"10px 20px", fontSize:13, fontWeight:700, cursor:"pointer", fontFamily:"'DM Sans', sans-serif", whiteSpace:"nowrap" }}>
-                    Open Builder →
+                    {key}
                   </button>
-                </div>
-              </>
-            )}
-
-            {uploadStage === "parsing" && (
-              <Card style={{ textAlign:"center", padding:"48px 24px" }}>
-                <div style={{ width:52, height:52, borderRadius:"50%", background:DS.dark, display:"flex", alignItems:"center", justifyContent:"center", margin:"0 auto 20px" }}>
-                  <span style={{ color:PHASE_COLOR, fontFamily:"'JetBrains Mono', monospace", fontSize:16 }}>◈</span>
-                </div>
-                <div style={{ fontFamily:"'DM Serif Display', serif", fontSize:22, color:"#0F172A", marginBottom:6 }}>
-                  {aiProcessing ? "Claude is analyzing your design system..." : "Reading file..."}
-                </div>
-                <div style={{ fontSize:13, color:DS.bodyDark }}>{uploadFile?.name}</div>
-              </Card>
-            )}
-
-            {uploadStage === "review" && uploadSummary && (
-              <div style={{ animation:"fadeIn 0.3s ease" }}>
-                <Card>
-                  <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:16 }}>
-                    <div>
-                      <SectionLabel>File analyzed</SectionLabel>
-                      <h2 style={{ fontFamily:"'DM Serif Display', serif", fontSize:24, fontWeight:400, color:"#0F172A", margin:"0 0 4px" }}>{uploadSummary.fileName}</h2>
-                      <div style={{ fontSize:12, color:DS.bodyDark, fontFamily:"'JetBrains Mono', monospace" }}>{uploadSummary.sizeKB}KB · {uploadSummary.type?.toUpperCase()}</div>
-                    </div>
-                    <Badge color={uploadSummary.confidence==="high"?"green":uploadSummary.confidence==="medium"?"amber":"red"}>
-                      {uploadSummary.confidence} confidence
-                    </Badge>
-                  </div>
-                  <div style={{ marginBottom:14 }}>
-                    <div style={{ fontSize:12, fontWeight:600, color:"#0F172A", marginBottom:6 }}>System name</div>
-                    <input value={bs.name} onChange={e=>upd("name",e.target.value)}
-                      style={{ width:"100%", boxSizing:"border-box", border:`1px solid ${DS.lightBorder}`, borderRadius:8, padding:"9px 12px", fontSize:13, fontFamily:"'DM Sans', sans-serif", color:"#0F172A", background:DS.white, outline:"none" }}
-                      onFocus={e=>e.target.style.borderColor=PHASE_COLOR}
-                      onBlur={e=>e.target.style.borderColor=DS.lightBorder} />
-                  </div>
-                  <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:16 }}>
-                    <div>
-                      <div style={{ fontSize:10, fontFamily:"'JetBrains Mono', monospace", textTransform:"uppercase", letterSpacing:2, color:DS.bodyDark, marginBottom:8 }}>Detected sections</div>
-                      {(uploadSummary.detectedSections||[]).map(s => (
-                        <div key={s} style={{ display:"flex", gap:8, alignItems:"flex-start", marginBottom:5 }}>
-                          <span style={{ width:6, height:6, borderRadius:"50%", background:"#22C55E", flexShrink:0, marginTop:4 }} />
-                          <span style={{ fontSize:12, color:"#0F172A", lineHeight:1.5 }}>{s}</span>
-                        </div>
-                      ))}
-                    </div>
-                    <div>
-                      <div style={{ fontSize:10, fontFamily:"'JetBrains Mono', monospace", textTransform:"uppercase", letterSpacing:2, color:DS.bodyDark, marginBottom:8 }}>Detected components</div>
-                      {uploadSummary.detectedComponents?.length
-                        ? uploadSummary.detectedComponents.map(s => (
-                            <div key={s} style={{ display:"flex", gap:8, alignItems:"flex-start", marginBottom:5 }}>
-                              <span style={{ width:6, height:6, borderRadius:"50%", background:PHASE_COLOR, flexShrink:0, marginTop:4 }} />
-                              <span style={{ fontSize:12, color:"#0F172A", lineHeight:1.5 }}>{s}</span>
-                            </div>
-                          ))
-                        : <div style={{ fontSize:12, color:DS.bodyDark }}>None auto-detected</div>}
-                    </div>
-                  </div>
-                </Card>
-
-                {uploadSummary.missingVsCarbon?.length > 0 && (
-                  <Card style={{ borderColor:"#FDE68A" }}>
-                    <SectionLabel>Gaps vs. Carbon structure</SectionLabel>
-                    {uploadSummary.missingVsCarbon.map(m => (
-                      <div key={m} style={{ display:"flex", gap:8, marginBottom:6 }}>
-                        <span style={{ fontSize:12, color:"#D97706" }}>⚠</span>
-                        <span style={{ fontSize:12, color:"#0F172A", lineHeight:1.5 }}>{m}</span>
-                      </div>
-                    ))}
-                  </Card>
-                )}
-
-                {uploadSummary.recommendations?.length > 0 && (
-                  <Card>
-                    <SectionLabel>Recommendations</SectionLabel>
-                    {uploadSummary.recommendations.map((r,i) => (
-                      <div key={i} style={{ display:"flex", gap:10, padding:"8px 0", borderBottom: i < uploadSummary.recommendations.length-1 ? `1px solid ${DS.lightBorder}` : "none" }}>
-                        <span style={{ fontSize:12, color:PHASE_COLOR, fontWeight:600, flexShrink:0, fontFamily:"'JetBrains Mono', monospace" }}>→</span>
-                        <span style={{ fontSize:12, color:"#0F172A", lineHeight:1.55 }}>{r}</span>
-                      </div>
-                    ))}
-                  </Card>
-                )}
-
-                <div style={{ display:"flex", gap:10, marginTop:4 }}>
-                  <PrimaryBtn onClick={() => setTab("export")}>Looks good — Export for Claude →</PrimaryBtn>
-                  <GhostBtn onClick={() => { setUploadStage("idle"); setUploadSummary(null); }}>Upload different file</GhostBtn>
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* ── BOOTSTRAP BUILDER ── */}
-        {tab === "bootstrap" && (
-          <div style={{ animation:"fadeIn 0.3s ease" }}>
-            <h2 style={{ fontFamily:"'DM Serif Display', serif", fontSize:28, fontWeight:400, color:"#0F172A", margin:"0 0 6px" }}>Build your design system</h2>
-            <p style={{ fontSize:14, color:DS.bodyDark, margin:"0 0 28px", lineHeight:1.6 }}>Dial in your tokens. All 46 Carbon components will be pre-documented with your values when you export.</p>
-
-            <Card>
-              <SectionLabel>System name</SectionLabel>
-              <input value={bs.name} onChange={e=>upd("name",e.target.value)} placeholder="My Design System"
-                style={{ width:"100%", boxSizing:"border-box", border:`1px solid ${DS.lightBorder}`, borderRadius:8, padding:"9px 12px", fontSize:13, fontFamily:"'DM Sans', sans-serif", color:"#0F172A", background:DS.white, outline:"none" }}
-                onFocus={e=>e.target.style.borderColor=PHASE_COLOR} onBlur={e=>e.target.style.borderColor=DS.lightBorder} />
-            </Card>
-
-            <Card>
-              <SectionLabel>Brand and surface colors</SectionLabel>
-              <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:"0 24px" }}>
-                {[
-                  ["primary","Primary action"],["accent","Accent / secondary"],["danger","Danger / error"],
-                  ["success","Success states"],["warning","Warning states"],
-                  ["background","Page background"],["layer01","Layer 01 (container)"],["layer02","Layer 02 (nested)"],
-                  ["textPrimary","Text primary"],["textSecondary","Text secondary"],
-                  ["borderSubtle","Border subtle"],["borderStrong","Border strong"],
-                ].map(([k,label]) => <ColorRow key={k} label={label} value={bs[k]||"#000000"} onChange={v=>upd(k,v)} />)}
-              </div>
-            </Card>
-
-            <Card>
-              <SectionLabel>Typography</SectionLabel>
-              <FieldRow label="Font family">
-                <DSSelect value={bs.fontFamily} onChange={v=>upd("fontFamily",v)}>
-                  {["IBM Plex Sans","Inter","DM Sans","Geist","Helvetica Neue","system-ui"].map(f=><option key={f} value={f}>{f}</option>)}
-                </DSSelect>
-              </FieldRow>
-              <SliderRow label="Base size" min={12} max={18} step={1} value={bs.baseFontSize} onChange={v=>upd("baseFontSize",v)} />
-              <FieldRow label="Scale ratio">
-                <DSSelect value={bs.typeScale} onChange={v=>upd("typeScale",Number(v))}>
-                  <option value={1.125}>Minor second — 1.125</option>
-                  <option value={1.200}>Minor third — 1.200</option>
-                  <option value={1.250}>Major third — 1.250</option>
-                  <option value={1.333}>Perfect fourth — 1.333</option>
-                </DSSelect>
-              </FieldRow>
-              <div style={{ display:"flex", gap:12, alignItems:"baseline", marginTop:12, padding:"12px 0", borderTop:`1px solid ${DS.lightBorder}`, flexWrap:"wrap" }}>
-                {sizes.slice(0,5).reverse().map((sz,i) => (
-                  <span key={i} style={{ fontSize:sz, fontFamily:`'${bs.fontFamily}', system-ui`, color:"#0F172A", lineHeight:1.1 }}>{sz}px</span>
                 ))}
               </div>
-            </Card>
+            </div>
 
-            <Card>
-              <SectionLabel>Spacing, shape and density</SectionLabel>
-              <SliderRow label="Base unit" min={4} max={16} step={4} value={bs.spacing} onChange={v=>upd("spacing",v)} />
-              <SliderRow label="Border radius" min={0} max={16} step={2} value={bs.radius} onChange={v=>upd("radius",v)} />
-              <FieldRow label="Density">
-                <DSSelect value={bs.density} onChange={v=>upd("density",v)}>
-                  <option value="compact">Compact — 32px component height</option>
-                  <option value="regular">Regular — 40px component height</option>
-                  <option value="comfortable">Comfortable — 48px component height</option>
-                </DSSelect>
-              </FieldRow>
-            </Card>
+            {/* Brand Name */}
+            <div style={{ background: "#fff", borderRadius: 12, padding: 20, border: "1px solid #eee" }}>
+              <div style={{ fontSize: 10, fontFamily: tokens.fontMono, letterSpacing: 2, textTransform: "uppercase", color: "#999", marginBottom: 10 }}>Brand Name</div>
+              <input
+                value={tokens.brandName}
+                onChange={(e) => update("brandName", e.target.value)}
+                style={{ width: "100%", padding: "8px 12px", borderRadius: 8, border: "1px solid #ddd", fontSize: 14, fontFamily: tokens.fontBody, boxSizing: "border-box" }}
+              />
+            </div>
 
-            <Card>
-              <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:14 }}>
-                <SectionLabel>{bs.selectedComponents.length} / {CARBON_COMPONENTS.length} components selected</SectionLabel>
-                <div style={{ display:"flex", gap:6 }}>
-                  <GhostBtn onClick={()=>upd("selectedComponents",CARBON_COMPONENTS.map(c=>c.id))}>All</GhostBtn>
-                  <GhostBtn onClick={()=>upd("selectedComponents",[])}>None</GhostBtn>
-                </div>
-              </div>
-              <input value={compSearch} onChange={e=>setCompSearch(e.target.value)} placeholder="Search components..."
-                style={{ width:"100%", boxSizing:"border-box", border:`1px solid ${DS.lightBorder}`, borderRadius:8, padding:"8px 12px", fontSize:12, fontFamily:"'DM Sans', sans-serif", color:"#0F172A", background:DS.white, outline:"none", marginBottom:12 }} />
-              <div style={{ display:"flex", gap:6, flexWrap:"wrap", marginBottom:14 }}>
-                {CATEGORIES.map(cat => <Chip key={cat} selected={catFilter===cat} onClick={()=>setCatFilter(cat)}>{cat}</Chip>)}
-              </div>
-              <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill, minmax(172px, 1fr))", gap:6 }}>
-                {filteredComps.map(c => {
-                  const sel = bs.selectedComponents.includes(c.id);
-                  return (
-                    <div key={c.id} onClick={()=>toggleComp(c.id)} style={{ padding:"10px 12px", borderRadius:8, cursor:"pointer", border:`${sel?"1.5px":"1px"} solid ${sel?PHASE_COLOR:DS.lightBorder}`, background:sel?`${PHASE_COLOR}10`:DS.white, transition:"all 0.12s" }}>
-                      <div style={{ fontSize:12, fontWeight:600, color:sel?PHASE_COLOR:"#0F172A" }}>{c.name}</div>
-                      <div style={{ fontSize:10, color:DS.bodyDark, marginTop:2, fontFamily:"'JetBrains Mono', monospace" }}>{c.category}</div>
-                    </div>
-                  );
-                })}
-              </div>
-            </Card>
-
-            <Card>
-              <SectionLabel>Live preview</SectionLabel>
-              <div style={{ background:bs.background, borderRadius:bs.radius, padding:bs.spacing*2, border:`1px solid ${bs.borderSubtle}`, fontFamily:`'${bs.fontFamily}', system-ui` }}>
-                {sizes.slice(0,3).reverse().map((sz,i) => (
-                  <div key={i} style={{ fontSize:sz, color:bs.textPrimary, lineHeight:1.25, marginBottom:4 }}>
-                    {["Heading","Subheading","Body"][i]} — {sz}px
-                  </div>
-                ))}
-                <div style={{ fontSize:fs, color:bs.textSecondary, lineHeight:1.6 }}>Secondary text — descriptions and captions.</div>
-                <div style={{ height:1, background:bs.borderSubtle, margin:`${bs.spacing}px 0` }} />
-                <div style={{ display:"flex", gap:bs.spacing/2, flexWrap:"wrap", marginBottom:bs.spacing }}>
-                  {[{label:"Primary",bg:bs.primary,color:"#fff",border:bs.primary},{label:"Secondary",bg:"transparent",color:bs.primary,border:bs.primary},{label:"Accent",bg:bs.accent,color:"#fff",border:bs.accent},{label:"Danger",bg:bs.danger,color:"#fff",border:bs.danger}].map(({label,bg,color,border})=>(
-                    <button key={label} style={{ height:h, padding:`0 ${bs.spacing*2}px`, background:bg, color, border:`1px solid ${border}`, borderRadius:bs.radius, fontSize:fs, cursor:"pointer", fontFamily:"inherit" }}>{label}</button>
-                  ))}
-                </div>
-                <div style={{ marginBottom:bs.spacing }}>
-                  <div style={{ fontSize:Math.round(fs*0.85), color:bs.textSecondary, marginBottom:4 }}>Input label</div>
-                  <input readOnly placeholder="Placeholder text..." style={{ height:h, width:"100%", padding:`0 ${bs.spacing}px`, border:`1px solid ${bs.borderStrong}`, borderRadius:bs.radius, fontSize:fs, background:bs.layer01, color:bs.textPrimary, fontFamily:"inherit", boxSizing:"border-box", outline:"none" }} />
-                </div>
-                <div style={{ display:"flex", gap:6, flexWrap:"wrap" }}>
-                  {[["Default",bs.layer01,bs.textSecondary],["Primary",`${bs.primary}22`,bs.primary],["Success",`${bs.success}22`,bs.success],["Warning",`${bs.warning}33`,bs.warning],["Error",`${bs.danger}22`,bs.danger]].map(([label,bg,color])=>(
-                    <span key={label} style={{ padding:`2px ${bs.spacing}px`, borderRadius:Math.max(bs.radius,12), background:bg, color, fontSize:Math.round(fs*0.8) }}>{label}</span>
-                  ))}
-                </div>
-              </div>
-            </Card>
-
-            <PrimaryBtn onClick={() => setTab("export")}>Export for Claude →</PrimaryBtn>
-          </div>
-        )}
-
-        {/* ── EXPORT ── */}
-        {tab === "export" && (
-          <div style={{ animation:"fadeIn 0.3s ease" }}>
-            <h2 style={{ fontFamily:"'DM Serif Display', serif", fontSize:28, fontWeight:400, color:"#0F172A", margin:"0 0 6px" }}>Export for Claude</h2>
-            <p style={{ fontSize:14, color:DS.bodyDark, margin:"0 0 28px", lineHeight:1.6 }}>Paste the Markdown export into a Claude Project system prompt and Claude will have full design system knowledge instantly — tokens, components, rules — no back-and-forth needed.</p>
-
-            <Card>
-              <SectionLabel>Export format</SectionLabel>
-              <div style={{ display:"flex", gap:8, marginBottom:20, flexWrap:"wrap" }}>
-                {[["markdown","CLAUDE.md (recommended)"],["json","tokens.json"],["css","tokens.css"]].map(([f,label]) => (
-                  <Chip key={f} selected={exportFormat===f} onClick={()=>setExportFormat(f)}>{label}</Chip>
-                ))}
-              </div>
-              <div style={{ fontSize:12, color:DS.bodyDark, lineHeight:1.6, marginBottom:14, padding:"10px 14px", background:DS.light, borderRadius:8, borderLeft:`3px solid ${PHASE_COLOR}` }}>
-                {exportFormat==="markdown" && "Full structured CLAUDE.md — foundations, all selected components documented, patterns, accessibility rules, and Figma MCP binding notes. Paste into a Claude Project system prompt."}
-                {exportFormat==="json" && "Token values as structured JSON — compatible with Style Dictionary, Theo, and custom build pipelines."}
-                {exportFormat==="css" && "CSS custom properties — drop into any codebase and reference via var(--color-primary) etc."}
-              </div>
-              <div style={{ display:"flex", gap:8, justifyContent:"flex-end", marginBottom:8 }}>
-                <GhostBtn onClick={copy}>{copied ? "✓ Copied" : "Copy"}</GhostBtn>
-                <PrimaryBtn onClick={download}>Download ↓</PrimaryBtn>
-              </div>
-              <MonoBlock>{exportContent()}</MonoBlock>
-            </Card>
-
-            <div style={{ background:DS.dark, borderRadius:12, padding:"24px 26px" }}>
-              <div style={{ fontSize:10, fontFamily:"'JetBrains Mono', monospace", textTransform:"uppercase", letterSpacing:3, color:PHASE_COLOR, marginBottom:18 }}>How to use with Claude</div>
+            {/* Colors */}
+            <div style={{ background: "#fff", borderRadius: 12, padding: 20, border: "1px solid #eee" }}>
+              <div style={{ fontSize: 10, fontFamily: tokens.fontMono, letterSpacing: 2, textTransform: "uppercase", color: "#999", marginBottom: 12 }}>Colors</div>
               {[
-                ["01","Copy the Markdown export above","This is your CLAUDE.md — the AI agent entry point for your design system."],
-                ["02","Paste into a Claude Project system prompt","Go to Project Instructions and paste. Claude now has full token and component context for every conversation."],
-                ["03","Or upload alongside your design files","Start a conversation, attach CLAUDE.md, and begin designing. No back-and-forth on token values."],
-                ["04","Design in Figma via MCP","Claude knows every token, every component rule, every spacing value. Ask it to build in Figma with no guessing."],
-              ].map(([n,title,desc]) => (
-                <div key={n} style={{ display:"flex", gap:14, marginBottom:16, alignItems:"flex-start" }}>
-                  <div style={{ width:26, height:26, borderRadius:"50%", background:`${PHASE_COLOR}22`, border:`1px solid ${PHASE_COLOR}44`, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
-                    <span style={{ fontSize:10, fontWeight:700, color:PHASE_COLOR, fontFamily:"'JetBrains Mono', monospace" }}>{n}</span>
+                ["primary", "Primary"],
+                ["primaryLight", "Primary Light"],
+                ["primaryDark", "Primary Dark"],
+                ["secondary", "Secondary"],
+                ["accent", "Accent"],
+              ].map(([key, label]) => (
+                <div key={key} style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
+                  <input type="color" value={tokens[key]} onChange={(e) => update(key, e.target.value)} style={{ width: 32, height: 24, border: "none", padding: 0, cursor: "pointer", borderRadius: 4 }} />
+                  <span style={{ fontSize: 12, flex: 1 }}>{label}</span>
+                  <span style={{ fontSize: 10, fontFamily: tokens.fontMono, color: "#bbb" }}>{tokens[key]}</span>
+                </div>
+              ))}
+            </div>
+
+            {/* Typography */}
+            <div style={{ background: "#fff", borderRadius: 12, padding: 20, border: "1px solid #eee" }}>
+              <div style={{ fontSize: 10, fontFamily: tokens.fontMono, letterSpacing: 2, textTransform: "uppercase", color: "#999", marginBottom: 12 }}>Typography</div>
+              {[
+                ["fontHeading", "Heading Font"],
+                ["fontBody", "Body Font"],
+              ].map(([key, label]) => (
+                <div key={key} style={{ marginBottom: 10 }}>
+                  <div style={{ fontSize: 11, color: "#888", marginBottom: 4 }}>{label}</div>
+                  <select
+                    value={tokens[key]}
+                    onChange={(e) => update(key, e.target.value)}
+                    style={{ width: "100%", padding: "7px 10px", borderRadius: 6, border: "1px solid #ddd", fontSize: 12, fontFamily: tokens[key], boxSizing: "border-box" }}
+                  >
+                    {FONT_OPTIONS.map((f) => (
+                      <option key={f} value={f} style={{ fontFamily: f }}>{f.split("'")[1]}</option>
+                    ))}
+                  </select>
+                </div>
+              ))}
+              <div style={{ marginBottom: 10 }}>
+                <div style={{ fontSize: 11, color: "#888", marginBottom: 4 }}>Base Size: {tokens.baseSize}px</div>
+                <input type="range" min={14} max={20} value={tokens.baseSize} onChange={(e) => update("baseSize", Number(e.target.value))} style={{ width: "100%" }} />
+              </div>
+              <div>
+                <div style={{ fontSize: 11, color: "#888", marginBottom: 4 }}>Scale Ratio: {tokens.scaleRatio}</div>
+                <input type="range" min={1.125} max={1.5} step={0.025} value={tokens.scaleRatio} onChange={(e) => update("scaleRatio", Number(e.target.value))} style={{ width: "100%" }} />
+              </div>
+            </div>
+
+            {/* Shape */}
+            <div style={{ background: "#fff", borderRadius: 12, padding: 20, border: "1px solid #eee" }}>
+              <div style={{ fontSize: 10, fontFamily: tokens.fontMono, letterSpacing: 2, textTransform: "uppercase", color: "#999", marginBottom: 12 }}>Shape</div>
+              {[
+                ["radiusSm", "Small", 0, 16],
+                ["radiusMd", "Medium", 0, 24],
+                ["radiusLg", "Large", 0, 32],
+              ].map(([key, label, min, max]) => (
+                <div key={key} style={{ marginBottom: 8 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, color: "#888", marginBottom: 2 }}>
+                    <span>{label}</span>
+                    <span>{tokens[key]}px</span>
                   </div>
-                  <div>
-                    <div style={{ fontSize:13, fontWeight:600, color:DS.white, marginBottom:2 }}>{title}</div>
-                    <div style={{ fontSize:12, color:DS.bodyLight, lineHeight:1.55 }}>{desc}</div>
-                  </div>
+                  <input type="range" min={min} max={max} value={tokens[key]} onChange={(e) => update(key, Number(e.target.value))} style={{ width: "100%" }} />
                 </div>
               ))}
             </div>
           </div>
         )}
+
+        {/* Main Content */}
+        <div>
+          <SectionNav />
+
+          {/* TOKENS SECTION */}
+          {activeSection === "tokens" && (
+            <div>
+              {/* Color Palette */}
+              <div style={{ background: "#fff", borderRadius: tokens.radiusLg, padding: 28, border: "1px solid #eee", marginBottom: 20 }}>
+                <div style={{ fontSize: 10, fontFamily: tokens.fontMono, letterSpacing: 2, textTransform: "uppercase", color: "#999", marginBottom: 20 }}>Color Palette</div>
+
+                <div style={{ marginBottom: 24 }}>
+                  <div style={{ fontSize: 12, fontWeight: 600, marginBottom: 12 }}>Brand</div>
+                  <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+                    <ColorSwatch color={tokens.primary} label="Primary" />
+                    <ColorSwatch color={tokens.primaryLight} label="Primary Light" />
+                    <ColorSwatch color={tokens.primaryDark} label="Primary Dark" />
+                    <ColorSwatch color={tokens.secondary} label="Secondary" />
+                    <ColorSwatch color={tokens.accent} label="Accent" />
+                  </div>
+                </div>
+
+                <div style={{ marginBottom: 24 }}>
+                  <div style={{ fontSize: 12, fontWeight: 600, marginBottom: 12 }}>Semantic</div>
+                  <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+                    <ColorSwatch color={tokens.success} label="Success" />
+                    <ColorSwatch color={tokens.warning} label="Warning" />
+                    <ColorSwatch color={tokens.error} label="Error" />
+                    <ColorSwatch color={tokens.info} label="Info" />
+                  </div>
+                </div>
+
+                <div>
+                  <div style={{ fontSize: 12, fontWeight: 600, marginBottom: 12 }}>Neutrals</div>
+                  <div style={{ display: "flex", gap: 4 }}>
+                    {[50, 100, 200, 300, 400, 500, 600, 700, 800, 900].map((n) => (
+                      <div key={n} style={{ flex: 1, textAlign: "center" }}>
+                        <div style={{ height: 40, background: tokens[`neutral${n}`], borderRadius: 4, border: "1px solid rgba(0,0,0,0.06)" }} />
+                        <div style={{ fontSize: 9, fontFamily: tokens.fontMono, color: "#aaa", marginTop: 4 }}>{n}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Spacing */}
+              <div style={{ background: "#fff", borderRadius: tokens.radiusLg, padding: 28, border: "1px solid #eee", marginBottom: 20 }}>
+                <div style={{ fontSize: 10, fontFamily: tokens.fontMono, letterSpacing: 2, textTransform: "uppercase", color: "#999", marginBottom: 20 }}>
+                  Spacing Scale — {tokens.spaceUnit}px base
+                </div>
+                <div style={{ display: "flex", alignItems: "flex-end", gap: 12 }}>
+                  {[1, 2, 3, 4, 5, 6, 8, 10, 12, 16].map((n) => (
+                    <div key={n} style={{ textAlign: "center" }}>
+                      <div style={{ width: 32, height: space(n), background: tokens.primaryLight, borderRadius: 3, border: `1px solid ${tokens.primary}33` }} />
+                      <div style={{ fontSize: 9, fontFamily: tokens.fontMono, color: "#aaa", marginTop: 6 }}>{space(n)}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Shape */}
+              <div style={{ background: "#fff", borderRadius: tokens.radiusLg, padding: 28, border: "1px solid #eee" }}>
+                <div style={{ fontSize: 10, fontFamily: tokens.fontMono, letterSpacing: 2, textTransform: "uppercase", color: "#999", marginBottom: 20 }}>Border Radius</div>
+                <div style={{ display: "flex", gap: 20 }}>
+                  {[
+                    ["Radius/100", tokens.radiusSm],
+                    ["Radius/200", tokens.radiusMd],
+                    ["Radius/400", tokens.radiusLg],
+                    ["Radius/Full", tokens.radiusFull],
+                  ].map(([label, val]) => (
+                    <div key={label} style={{ textAlign: "center" }}>
+                      <div style={{ width: 56, height: 56, background: tokens.primaryLight, border: `2px solid ${tokens.primary}`, borderRadius: val }} />
+                      <div style={{ fontSize: 10, fontFamily: tokens.fontMono, color: "#aaa", marginTop: 8 }}>{label} — {val === 9999 ? "full" : val + "px"}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* TYPOGRAPHY SECTION */}
+          {activeSection === "typography" && (
+            <div style={{ background: "#fff", borderRadius: tokens.radiusLg, padding: 28, border: "1px solid #eee" }}>
+              <div style={{ fontSize: 10, fontFamily: tokens.fontMono, letterSpacing: 2, textTransform: "uppercase", color: "#999", marginBottom: 24 }}>
+                Type Scale — ratio {tokens.scaleRatio}
+              </div>
+              {Object.entries(sizes).reverse().map(([label, size]) => (
+                <div key={label} style={{ display: "flex", alignItems: "baseline", gap: 20, padding: "14px 0", borderBottom: "1px solid #f0f0f0" }}>
+                  <div style={{ width: 50, fontSize: 10, fontFamily: tokens.fontMono, color: "#bbb", textAlign: "right", flexShrink: 0 }}>{label}</div>
+                  <div style={{ width: 50, fontSize: 10, fontFamily: tokens.fontMono, color: "#bbb", flexShrink: 0 }}>{Math.round(size)}px</div>
+                  <div style={{ fontFamily: label.includes("x") || label === "sm" || label === "base" ? tokens.fontBody : tokens.fontHeading, fontSize: size, fontWeight: size > 20 ? 700 : 400, lineHeight: 1.3 }}>
+                    {tokens.brandName}
+                  </div>
+                </div>
+              ))}
+
+              <div style={{ marginTop: 32 }}>
+                <div style={{ fontSize: 10, fontFamily: tokens.fontMono, letterSpacing: 2, textTransform: "uppercase", color: "#999", marginBottom: 16 }}>Font Pairing Preview</div>
+                <div style={{ padding: 24, background: tokens.neutral50, borderRadius: tokens.radiusMd }}>
+                  <h2 style={{ fontFamily: tokens.fontHeading, fontSize: sizes["2xl"], fontWeight: 700, margin: "0 0 8px", lineHeight: 1.2 }}>The quick brown fox jumps over the lazy dog</h2>
+                  <p style={{ fontFamily: tokens.fontBody, fontSize: sizes.base, lineHeight: 1.7, color: tokens.neutral600, margin: "0 0 12px" }}>
+                    Typography is the voice of your interface. A strong type system creates hierarchy, guides attention, and establishes brand personality without a single pixel of color.
+                  </p>
+                  <code style={{ fontFamily: tokens.fontMono, fontSize: sizes.sm, background: tokens.neutral200, padding: "3px 8px", borderRadius: 4 }}>
+                    const designSystem = true;
+                  </code>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* COMPONENTS SECTION */}
+          {activeSection === "components" && (
+            <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+              {/* Buttons */}
+              <div style={{ background: "#fff", borderRadius: tokens.radiusLg, padding: 28, border: "1px solid #eee" }}>
+                <div style={{ fontSize: 10, fontFamily: tokens.fontMono, letterSpacing: 2, textTransform: "uppercase", color: "#999", marginBottom: 20 }}>Buttons</div>
+                <div style={{ display: "flex", gap: 12, flexWrap: "wrap", alignItems: "center" }}>
+                  {[
+                    { label: "Brand", bg: tokens.primary, color: tokens.primaryLight, border: `1px solid ${tokens.primary}` },
+                    { label: "Neutral", bg: tokens.neutral200, color: tokens.neutral900, border: `1px solid ${tokens.neutral500}` },
+                    { label: "Outline", bg: "transparent", color: tokens.neutral900, border: `1px solid ${tokens.neutral300}` },
+                    { label: "Ghost", bg: "transparent", color: tokens.neutral700, border: "1px solid transparent" },
+                    { label: "Danger", bg: tokens.error, color: "#fff", border: `1px solid ${tokens.error}` },
+                  ].map((btn) => (
+                    <button
+                      key={btn.label}
+                      style={{
+                        background: btn.bg,
+                        color: btn.color,
+                        border: btn.border,
+                        borderRadius: tokens.radiusMd,
+                        padding: "12px 24px",
+                        fontSize: 16,
+                        fontWeight: 400,
+                        fontFamily: tokens.fontBody,
+                        cursor: "pointer",
+                      }}
+                    >
+                      {btn.label}
+                    </button>
+                  ))}
+                </div>
+                <div style={{ display: "flex", gap: 12, marginTop: 16 }}>
+                  {["sm", "md", "lg"].map((size) => (
+                    <button
+                      key={size}
+                      style={{
+                        background: tokens.primary,
+                        color: contrastOn(tokens.primary),
+                        border: "none",
+                        borderRadius: tokens.radiusMd,
+                        padding: size === "sm" ? "6px 14px" : size === "md" ? "10px 22px" : "14px 30px",
+                        fontSize: size === "sm" ? 12 : size === "md" ? 14 : 16,
+                        fontWeight: 600,
+                        fontFamily: tokens.fontBody,
+                        cursor: "pointer",
+                      }}
+                    >
+                      Size {size.toUpperCase()}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Form Elements */}
+              <div style={{ background: "#fff", borderRadius: tokens.radiusLg, padding: 28, border: "1px solid #eee" }}>
+                <div style={{ fontSize: 10, fontFamily: tokens.fontMono, letterSpacing: 2, textTransform: "uppercase", color: "#999", marginBottom: 20 }}>Inputs & Forms</div>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+                  <div>
+                    <label style={{ fontSize: 14, fontWeight: 400, display: "block", marginBottom: 8, color: tokens.neutral900 }}>Default Input</label>
+                    <input
+                      placeholder="Enter text..."
+                      style={{
+                        width: "100%",
+                        padding: "12px 16px",
+                        borderRadius: tokens.radiusMd,
+                        border: `1px solid ${tokens.neutral300}`,
+                        fontSize: 16,
+                        fontFamily: tokens.fontBody,
+                        boxSizing: "border-box",
+                        outline: "none",
+                        color: tokens.neutral900,
+                        background: tokens.neutral50,
+                      }}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: 14, fontWeight: 400, display: "block", marginBottom: 8, color: tokens.error }}>Error State</label>
+                    <input
+                      defaultValue="Invalid entry"
+                      style={{
+                        width: "100%",
+                        padding: "12px 16px",
+                        borderRadius: tokens.radiusMd,
+                        border: `1px solid ${tokens.error}`,
+                        fontSize: 16,
+                        fontFamily: tokens.fontBody,
+                        boxSizing: "border-box",
+                        outline: "none",
+                        color: tokens.neutral900,
+                        background: tokens.neutral50,
+                      }}
+                    />
+                    <div style={{ fontSize: 14, color: tokens.error, marginTop: 6 }}>This field is required</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Cards */}
+              <div style={{ background: "#fff", borderRadius: tokens.radiusLg, padding: 28, border: "1px solid #eee" }}>
+                <div style={{ fontSize: 10, fontFamily: tokens.fontMono, letterSpacing: 2, textTransform: "uppercase", color: "#999", marginBottom: 20 }}>Cards</div>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16 }}>
+                  {[
+                    { title: "Flat", shadow: "none", border: `1px solid ${tokens.neutral300}` },
+                    { title: "Elevated", shadow: tokens.shadowMd, border: `1px solid ${tokens.neutral300}` },
+                    { title: "Prominent", shadow: tokens.shadowLg, border: "1px solid transparent" },
+                  ].map((card) => (
+                    <div
+                      key={card.title}
+                      style={{
+                        padding: 32,
+                        borderRadius: tokens.radiusMd,
+                        background: tokens.neutral50,
+                        border: card.border,
+                        boxShadow: card.shadow,
+                      }}
+                    >
+                      <div style={{ fontFamily: tokens.fontHeading, fontWeight: 600, fontSize: 24, marginBottom: 12, lineHeight: 1.2, letterSpacing: "-0.48px" }}>{card.title}</div>
+                      <p style={{ fontSize: 16, color: tokens.neutral500, lineHeight: 1.4, margin: 0, fontFamily: tokens.fontBody }}>Card component with {card.title.toLowerCase()} treatment for content hierarchy.</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Badges & Tags */}
+              <div style={{ background: "#fff", borderRadius: tokens.radiusLg, padding: 28, border: "1px solid #eee" }}>
+                <div style={{ fontSize: 10, fontFamily: tokens.fontMono, letterSpacing: 2, textTransform: "uppercase", color: "#999", marginBottom: 20 }}>Badges & Status</div>
+                <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+                  {[
+                    { label: "Positive", bg: "#ebffee", color: "#02542d" },
+                    { label: "Warning", bg: "#fff8e6", color: "#7d4e00" },
+                    { label: "Danger", bg: "#ffebeb", color: "#c62828" },
+                    { label: "Default", bg: tokens.neutral100, color: tokens.neutral600 },
+                    { label: "Brand", bg: tokens.primaryLight, color: tokens.primary },
+                    { label: "Neutral", bg: tokens.neutral200, color: tokens.neutral900 },
+                  ].map((b) => (
+                    <span
+                      key={b.label}
+                      style={{
+                        background: b.bg,
+                        color: b.color,
+                        padding: "5px 14px",
+                        borderRadius: tokens.radiusFull,
+                        fontSize: 12,
+                        fontWeight: 600,
+                        fontFamily: tokens.fontBody,
+                      }}
+                    >
+                      {b.label}
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              {/* Alert */}
+              <div style={{ background: "#fff", borderRadius: tokens.radiusLg, padding: 28, border: "1px solid #eee" }}>
+                <div style={{ fontSize: 10, fontFamily: tokens.fontMono, letterSpacing: 2, textTransform: "uppercase", color: "#999", marginBottom: 20 }}>Alerts</div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                  {[
+                    { type: "Positive", bg: "#ebffee", border: "#14ae5c", color: "#02542d", msg: "Your changes have been saved successfully." },
+                    { type: "Warning", bg: "#fff8e6", border: "#ffb800", color: "#7d4e00", msg: "Please review your entries before continuing." },
+                    { type: "Danger", bg: "#ffebeb", border: tokens.error, color: "#c62828", msg: "Something went wrong. Please try again." },
+                  ].map((a) => (
+                    <div
+                      key={a.type}
+                      style={{
+                        padding: "14px 18px",
+                        borderRadius: tokens.radiusMd,
+                        background: a.bg,
+                        borderLeft: `4px solid ${a.border}`,
+                      }}
+                    >
+                      <div style={{ fontWeight: 700, fontSize: 13, color: a.color, marginBottom: 2 }}>{a.type}</div>
+                      <div style={{ fontSize: 13, color: tokens.neutral700 }}>{a.msg}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* AUDIT SECTION */}
+          {activeSection === "audit" && (
+            <div>
+              {/* Intro */}
+              <div style={{ background: "#fff", borderRadius: tokens.radiusLg, padding: 24, border: "1px solid #eee", marginBottom: 16 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+                  <div>
+                    <div style={{ fontSize: 10, fontFamily: tokens.fontMono, letterSpacing: 2, textTransform: "uppercase", color: "#999", marginBottom: 6 }}>Design System Audit</div>
+                    <div style={{ fontSize: 14, color: "#666" }}>Check your system against Material Design 3, Atlassian, IBM Carbon, and Apple HIG.</div>
+                  </div>
+                  <div style={{ textAlign: "right" }}>
+                    <div style={{ fontSize: 24, fontWeight: 700, color: tokens.primary }}>
+                      {Math.round((Object.values(auditChecked).filter(Boolean).length / AUDIT_SECTIONS.reduce((a, s) => a + s.items.length, 0)) * 100)}%
+                    </div>
+                    <div style={{ fontSize: 11, color: "#999" }}>
+                      {Object.values(auditChecked).filter(Boolean).length} / {AUDIT_SECTIONS.reduce((a, s) => a + s.items.length, 0)} items
+                    </div>
+                  </div>
+                </div>
+                {/* Progress bar */}
+                <div style={{ height: 6, background: "#eee", borderRadius: 3, overflow: "hidden" }}>
+                  <div style={{ height: "100%", background: tokens.primary, borderRadius: 3, transition: "width 0.3s", width: `${(Object.values(auditChecked).filter(Boolean).length / AUDIT_SECTIONS.reduce((a, s) => a + s.items.length, 0)) * 100}%` }} />
+                </div>
+              </div>
+
+              {/* Filters */}
+              <div style={{ display: "flex", gap: 6, marginBottom: 16 }}>
+                {[
+                  { id: "all", label: "All items" },
+                  { id: "figma", label: "Figma" },
+                  { id: "a11y", label: "Accessibility" },
+                  { id: "ai", label: "AI Acceleration" },
+                ].map((f) => (
+                  <button key={f.id} onClick={() => setAuditFilter(f.id)} style={{
+                    background: auditFilter === f.id ? tokens.primary : "#f5f5f5",
+                    color: auditFilter === f.id ? "#fff" : "#666",
+                    border: "none", borderRadius: 8, padding: "7px 14px", fontSize: 12, fontWeight: 500, cursor: "pointer",
+                  }}>{f.label}</button>
+                ))}
+              </div>
+
+              {/* Sections */}
+              {AUDIT_SECTIONS.map((section) => {
+                const filteredItems = auditFilter === "all" ? section.items : section.items.filter((item) => item.tags.includes(auditFilter));
+                if (filteredItems.length === 0) return null;
+                const sectionComplete = filteredItems.filter((_, i) => auditChecked[`${section.id}-${i}`]).length;
+
+                return (
+                  <div key={section.id} style={{ background: "#fff", borderRadius: tokens.radiusLg, padding: 24, border: "1px solid #eee", marginBottom: 12 }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                        <span style={{ fontSize: 16 }}>{section.icon}</span>
+                        <span style={{ fontWeight: 700, fontSize: 15 }}>{section.label}</span>
+                      </div>
+                      <span style={{ fontSize: 11, fontFamily: tokens.fontMono, color: "#999" }}>
+                        {sectionComplete}/{filteredItems.length}
+                      </span>
+                    </div>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                      {filteredItems.map((item, i) => {
+                        const key = `${section.id}-${i}`;
+                        const checked = auditChecked[key] || false;
+                        const promptKey = `${section.id}-${i}`;
+                        return (
+                          <div key={i} style={{ borderRadius: 10, border: "1px solid #eee", overflow: "hidden", opacity: checked ? 0.6 : 1 }}>
+                            <div style={{ display: "flex", alignItems: "flex-start", gap: 12, padding: "14px 16px", cursor: "pointer" }}
+                              onClick={() => setAuditChecked((prev) => ({ ...prev, [key]: !prev[key] }))}>
+                              <div style={{
+                                width: 20, height: 20, borderRadius: 6, border: checked ? "none" : "2px solid #ccc",
+                                background: checked ? tokens.primary : "transparent", flexShrink: 0, marginTop: 2,
+                                display: "flex", alignItems: "center", justifyContent: "center",
+                                color: "#fff", fontSize: 12, fontWeight: 700,
+                              }}>{checked ? "✓" : ""}</div>
+                              <div style={{ flex: 1 }}>
+                                <div style={{ fontWeight: 600, fontSize: 14, marginBottom: 3, textDecoration: checked ? "line-through" : "none" }}>{item.label}</div>
+                                <div style={{ fontSize: 12, color: "#888", lineHeight: 1.4 }}>{item.sub}</div>
+                                <div style={{ display: "flex", gap: 4, marginTop: 6, flexWrap: "wrap" }}>
+                                  {item.systems.map((sys) => (
+                                    <span key={sys} style={{
+                                      fontSize: 9, padding: "2px 7px", borderRadius: 10, fontWeight: 500,
+                                      background: AUDIT_COLORS[sys]?.bg || "#f5f5f5",
+                                      color: AUDIT_COLORS[sys]?.text || "#555",
+                                    }}>{sys === "google" ? "Material" : sys === "apple" ? "HIG" : sys.charAt(0).toUpperCase() + sys.slice(1)}</span>
+                                  ))}
+                                  {item.tags.map((tag) => (
+                                    <span key={tag} style={{
+                                      fontSize: 9, padding: "2px 7px", borderRadius: 10, fontWeight: 500,
+                                      background: AUDIT_COLORS[tag]?.bg || "#f5f5f5",
+                                      color: AUDIT_COLORS[tag]?.text || "#555",
+                                    }}>{tag === "a11y" ? "A11y" : tag === "ai" ? "AI" : tag.charAt(0).toUpperCase() + tag.slice(1)}</span>
+                                  ))}
+                                </div>
+                              </div>
+                              <button onClick={(e) => { e.stopPropagation(); setExpandedAuditPrompt(expandedAuditPrompt === promptKey ? null : promptKey); }}
+                                style={{ background: "#f5f5f5", border: "none", borderRadius: 6, padding: "4px 10px", fontSize: 11, cursor: "pointer", color: "#888", flexShrink: 0 }}>
+                                {expandedAuditPrompt === promptKey ? "Hide" : "Prompt"}
+                              </button>
+                            </div>
+                            {expandedAuditPrompt === promptKey && (
+                              <div style={{ padding: "0 16px 14px" }}>
+                                <pre style={{
+                                  fontFamily: tokens.fontMono, fontSize: 11, background: "#1a1a1a", color: "#e0e0e0",
+                                  padding: 14, borderRadius: 8, whiteSpace: "pre-wrap", lineHeight: 1.6, margin: "0 0 8px",
+                                }}>{item.prompt}</pre>
+                                <button onClick={() => { navigator.clipboard.writeText(item.prompt); setCopiedAuditPrompt(promptKey); setTimeout(() => setCopiedAuditPrompt(null), 2000); }}
+                                  style={{ background: copiedAuditPrompt === promptKey ? "#16A34A" : tokens.primary, color: "#fff", border: "none", borderRadius: 6, padding: "6px 14px", fontSize: 11, fontWeight: 500, cursor: "pointer" }}>
+                                  {copiedAuditPrompt === promptKey ? "✓ Copied" : "Copy prompt"}
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {/* EXPORT SECTION */}
+          {activeSection === "export" && (
+            <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+              {/* CSS Variables */}
+              <div style={{ background: "#fff", borderRadius: tokens.radiusLg, padding: 28, border: "1px solid #eee" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+                  <div style={{ fontSize: 10, fontFamily: tokens.fontMono, letterSpacing: 2, textTransform: "uppercase", color: "#999" }}>CSS Custom Properties</div>
+                  <button
+                    onClick={() => { navigator.clipboard.writeText(cssVarsOutput); }}
+                    style={{ background: tokens.primary, color: "#fff", border: "none", borderRadius: 8, padding: "8px 16px", fontSize: 12, fontWeight: 600, cursor: "pointer" }}
+                  >
+                    Copy CSS
+                  </button>
+                </div>
+                <pre style={{
+                  fontFamily: tokens.fontMono,
+                  fontSize: 11,
+                  background: "#1a1a1a",
+                  color: "#e0e0e0",
+                  padding: 20,
+                  borderRadius: 10,
+                  overflow: "auto",
+                  maxHeight: 400,
+                  lineHeight: 1.6,
+                  whiteSpace: "pre-wrap",
+                }}>
+                  {cssVarsOutput}
+                </pre>
+              </div>
+
+              {/* AI Customization Prompt */}
+              <div style={{ background: "#fff", borderRadius: tokens.radiusLg, padding: 28, border: "1px solid #eee" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+                  <div style={{ fontSize: 10, fontFamily: tokens.fontMono, letterSpacing: 2, textTransform: "uppercase", color: "#999" }}>AI Customization Prompt</div>
+                  <button
+                    onClick={() => { navigator.clipboard.writeText(aiCustomizationPrompt); setAiPromptCopied(true); setTimeout(() => setAiPromptCopied(false), 2000); }}
+                    style={{ background: aiPromptCopied ? "#16A34A" : tokens.secondary, color: "#fff", border: "none", borderRadius: 8, padding: "8px 16px", fontSize: 12, fontWeight: 600, cursor: "pointer" }}
+                  >
+                    {aiPromptCopied ? "✓ Copied" : "Copy Prompt"}
+                  </button>
+                </div>
+                <p style={{ fontSize: 13, color: "#888", lineHeight: 1.6, margin: "0 0 16px" }}>
+                  Paste this prompt into Claude along with your client's brand guidelines. It will generate a complete set of customized tokens you can paste back into this system.
+                </p>
+                <pre style={{
+                  fontFamily: tokens.fontMono,
+                  fontSize: 11,
+                  background: "#1a1a1a",
+                  color: "#e0e0e0",
+                  padding: 20,
+                  borderRadius: 10,
+                  overflow: "auto",
+                  maxHeight: 300,
+                  lineHeight: 1.6,
+                  whiteSpace: "pre-wrap",
+                }}>
+                  {aiCustomizationPrompt}
+                </pre>
+              </div>
+
+              {/* Packaging Guide */}
+              <div style={{ background: tokens.secondary, borderRadius: tokens.radiusLg, padding: 28, color: "#fff" }}>
+                <div style={{ fontSize: 10, fontFamily: tokens.fontMono, letterSpacing: 2, textTransform: "uppercase", color: "rgba(255,255,255,0.4)", marginBottom: 16 }}>Client Delivery Checklist</div>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
+                  {[
+                    { title: "Token File", desc: "Export CSS custom properties or JSON tokens for their tech stack (Tailwind config, Style Dictionary, Figma tokens)" },
+                    { title: "Component Library", desc: "Document each component with props, states, accessibility notes, and usage guidelines" },
+                    { title: "Brand Application", desc: "Show tokens applied to 3-5 real screens from their product as proof of concept" },
+                    { title: "Governance Guide", desc: "Define who can modify tokens, how to request changes, and versioning strategy" },
+                  ].map((item) => (
+                    <div key={item.title}>
+                      <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 6 }}>{item.title}</div>
+                      <div style={{ fontSize: 12, color: "rgba(255,255,255,0.5)", lineHeight: 1.5 }}>{item.desc}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

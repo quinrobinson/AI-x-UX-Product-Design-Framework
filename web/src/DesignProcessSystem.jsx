@@ -502,11 +502,46 @@ const AI_LEVERAGE = {
   low: { label: "Low — your judgment", color: "#8C1A1A", bg: "#FDE8E8" },
 };
 
-export default function DesignProcessSystem({ initialPhase, onOpenBrief }) {
-  const [activePhase, setActivePhase] = useState(initialPhase || null);
+export default function DesignProcessSystem() {
+  const [activePhase, setActivePhase] = useState(null);
   const [activeTab, setActiveTab] = useState("prompts");
   const [expandedPrompt, setExpandedPrompt] = useState(null);
   const [copiedPrompt, setCopiedPrompt] = useState(null);
+  const [kickoffOpen, setKickoffOpen] = useState(false);
+  const [kickoffCopied, setKickoffCopied] = useState(false);
+
+  const KICKOFF_PROMPT = `You are a UX design assistant trained on the Agentic Product Design Framework —
+a six-phase system (Discover → Define → Ideate → Prototype → Validate → Deliver)
+with structured skill files, Figma templates, and AI-ready prompts for each phase.
+
+The six phases and their skill files are:
+- Discover → user-research.md, competitive-analysis.md
+- Define → problem-framing.md
+- Ideate → concept-generation.md, visual-design-execution.md
+- Prototype → prototyping.md, accessibility-audit.md
+- Validate → usability-testing.md
+- Deliver → design-delivery.md
+- Cross-phase → design-systems.md, figma-playbook.md
+
+I'm starting a new design project and need help getting oriented.
+Please ask me the following four questions (all at once is fine):
+
+1. What type of project is this?
+   (e.g., new product, feature addition, redesign, internal tool, client work)
+
+2. What phase are you entering?
+   (Discover / Define / Ideate / Prototype / Validate / Deliver — or "not sure")
+
+3. What do you have so far?
+   (nothing yet / a brief / a brief + research / existing designs)
+
+4. Are you working solo or with a team?
+
+Based on my answers, respond with:
+- Recommended starting phase and a one-sentence reason why
+- The specific skill file to upload next (exact filename)
+- A suggested first deliverable — specific, not a category
+- One prompt I can use right now, before uploading anything, to get started`;
 
   const phase = activePhase ? PHASES.find((p) => p.id === activePhase) : null;
 
@@ -531,41 +566,44 @@ export default function DesignProcessSystem({ initialPhase, onOpenBrief }) {
         <p style={{ fontSize: 16, color: "#666", maxWidth: 600, lineHeight: 1.6, margin: 0 }}>
           A scalable framework for integrating AI into every phase of product design — from research through delivery. Built to grow with your practice.
         </p>
+      </div>
 
-        {/* Brief Generator callout */}
-        {onOpenBrief && (
-          <div style={{
-            marginTop: 28,
-            background: "#0F172A", borderRadius: 12, padding: "18px 22px",
-            display: "flex", alignItems: "center", justifyContent: "space-between",
-            gap: 20, flexWrap: "wrap",
-          }}>
-            <div style={{ display: "flex", alignItems: "flex-start", gap: 14 }}>
-              <div style={{
-                width: 36, height: 36, borderRadius: 8, flexShrink: 0,
-                background: "#3B82F620", border: "1px solid #3B82F644",
-                display: "flex", alignItems: "center", justifyContent: "center",
-                fontSize: 16,
-              }}>✦</div>
-              <div>
-                <div style={{ fontSize: 13, fontWeight: 700, color: "#F8FAFC", marginBottom: 3 }}>Not sure which phase to start in?</div>
-                <div style={{ fontSize: 12, color: "#94A3B8", lineHeight: 1.55, maxWidth: 480 }}>
-                  Answer 3 quick questions and get a Claude-ready prompt that identifies your starting point and tells you exactly which skill file to upload first.
+      {/* Pre-phase guidance — only when no phase selected */}
+      {!activePhase && (
+        <div style={{ padding: "0 32px 16px", maxWidth: 1100, margin: "0 auto" }}>
+          {/* How to Use This System */}
+          <div style={{ background: "#fff", borderRadius: 16, padding: 28, border: "1px solid #eee", marginBottom: 12 }}>
+            <div style={{ fontSize: 11, fontFamily: "'JetBrains Mono', monospace", textTransform: "uppercase", letterSpacing: 2, color: "#999", marginBottom: 16 }}>How to Use This System</div>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 20 }}>
+              {[
+                { num: "01", title: "Select a phase", desc: "Click any phase below to reveal its AI prompts, skills matrix, templates, and tool recommendations." },
+                { num: "02", title: "Copy & customize prompts", desc: "Each prompt has placeholders in [BRACKETS]. Replace them with your project specifics and paste into Claude." },
+                { num: "03", title: "Use templates as scaffolding", desc: "Templates show essential fields. Expand them for your project's needs — starting points, not rigid forms." },
+                { num: "04", title: "Scale over time", desc: "Add your own prompts that work. Remove what doesn't. This system grows with your practice and your projects." },
+              ].map((item) => (
+                <div key={item.num}>
+                  <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: "#ccc", marginBottom: 6 }}>{item.num}</div>
+                  <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 6 }}>{item.title}</div>
+                  <div style={{ fontSize: 13, color: "#888", lineHeight: 1.5 }}>{item.desc}</div>
                 </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Phase Decision Helper */}
+          <div style={{ background: "#fff", borderRadius: 16, padding: 24, border: "1px solid #eee", display: "flex", alignItems: "center", gap: 20 }}>
+            <div style={{ width: 48, height: 48, borderRadius: 12, background: "#F59E0B", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+              <span style={{ fontSize: 24, color: "#fff" }}>🧭</span>
+            </div>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 4 }}>Not sure which phase to start in?</div>
+              <div style={{ fontSize: 13, color: "#888", lineHeight: 1.5 }}>
+                Have research data? Start in <strong style={{ color: "#2D5A27" }}>Discover</strong>. Know the problem but need solutions? Jump to <strong style={{ color: "#8B5E00" }}>Ideate</strong>. Building a design system from scratch? <strong style={{ color: "#8B5E00" }}>Ideate</strong>'s Scaffolder prompt has you covered. Inheriting existing designs? Start in <strong style={{ color: "#1A4B8C" }}>Prototype</strong> or <strong style={{ color: "#8C1A1A" }}>Validate</strong>.
               </div>
             </div>
-            <button
-              onClick={onOpenBrief}
-              style={{
-                background: "#3B82F6", color: "#fff", border: "none",
-                borderRadius: 8, padding: "10px 20px", fontSize: 13, fontWeight: 600,
-                cursor: "pointer", fontFamily: "'DM Sans', sans-serif",
-                whiteSpace: "nowrap", flexShrink: 0,
-              }}
-            >Build your prompt →</button>
           </div>
-        )}
-      </div>
+        </div>
+      )}
 
       {/* Process Map */}
       <div style={{ padding: "0 32px 16px", maxWidth: 1100, margin: "0 auto" }}>
@@ -957,54 +995,71 @@ export default function DesignProcessSystem({ initialPhase, onOpenBrief }) {
       {/* Bottom guidance */}
       {!activePhase && (
         <div style={{ padding: "32px 32px 48px", maxWidth: 1100, margin: "0 auto" }}>
-          <div style={{ background: "#fff", borderRadius: 16, padding: 32, border: "1px solid #eee" }}>
-            <div style={{ fontSize: 11, fontFamily: "'JetBrains Mono', monospace", textTransform: "uppercase", letterSpacing: 2, color: "#999", marginBottom: 16 }}>How to Use This System</div>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 24 }}>
-              {[
-                { num: "01", title: "Select a phase", desc: "Click any phase above to reveal its AI prompts, skills matrix, templates, and tool recommendations." },
-                { num: "02", title: "Copy & customize prompts", desc: "Each prompt has placeholders in [BRACKETS]. Replace them with your project specifics and paste into Claude or your AI tool." },
-                { num: "03", title: "Use templates as scaffolding", desc: "Templates show the essential fields. Expand them for your project's needs — they're starting points, not rigid forms." },
-                { num: "04", title: "Scale over time", desc: "Add your own prompts that work. Remove what doesn't. This system grows with your practice and your projects." },
-              ].map((item) => (
-                <div key={item.num}>
-                  <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: "#ccc", marginBottom: 6 }}>{item.num}</div>
-                  <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 6 }}>{item.title}</div>
-                  <div style={{ fontSize: 13, color: "#888", lineHeight: 1.5 }}>{item.desc}</div>
+
+          {/* START HERE — Kickoff Prompt */}
+          <div style={{ marginBottom: 16, background: "#0F172A", borderRadius: 16, border: "1px solid #334155", overflow: "hidden" }}>
+            <button
+              onClick={() => setKickoffOpen(!kickoffOpen)}
+              style={{ width: "100%", display: "flex", justifyContent: "space-between", alignItems: "center", padding: "20px 28px", background: "none", border: "none", cursor: "pointer", textAlign: "left" }}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+                <div style={{ background: "#14B8A6", borderRadius: 6, padding: "3px 10px" }}>
+                  <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, fontWeight: 700, color: "#0F172A", letterSpacing: 2, textTransform: "uppercase" }}>Start Here</span>
                 </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Onboarding Guide */}
-          <div style={{ marginTop: 16, background: "#fff", borderRadius: 16, padding: 24, border: "1px solid #eee", borderLeft: "4px solid #0D9488", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <div>
-              <div style={{ fontSize: 11, fontFamily: "'JetBrains Mono', monospace", textTransform: "uppercase", letterSpacing: 2, color: "#0D9488", marginBottom: 6 }}>Onboarding Guide</div>
-              <div style={{ fontSize: 14, color: "#333", fontWeight: 600, marginBottom: 4 }}>New to the framework? Start here.</div>
-              <div style={{ fontSize: 13, color: "#888", lineHeight: 1.5 }}>A 21-slide deck covering the Agentic design philosophy, 6-phase framework, skill chaining, Figma setup, Claude integration, and per-phase prompt examples. Share with your team or use to onboard new collaborators.</div>
-            </div>
-            <a href="https://github.com/quinrobinson/Agentic-Product-Design-Framework/raw/main/artifacts/onboarding-deck.pptx"
-              style={{ background: "#0D9488", color: "#fff", padding: "10px 20px", borderRadius: 8, fontSize: 13, fontWeight: 600, textDecoration: "none", whiteSpace: "nowrap", flexShrink: 0, marginLeft: 24 }}>
-              Download PPTX
-            </a>
-          </div>
-
-          {/* AI Philosophy */}
-          <div style={{ marginTop: 16, background: "#1a1a1a", borderRadius: 16, padding: 32, color: "#e0e0e0" }}>
-            <div style={{ fontSize: 11, fontFamily: "'JetBrains Mono', monospace", textTransform: "uppercase", letterSpacing: 2, color: "#666", marginBottom: 16 }}>The AI × Design Philosophy</div>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24 }}>
-              <div>
-                <div style={{ fontFamily: "'DM Serif Display', serif", fontSize: 20, marginBottom: 12, color: "#fff" }}>AI amplifies throughput.</div>
-                <p style={{ fontSize: 13, lineHeight: 1.7, color: "#999", margin: 0 }}>
-                  Research that took days can be synthesized in minutes. Prototypes that needed a week can ship in hours. Documentation that was always skipped now gets written. AI removes the friction from the labor-intensive parts of design.
-                </p>
+                <div>
+                  <div style={{ fontWeight: 700, fontSize: 15, color: "#F8FAFC" }}>Kickoff Prompt</div>
+                  <div style={{ fontSize: 12, color: "#64748B", marginTop: 2 }}>New to the framework? Paste this into Claude before uploading any skill file.</div>
+                </div>
               </div>
-              <div>
-                <div style={{ fontFamily: "'DM Serif Display', serif", fontSize: 20, marginBottom: 12, color: "#fff" }}>You provide judgment.</div>
-                <p style={{ fontSize: 13, lineHeight: 1.7, color: "#999", margin: 0 }}>
-                  Taste, empathy, strategic thinking, stakeholder navigation, ethical consideration — these remain fundamentally human skills. AI generates options. You make decisions. The best designers will be those who wield AI as a power tool, not a replacement.
-                </p>
+              <span style={{ fontSize: 18, color: "#334155", transform: kickoffOpen ? "rotate(180deg)" : "none", transition: "transform 0.2s" }}>↓</span>
+            </button>
+
+            {kickoffOpen && (
+              <div style={{ borderTop: "1px solid #1E293B", padding: "0 28px 24px" }}>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24, marginTop: 24 }}>
+                  {/* Left: what it does */}
+                  <div>
+                    <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: "#14B8A6", letterSpacing: 2, textTransform: "uppercase", marginBottom: 14 }}>Four questions Claude will ask</div>
+                    {[
+                      { n: "01", q: "What type of project is this?", hint: "New product, feature, redesign, internal tool, client work" },
+                      { n: "02", q: "What phase are you entering?", hint: "Discover / Define / Ideate / Prototype / Validate / Deliver — or \"not sure\"" },
+                      { n: "03", q: "What do you have so far?", hint: "Nothing yet / a brief / brief + research / existing designs" },
+                      { n: "04", q: "Are you working solo or with a team?", hint: "" },
+                    ].map(({ n, q, hint }) => (
+                      <div key={n} style={{ marginBottom: 14 }}>
+                        <div style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
+                          <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: "#334155", marginTop: 2, flexShrink: 0 }}>{n}</span>
+                          <div>
+                            <div style={{ fontSize: 13, fontWeight: 600, color: "#F8FAFC", lineHeight: 1.4 }}>{q}</div>
+                            {hint && <div style={{ fontSize: 11, color: "#64748B", marginTop: 3, lineHeight: 1.4 }}>{hint}</div>}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                    <div style={{ marginTop: 20, paddingTop: 16, borderTop: "1px solid #1E293B" }}>
+                      <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: "#14B8A6", letterSpacing: 2, textTransform: "uppercase", marginBottom: 10 }}>Claude responds with</div>
+                      {["Recommended starting phase + reason why", "The exact skill file to upload next", "A specific first deliverable", "One prompt you can use right now"].map((r) => (
+                        <div key={r} style={{ fontSize: 12, color: "#94A3B8", marginBottom: 6, display: "flex", gap: 8 }}>
+                          <span style={{ color: "#14B8A6", flexShrink: 0 }}>→</span>{r}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Right: prompt code block */}
+                  <div style={{ background: "#1E293B", borderRadius: 10, border: "1px solid #334155", padding: "18px 20px", display: "flex", flexDirection: "column" }}>
+                    <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: "#14B8A6", letterSpacing: 2, textTransform: "uppercase", marginBottom: 14 }}>Copy &amp; paste into Claude</div>
+                    <pre style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: "#94A3B8", lineHeight: 1.7, whiteSpace: "pre-wrap", margin: 0, flex: 1, overflowY: "auto", maxHeight: 320 }}>{KICKOFF_PROMPT}</pre>
+                    <button
+                      onClick={() => { navigator.clipboard.writeText(KICKOFF_PROMPT); setKickoffCopied(true); setTimeout(() => setKickoffCopied(false), 2000); }}
+                      style={{ marginTop: 14, background: kickoffCopied ? "#0D9488" : "#14B8A6", color: "#0F172A", border: "none", borderRadius: 7, padding: "9px 0", fontWeight: 700, fontSize: 12, cursor: "pointer", width: "100%", transition: "background 0.2s" }}
+                    >
+                      {kickoffCopied ? "✓ Copied to clipboard" : "Copy Kickoff Prompt"}
+                    </button>
+                  </div>
+                </div>
               </div>
-            </div>
+            )}
           </div>
 
           {/* Skill Chaining */}
@@ -1072,43 +1127,22 @@ export default function DesignProcessSystem({ initialPhase, onOpenBrief }) {
             </div>
           </div>
 
-          {/* Figma Playbook */}
-          <div style={{ marginTop: 16, background: "#fff", borderRadius: 16, padding: 32, border: "1px solid #eee", borderTop: "3px solid #E85D04" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 20 }}>
+          {/* Agentic Product Design Philosophy */}
+          <div style={{ marginTop: 16, background: "#1a1a1a", borderRadius: 16, padding: 32, color: "#e0e0e0" }}>
+            <div style={{ fontSize: 11, fontFamily: "'JetBrains Mono', monospace", textTransform: "uppercase", letterSpacing: 2, color: "#666", marginBottom: 16 }}>Agentic Product Design Philosophy</div>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24 }}>
               <div>
-                <div style={{ fontSize: 11, fontFamily: "'JetBrains Mono', monospace", textTransform: "uppercase", letterSpacing: 2, color: "#E85D04", marginBottom: 8 }}>Figma Playbook — MCP Integration</div>
-                <div style={{ fontFamily: "'DM Serif Display', serif", fontSize: 22, color: "#111", marginBottom: 6 }}>Claude builds directly in Figma</div>
-                <p style={{ fontSize: 13, color: "#888", margin: 0, lineHeight: 1.5 }}>
-                  The Figma Playbook is a companion skill that works alongside every phase. Phase skills define <em>what</em> to create. The playbook defines <em>how</em> to execute it in Figma via MCP.
+                <div style={{ fontFamily: "'DM Serif Display', serif", fontSize: 20, marginBottom: 12, color: "#fff" }}>AI amplifies throughput.</div>
+                <p style={{ fontSize: 13, lineHeight: 1.7, color: "#999", margin: 0 }}>
+                  Research that took days can be synthesized in minutes. Prototypes that needed a week can ship in hours. Documentation that was always skipped now gets written. AI removes the friction from the labor-intensive parts of design.
                 </p>
               </div>
-              <span style={{ fontSize: 10, fontFamily: "'JetBrains Mono', monospace", background: "#FFF3E0", color: "#E85D04", padding: "6px 12px", borderRadius: 6, fontWeight: 500, whiteSpace: "nowrap" }}>
-                figma-playbook.md
-              </span>
-            </div>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
-              {[
-                { phase: "Discover", color: "#22C55E", actions: ["Research findings boards", "Persona cards", "Competitive matrices"] },
-                { phase: "Define", color: "#8B5CF6", actions: ["Journey maps with emotion curves", "Design briefs", "Requirements boards"] },
-                { phase: "Ideate", color: "#F59E0B", actions: ["Concept cards (5 directions)", "Wireframe scaffolding", "Pattern reference boards"] },
-                { phase: "Prototype", color: "#3B82F6", actions: ["Components with variants", "Screen layouts (all states)", "Design system variables"] },
-                { phase: "Validate", color: "#EF4444", actions: ["Task completion matrices", "Severity-ranked issue cards", "Heuristic eval boards"] },
-                { phase: "Deliver", color: "#14B8A6", actions: ["Spec annotations + redlines", "Component doc frames", "Decision record cards"] },
-              ].map((p) => (
-                <div key={p.phase} style={{ padding: 16, borderRadius: 10, background: "#FAFAF8", border: "1px solid #eee", borderTop: `3px solid ${p.color}` }}>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: p.color, marginBottom: 10 }}>{p.phase}</div>
-                  {p.actions.map((a, i) => (
-                    <div key={i} style={{ fontSize: 12, color: "#666", marginBottom: 4, display: "flex", gap: 6 }}>
-                      <span style={{ color: p.color }}>→</span> {a}
-                    </div>
-                  ))}
-                </div>
-              ))}
-            </div>
-            <div style={{ marginTop: 16, padding: "12px 16px", background: "#FFF3E0", borderRadius: 8, borderLeft: "3px solid #E85D04" }}>
-              <span style={{ fontSize: 12, color: "#9A5400" }}>
-                <strong>How to use:</strong> Tell Claude what to create and which Figma page to target. Claude reads the phase skill + playbook together and executes directly in your file.
-              </span>
+              <div>
+                <div style={{ fontFamily: "'DM Serif Display', serif", fontSize: 20, marginBottom: 12, color: "#fff" }}>You provide judgment.</div>
+                <p style={{ fontSize: 13, lineHeight: 1.7, color: "#999", margin: 0 }}>
+                  Taste, empathy, strategic thinking, stakeholder navigation, ethical consideration — these remain fundamentally human skills. AI generates options. You make decisions. The best designers will be those who wield AI as a power tool, not a replacement.
+                </p>
+              </div>
             </div>
           </div>
         </div>
