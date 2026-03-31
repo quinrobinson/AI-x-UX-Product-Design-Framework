@@ -507,41 +507,6 @@ export default function DesignProcessSystem() {
   const [activeTab, setActiveTab] = useState("prompts");
   const [expandedPrompt, setExpandedPrompt] = useState(null);
   const [copiedPrompt, setCopiedPrompt] = useState(null);
-  const [kickoffOpen, setKickoffOpen] = useState(false);
-  const [kickoffCopied, setKickoffCopied] = useState(false);
-
-  const KICKOFF_PROMPT = `You are a UX design assistant trained on the Agentic Product Design Framework —
-a six-phase system (Discover → Define → Ideate → Prototype → Validate → Deliver)
-with structured skill files, Figma templates, and AI-ready prompts for each phase.
-
-The six phases and their skill files are:
-- Discover → user-research.md, competitive-analysis.md
-- Define → problem-framing.md
-- Ideate → concept-generation.md, visual-design-execution.md
-- Prototype → prototyping.md, accessibility-audit.md
-- Validate → usability-testing.md
-- Deliver → design-delivery.md
-- Cross-phase → design-systems.md, figma-playbook.md
-
-I'm starting a new design project and need help getting oriented.
-Please ask me the following four questions (all at once is fine):
-
-1. What type of project is this?
-   (e.g., new product, feature addition, redesign, internal tool, client work)
-
-2. What phase are you entering?
-   (Discover / Define / Ideate / Prototype / Validate / Deliver — or "not sure")
-
-3. What do you have so far?
-   (nothing yet / a brief / a brief + research / existing designs)
-
-4. Are you working solo or with a team?
-
-Based on my answers, respond with:
-- Recommended starting phase and a one-sentence reason why
-- The specific skill file to upload next (exact filename)
-- A suggested first deliverable — specific, not a category
-- One prompt I can use right now, before uploading anything, to get started`;
 
   const phase = activePhase ? PHASES.find((p) => p.id === activePhase) : null;
 
@@ -996,72 +961,6 @@ Based on my answers, respond with:
       {!activePhase && (
         <div style={{ padding: "32px 32px 48px", maxWidth: 1100, margin: "0 auto" }}>
 
-          {/* START HERE — Kickoff Prompt */}
-          <div style={{ marginBottom: 16, background: "#0F172A", borderRadius: 16, border: "1px solid #334155", overflow: "hidden" }}>
-            <button
-              onClick={() => setKickoffOpen(!kickoffOpen)}
-              style={{ width: "100%", display: "flex", justifyContent: "space-between", alignItems: "center", padding: "20px 28px", background: "none", border: "none", cursor: "pointer", textAlign: "left" }}
-            >
-              <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-                <div style={{ background: "#14B8A6", borderRadius: 6, padding: "3px 10px" }}>
-                  <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, fontWeight: 700, color: "#0F172A", letterSpacing: 2, textTransform: "uppercase" }}>Start Here</span>
-                </div>
-                <div>
-                  <div style={{ fontWeight: 700, fontSize: 15, color: "#F8FAFC" }}>Kickoff Prompt</div>
-                  <div style={{ fontSize: 12, color: "#64748B", marginTop: 2 }}>New to the framework? Paste this into Claude before uploading any skill file.</div>
-                </div>
-              </div>
-              <span style={{ fontSize: 18, color: "#334155", transform: kickoffOpen ? "rotate(180deg)" : "none", transition: "transform 0.2s" }}>↓</span>
-            </button>
-
-            {kickoffOpen && (
-              <div style={{ borderTop: "1px solid #1E293B", padding: "0 28px 24px" }}>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24, marginTop: 24 }}>
-                  {/* Left: what it does */}
-                  <div>
-                    <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: "#14B8A6", letterSpacing: 2, textTransform: "uppercase", marginBottom: 14 }}>Four questions Claude will ask</div>
-                    {[
-                      { n: "01", q: "What type of project is this?", hint: "New product, feature, redesign, internal tool, client work" },
-                      { n: "02", q: "What phase are you entering?", hint: "Discover / Define / Ideate / Prototype / Validate / Deliver — or \"not sure\"" },
-                      { n: "03", q: "What do you have so far?", hint: "Nothing yet / a brief / brief + research / existing designs" },
-                      { n: "04", q: "Are you working solo or with a team?", hint: "" },
-                    ].map(({ n, q, hint }) => (
-                      <div key={n} style={{ marginBottom: 14 }}>
-                        <div style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
-                          <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: "#334155", marginTop: 2, flexShrink: 0 }}>{n}</span>
-                          <div>
-                            <div style={{ fontSize: 13, fontWeight: 600, color: "#F8FAFC", lineHeight: 1.4 }}>{q}</div>
-                            {hint && <div style={{ fontSize: 11, color: "#64748B", marginTop: 3, lineHeight: 1.4 }}>{hint}</div>}
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                    <div style={{ marginTop: 20, paddingTop: 16, borderTop: "1px solid #1E293B" }}>
-                      <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: "#14B8A6", letterSpacing: 2, textTransform: "uppercase", marginBottom: 10 }}>Claude responds with</div>
-                      {["Recommended starting phase + reason why", "The exact skill file to upload next", "A specific first deliverable", "One prompt you can use right now"].map((r) => (
-                        <div key={r} style={{ fontSize: 12, color: "#94A3B8", marginBottom: 6, display: "flex", gap: 8 }}>
-                          <span style={{ color: "#14B8A6", flexShrink: 0 }}>→</span>{r}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Right: prompt code block */}
-                  <div style={{ background: "#1E293B", borderRadius: 10, border: "1px solid #334155", padding: "18px 20px", display: "flex", flexDirection: "column" }}>
-                    <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: "#14B8A6", letterSpacing: 2, textTransform: "uppercase", marginBottom: 14 }}>Copy &amp; paste into Claude</div>
-                    <pre style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: "#94A3B8", lineHeight: 1.7, whiteSpace: "pre-wrap", margin: 0, flex: 1, overflowY: "auto", maxHeight: 320 }}>{KICKOFF_PROMPT}</pre>
-                    <button
-                      onClick={() => { navigator.clipboard.writeText(KICKOFF_PROMPT); setKickoffCopied(true); setTimeout(() => setKickoffCopied(false), 2000); }}
-                      style={{ marginTop: 14, background: kickoffCopied ? "#0D9488" : "#14B8A6", color: "#0F172A", border: "none", borderRadius: 7, padding: "9px 0", fontWeight: 700, fontSize: 12, cursor: "pointer", width: "100%", transition: "background 0.2s" }}
-                    >
-                      {kickoffCopied ? "✓ Copied to clipboard" : "Copy Kickoff Prompt"}
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-
           {/* Skill Chaining */}
           <div style={{ marginTop: 16, background: "#fff", borderRadius: 16, padding: 32, border: "1px solid #eee", borderTop: "3px solid #6366F1" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 24 }}>
@@ -1124,25 +1023,6 @@ Based on my answers, respond with:
               <span style={{ fontSize: 12, color: "#4338CA" }}>
                 <strong>Each phase has a "Phase Handoff" tab</strong> — click any phase above, then open that tab to see the block fields and copy the exact prompts.
               </span>
-            </div>
-          </div>
-
-          {/* Agentic Product Design Philosophy */}
-          <div style={{ marginTop: 16, background: "#1a1a1a", borderRadius: 16, padding: 32, color: "#e0e0e0" }}>
-            <div style={{ fontSize: 11, fontFamily: "'JetBrains Mono', monospace", textTransform: "uppercase", letterSpacing: 2, color: "#666", marginBottom: 16 }}>Agentic Product Design Philosophy</div>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24 }}>
-              <div>
-                <div style={{ fontFamily: "'DM Serif Display', serif", fontSize: 20, marginBottom: 12, color: "#fff" }}>AI amplifies throughput.</div>
-                <p style={{ fontSize: 13, lineHeight: 1.7, color: "#999", margin: 0 }}>
-                  Research that took days can be synthesized in minutes. Prototypes that needed a week can ship in hours. Documentation that was always skipped now gets written. AI removes the friction from the labor-intensive parts of design.
-                </p>
-              </div>
-              <div>
-                <div style={{ fontFamily: "'DM Serif Display', serif", fontSize: 20, marginBottom: 12, color: "#fff" }}>You provide judgment.</div>
-                <p style={{ fontSize: 13, lineHeight: 1.7, color: "#999", margin: 0 }}>
-                  Taste, empathy, strategic thinking, stakeholder navigation, ethical consideration — these remain fundamentally human skills. AI generates options. You make decisions. The best designers will be those who wield AI as a power tool, not a replacement.
-                </p>
-              </div>
             </div>
           </div>
         </div>

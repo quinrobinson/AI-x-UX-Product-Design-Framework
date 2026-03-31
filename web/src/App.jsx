@@ -649,6 +649,31 @@ Based on my answers, respond with:
         </div>
       </div>
 
+      {/* AGENTIC PHILOSOPHY — below tools */}
+      {!activeTool && (
+        <div style={{ background: DS.dark }}>
+          <div style={{ maxWidth: 1160, margin: "0 auto", padding: "64px 60px" }}>
+            <div style={{ fontSize: 10, fontFamily: "'JetBrains Mono', monospace", textTransform: "uppercase", letterSpacing: 3, color: DS.bodyLight, opacity: 0.4, marginBottom: 24 }}>
+              Agentic Product Design Philosophy — 05
+            </div>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 32 }}>
+              <div>
+                <div style={{ fontFamily: "'DM Serif Display', serif", fontSize: 22, marginBottom: 14, color: DS.light }}>AI amplifies throughput.</div>
+                <p style={{ fontSize: 14, lineHeight: 1.7, color: DS.bodyLight, margin: 0, opacity: 0.6 }}>
+                  Research that took days can be synthesized in minutes. Prototypes that needed a week can ship in hours. Documentation that was always skipped now gets written. AI removes the friction from the labor-intensive parts of design.
+                </p>
+              </div>
+              <div>
+                <div style={{ fontFamily: "'DM Serif Display', serif", fontSize: 22, marginBottom: 14, color: DS.light }}>You provide judgment.</div>
+                <p style={{ fontSize: 14, lineHeight: 1.7, color: DS.bodyLight, margin: 0, opacity: 0.6 }}>
+                  Taste, empathy, strategic thinking, stakeholder navigation, ethical consideration — these remain fundamentally human skills. AI generates options. You make decisions. The best designers will be those who wield AI as a power tool, not a replacement.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* FOOTER */}
       <div style={{ background: DS.dark }}>
       <div style={{ borderTop: `1px solid ${DS.darkBorder}`, maxWidth: 1160, margin: "0 auto", padding: "28px 60px 56px", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 16 }}>
