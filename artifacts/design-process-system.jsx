@@ -58,8 +58,28 @@ const PHASES = [
         outputs: ["Competitive Matrix", "Feature Benchmark", "Convention Map", "Innovation Opportunities"],
         checklist: ["All three competitor tiers represented", "Analysis based on actual product usage", "User sentiment included", "Conventions separated from opportunities", "Analysis is current"] },
     ],
+    handoff: {
+      direction: "Discover → Define",
+      nextPhase: "Problem Framing",
+      description: "Close User Research or Competitive Analysis by generating a handoff block. Paste it as the first message when opening Problem Framing — Claude picks up with full research context.",
+      blocks: [
+        {
+          title: "User Research Handoff",
+          subtitle: "Synthesized research findings for problem framing",
+          from: "User Research", to: "Define",
+          carries: "Top 3 themes, primary pain points ranked by severity, unmet needs, a key user quote, and the assumptions that still need validating in Define.",
+          fields: ["Product / problem space", "Research method & participants", "Top 3 themes (with frequency)", "Pain points ranked by severity", "Unmet needs → opportunities", "Key user quote", "Assumptions to validate", "Constraints surfaced", "What Define should focus on"],
+        },
+        {
+          title: "Competitive Analysis Handoff",
+          subtitle: "Market context and differentiation signals for problem framing",
+          from: "Competitive Analysis", to: "Define",
+          carries: "Dominant UX conventions (what users expect), competitive gaps, standout patterns worth adopting, and the differentiation opportunity that should shape the problem statement.",
+          fields: ["Competitive set (direct / indirect / aspirational)", "Dominant UX conventions", "Competitive gaps (opportunities)", "Standout patterns to adopt", "Differentiation opportunity", "Positioning signal for Define"],
+        },
+      ],
+    },
     figmaActions: [
-      { action: "Research Findings Board", desc: "Themed cards with key themes, frequency badges, and evidence quotes organized on the Discover page", example: "\"Create a research findings board on the Discover page with these 5 themes...\"" },
       { action: "Persona Cards", desc: "Structured persona layouts with name, role, goals, frustrations, and key quote", example: "\"Build persona cards for our 3 research personas on the Discover page\"" },
       { action: "Competitive Matrix", desc: "Color-coded comparison table with competitors as columns and evaluation dimensions as rows", example: "\"Create a competitive analysis matrix comparing these 4 competitors...\"" },
     ],
@@ -116,6 +136,20 @@ const PHASES = [
         outputs: ["Problem Statement", "Journey Map", "Requirements Roadmap", "Design Brief"],
         checklist: ["Problem specific enough to guide but open enough for creativity", "Assumptions explicitly stated", "Journey map based on research, not assumptions", "Requirements prioritized with rationale", "Scope boundaries explicit"] },
     ],
+    handoff: {
+      direction: "Define → Ideate",
+      nextPhase: "Concept Generation",
+      description: "Close Problem Framing by generating a handoff block. Paste it when opening Concept Generation — Claude generates concepts grounded in the validated problem, not generic ideas.",
+      blocks: [
+        {
+          title: "Problem Framing Handoff",
+          subtitle: "Validated problem statement and constraints for ideation",
+          from: "Problem Framing", to: "Ideate",
+          carries: "The selected problem statement (HMW/JTBD/user story), why it won over alternatives, specific constraints, top 3 journey friction points, success criteria, and a provocation to push ideation beyond the obvious.",
+          fields: ["Carried forward from Discover", "Primary user (persona + context)", "Validated problem statement", "Why this framing (not alternatives)", "Key constraints (technical/business/user/brand)", "Journey friction points (top 3)", "Success criteria", "Scope (in / out)", "Provocation for Ideate"],
+        },
+      ],
+    },
     figmaActions: [
       { action: "Journey Map", desc: "Stage columns with actions, thoughts, emotions (as colored dots), touchpoints, pain points, and opportunities", example: "\"Create a journey map for our primary persona on the Define page\"" },
       { action: "Design Brief Card", desc: "Structured layout with problem statement, users, metrics, constraints, and scope", example: "\"Build a design brief on the Define page with this problem statement...\"" },
@@ -195,16 +229,42 @@ const PHASES = [
     ],
     skillDocs: [
       { name: "concept-generation", file: "03-ideate/concept-generation.md", title: "Concept Generation & Ideation",
-        summary: "Generate a broad range of design solutions using the Five-Direction Method, then converge on the strongest direction.",
-        workflow: ["Generate 5 concept directions (convention → moonshot)", "Document each as a concept card with strengths and risks", "Recommend UI patterns for the selected direction", "Scaffold design system foundations if needed"],
-        outputs: ["Concept Cards", "UI Pattern Recommendations", "Design System Scaffold", "Wireframe Briefs"],
-        checklist: ["At least 3 directions explored", "Each concept has strengths AND risks", "Pattern recs consider accessibility", "Design system tokens are opinionated", "Wireframes include edge cases and states"] },
+        summary: "Generate design concepts, UI pattern recs, visual system directions, and chart type selections using the Five-Direction Method.",
+        workflow: ["Generate 5 concept directions (convention → moonshot)", "Document each as a concept card with strengths, risks, and visual direction", "Select chart types matched to data relationships", "Recommend UI patterns for the selected direction", "Scaffold design system foundations"],
+        outputs: ["Concept Cards", "Visual Direction Cards", "Chart Type Selection", "UI Pattern Recommendations", "Design System Scaffold", "Wireframe Briefs"],
+        checklist: ["At least 3 directions explored", "Each concept has strengths AND risks", "Visual direction considered alongside interaction model", "Chart type justified against data relationship", "Pattern recs address accessibility", "Wireframes include all states and edge cases"] },
+      { name: "visual-design-execution", file: "03-ideate/visual-design-execution.md", title: "Visual Design Execution",
+        summary: "Translate a product brief into a cohesive visual system — style, color, typography, spacing, motion, and icons.",
+        workflow: ["Select visual style matched to domain and audience", "Build semantic color token architecture with light/dark pairing", "Define typography pairings and type scale", "Establish 4pt spacing scale and shape tokens", "Set elevation and motion timing standards", "Define icon library and touch target rules"],
+        outputs: ["Color Token System", "Typography Scale", "Spacing & Shape Tokens", "Motion Spec", "Icon Standards", "Pre-Delivery Visual QA"],
+        checklist: ["One style system throughout — no mixing", "All colors reference semantic tokens", "Light and dark mode both tested", "Body text ≥ 4.5:1 contrast in both modes", "All spacing multiples of 4", "Animations ≤ 300ms, transform/opacity only", "Single icon library, consistent stroke width"] },
       { name: "design-systems", file: "design-systems.md", title: "Design System Audit & Token Documentation",
         summary: "Audit products against Material, Atlassian, Carbon, Apple HIG. Document tokens using M3 naming. Set up Figma variables.",
         workflow: ["Run design system audit using checklist artifact", "Document tokens following M3 naming conventions", "Set up Figma variable collections (Reference → System → Component)", "Create component anatomy documentation", "Compare approaches across the four major systems"],
         outputs: ["Audit Report", "M3 Token Specs", "Figma Variable Collections", "Component Anatomy Docs", "Cross-System Comparison"],
         checklist: ["All design decisions expressed as named tokens", "Light and dark mode variants for every color", "Typography scale uses M3 typescale names or equivalent", "Spacing follows 4px or 8px base grid", "Elevation documented with shadow + surface tint pairs"] },
     ],
+    handoff: {
+      direction: "Ideate → Prototype",
+      nextPhase: "Prototyping",
+      description: "Close Concept Generation (and Visual Design if run) by generating handoff blocks. Combine them when opening Prototyping — Claude builds a prototype that uses the right concept, visual system, and tokens from the start.",
+      blocks: [
+        {
+          title: "Concept Generation Handoff",
+          subtitle: "Selected concept, visual direction, and screens to build",
+          from: "Concept Generation", to: "Prototype",
+          carries: "The selected concept name and interaction model, why it won over rejected alternatives, visual direction (style + color + type), screens to prototype, key interactions to nail, platform and stack, and open questions to resolve through building.",
+          fields: ["Carried forward from Define", "Selected concept (name + core idea + UX pattern)", "Why chosen over alternatives", "Rejected concepts + reasons", "Visual direction (style / color / type / density)", "Screens / flows to prototype", "Key interactions to nail", "Platform & stack", "Open questions for prototype phase"],
+        },
+        {
+          title: "Visual Design Handoff",
+          subtitle: "Full token set for prototype implementation",
+          from: "Visual Design", to: "Prototype",
+          carries: "The complete design token set — brand colors, surface colors, typography, spacing scale, shape tokens, motion timing — ready to paste directly into the prototype.",
+          fields: ["Brand primary + secondary (hex + token name)", "Surface colors light + dark", "Text colors primary + secondary", "Heading font + body font", "Type scale (xs through 5xl)", "Spacing scale + shape tokens", "Motion timing (fast/normal/slow + easing)", "Icon library + stroke width", "Dark mode supported y/n"],
+        },
+      ],
+    },
     figmaActions: [
       { action: "Concept Cards", desc: "Row of 5 concept cards using the Five-Direction Method with strength/risk tags", example: "\"Create concept exploration cards for these 5 directions on the Ideate page\"" },
       { action: "Wireframe Scaffolding", desc: "Frame structures at standard device widths (375, 768, 1280) with labeled content areas", example: "\"Scaffold wireframe frames for the dashboard and settings screens\"" },
@@ -260,11 +320,30 @@ const PHASES = [
     aiTools: ["Claude — Code prototypes & components", "v0 by Vercel — UI generation", "Figma Dev Mode — Design-to-code", "Cursor / Copilot — Code assistance"],
     skillDocs: [
       { name: "prototyping", file: "04-prototype/prototyping.md", title: "Prototyping & Production Design",
-        summary: "Transform concepts into testable, accessible, production-quality prototypes.",
-        workflow: ["Define prototype spec (purpose, fidelity, scope, states)", "Build structure → content → states → interactions", "Write UX copy systematically per screen", "Run accessibility audit against WCAG 2.1 AA", "Design QA checklist before handoff"],
-        outputs: ["Functional Prototype", "UX Copy System", "Accessibility Audit Report", "Design QA Checklist"],
-        checklist: ["Prototype uses realistic data", "All states accounted for", "Copy is specific and consistent in voice", "Accessibility audit has specific fixes", "Responsive behavior tested", "Micro-interactions enhance usability"] },
+        summary: "Build functional prototypes with correct touch targets, interaction timing, gesture safety, and platform-specific QA.",
+        workflow: ["Define prototype spec (purpose, fidelity, platform, states)", "Build structure → content → states → interactions", "Apply touch target standards (44×44pt iOS / 48×48dp Android)", "Specify interaction timing (80–300ms) and animation rules", "Write UX copy systematically per screen", "Run pre-delivery QA checklist (interaction, gesture, light/dark, layout, a11y)"],
+        outputs: ["Functional Prototype", "Interaction Timing Spec", "UX Copy System", "Pre-Delivery QA Checklist"],
+        checklist: ["All tappable elements have press feedback ≤ 150ms", "Touch targets ≥ 44×44pt (iOS) / 48×48dp (Android)", "Animation 80–300ms, transform/opacity only", "Gesture conflicts with system swipes checked", "Safe areas respected (notch, gesture bar)", "Primary text ≥ 4.5:1 contrast in light and dark mode", "Disabled states visually clear and non-interactive"] },
+      { name: "accessibility-audit", file: "04-prototype/accessibility-audit.md", title: "Accessibility Audit",
+        summary: "Systematic WCAG 2.1 AA audit for web and native mobile covering contrast, keyboard, screen readers, touch, and forms.",
+        workflow: ["Define audit scope (platform, WCAG level, components in scope)", "Check visual: contrast ratios, color as sole indicator, text resize", "Check keyboard & focus: tab order, visible rings, skip links, no traps", "Check screen reader: semantic HTML, heading hierarchy, ARIA, alt text", "Check touch: target sizes, gesture alternatives, reduced motion", "Check forms: labels, error placement, focus management", "Produce audit report with severity levels and fixes"],
+        outputs: ["Accessibility Audit Report", "Issue List with Severity", "Platform-Specific Notes", "Pre-Delivery a11y Checklist"],
+        checklist: ["All body text ≥ 4.5:1 (light and dark mode)", "UI components and icons ≥ 3:1", "Color never sole indicator of meaning", "All interactive elements reachable by Tab", "Focus indicator visible on every interactive element", "Touch targets ≥ 44×44pt / 48×48dp", "prefers-reduced-motion respected", "One h1 per page, sequential heading hierarchy"] },
     ],
+    handoff: {
+      direction: "Prototype → Validate",
+      nextPhase: "Usability Testing",
+      description: "Close Prototyping by generating a handoff block. Paste it when opening Usability Testing — Claude writes a test plan with tasks matched to the actual prototype screens and your riskiest hypotheses.",
+      blocks: [
+        {
+          title: "Prototyping Handoff",
+          subtitle: "Prototype details, hypotheses, and draft test tasks",
+          from: "Prototyping", to: "Validate",
+          carries: "Prototype link and fidelity, all screens built, key design decisions made during building, known gaps and shortcuts testers should know, the 3 hypotheses to test ranked by risk, and draft task scenarios.",
+          fields: ["Carried forward from Ideate", "Prototype link + fidelity", "Screens built + flows covered", "Key design decisions (+ rationale)", "Known gaps / shortcuts", "Hypotheses to test (with success criteria)", "Riskiest assumptions (top 2)", "Draft task scenarios", "Accessibility notes for testers"],
+        },
+      ],
+    },
     figmaActions: [
       { action: "Component Creation", desc: "Build components with variants (default, hover, active, disabled, focus, error) and auto-layout", example: "\"Create a Button component with primary/secondary/outline variants\"" },
       { action: "Screen Layouts", desc: "Full screen designs at standard breakpoints with all states (default, loading, error, empty, success)", example: "\"Build the dashboard screen layout with default and empty states\"" },
@@ -323,6 +402,20 @@ const PHASES = [
         outputs: ["Test Plan", "Task Scenarios", "Session Notes", "Findings Report", "Heuristic Evaluation"],
         checklist: ["Task scenarios are realistic and non-leading", "Participant criteria specific enough to recruit right people", "Analysis uses severity × frequency, not opinion", "Every issue has an actionable recommendation", "Positive findings documented, not just problems"] },
     ],
+    handoff: {
+      direction: "Validate → Deliver",
+      nextPhase: "Design Delivery",
+      description: "Close Usability Testing by generating a handoff block. Paste it when opening Design Delivery — Claude writes specs and handoff docs grounded in what was actually tested and validated, not just what was designed.",
+      blocks: [
+        {
+          title: "Usability Testing Handoff",
+          subtitle: "Test findings, validated assumptions, and metrics baseline",
+          from: "Usability Testing", to: "Deliver",
+          carries: "Overall verdict (pass/conditional/fail), what worked and should be kept, issues ranked by priority with recommended fixes, which assumptions from Ideate were validated or invalidated, remaining open questions for engineering, and the metrics baseline for post-launch measurement.",
+          fields: ["Carried forward from Prototype", "Test method + participants", "Overall verdict (pass/fail)", "What worked (keep in delivery)", "Issues to fix before delivery (ranked)", "Design changes made post-testing", "Validated / invalidated assumptions", "Remaining open questions", "Accessibility findings", "Metrics baseline (completion rate, time on task, SUS)"],
+        },
+      ],
+    },
     figmaActions: [
       { action: "Task Completion Matrix", desc: "Table showing pass/fail/assist per task per participant with completion rates", example: "\"Create a task completion matrix with these 5 tasks and 6 participants\"" },
       { action: "Issue Cards", desc: "Severity-ranked cards with title, frequency, evidence quote, and recommendation", example: "\"Build issue cards for these 8 usability findings ranked by severity\"" },
@@ -376,11 +469,25 @@ const PHASES = [
     aiTools: ["Claude — Specs, docs & code generation", "Figma Dev Mode — Automated handoff", "Storybook — Component documentation", "Zeroheight — Design system docs"],
     skillDocs: [
       { name: "design-delivery", file: "06-deliver/design-delivery.md", title: "Design Delivery & Documentation",
-        summary: "Ship designs with precision — component specs, handoff packages, and decision records.",
-        workflow: ["Write component specs (props, states, responsive, a11y, content guidelines)", "Prepare developer handoff package with checklist", "Document design decisions as DDRs with rationale", "Write release notes (internal changelog + user-facing)"],
-        outputs: ["Component Specs", "Handoff Checklist", "Design Decision Records", "Release Notes", "Design System Docs"],
-        checklist: ["Specs complete enough for devs to build without questions", "All assets exported and organized", "Design decisions documented with rationale", "Handoff includes accessibility requirements", "Token names used instead of raw values"] },
+        summary: "Ship designs with platform-specific precision — component specs, iOS/Android/Web handoff packages, DDRs, and release notes.",
+        workflow: ["Write component specs (props, all states, responsive, a11y, content guidelines)", "Prepare platform-specific handoff: Web (breakpoints, performance, CSS arch), iOS (safe areas, Dynamic Type, VoiceOver), Android (WindowInsets, TalkBack, Material state layers)", "Document design decisions as DDRs with rationale", "Write release notes (internal changelog + user-facing)"],
+        outputs: ["Component Specs", "Web Handoff Package", "iOS Handoff Package", "Android Handoff Package", "Design Decision Records", "Release Notes"],
+        checklist: ["Specs complete enough for devs to build without questions", "Platform-specific rules addressed (iOS / Android / Web)", "All assets exported and organized", "Token names used throughout — no raw values", "Accessibility package included (tab order, aria, alt text, platform labels)", "Acceptance criteria defined for eng review"] },
     ],
+    handoff: {
+      direction: "Deliver → Archive / v2",
+      nextPhase: "v2 Planning",
+      description: "Design Delivery closes the chain. Generate the Retrospective Block to archive the full project — the discovery insight, problem statement, concept, and key decisions — all in one block. Paste it to re-enter this project at any point, or hand it to a new designer.",
+      blocks: [
+        {
+          title: "Retrospective Block",
+          subtitle: "Full project memory — archive, v2 brief, or collaborator onboarding",
+          from: "Deliver", to: "Archive / v2",
+          carries: "The complete project chain in one block: the discovery insight that drove everything, the problem statement, the winning concept, the test finding that shaped delivery, all significant design decisions with rationale, what was deliberately left out, technical/design debt flagged, post-launch metrics to watch, and a ready-made v2 re-entry prompt.",
+          fields: ["Features built + shipped", "Figma + design system links", "Discovery insight that drove everything", "Problem statement", "Concept chosen + why", "Key test finding that shaped delivery", "Design decisions + DDR references", "What was left out (and why)", "Technical / design debt flagged", "Post-launch metrics to watch", "v2 / next sprint backlog", "Re-entry prompt for future work"],
+        },
+      ],
+    },
     figmaActions: [
       { action: "Spec Annotations", desc: "Annotation cards connected to design elements with token references (spacing, color, type, radius)", example: "\"Annotate the card component with spacing and color specs\"" },
       { action: "Component Documentation", desc: "Doc frames with variants grid, props table, states row, usage guidelines, and a11y notes", example: "\"Create documentation frames for the Button and Input components\"" },
@@ -400,6 +507,41 @@ export default function DesignProcessSystem() {
   const [activeTab, setActiveTab] = useState("prompts");
   const [expandedPrompt, setExpandedPrompt] = useState(null);
   const [copiedPrompt, setCopiedPrompt] = useState(null);
+  const [kickoffOpen, setKickoffOpen] = useState(false);
+  const [kickoffCopied, setKickoffCopied] = useState(false);
+
+  const KICKOFF_PROMPT = `You are a UX design assistant trained on the Agentic Product Design Framework —
+a six-phase system (Discover → Define → Ideate → Prototype → Validate → Deliver)
+with structured skill files, Figma templates, and AI-ready prompts for each phase.
+
+The six phases and their skill files are:
+- Discover → user-research.md, competitive-analysis.md
+- Define → problem-framing.md
+- Ideate → concept-generation.md, visual-design-execution.md
+- Prototype → prototyping.md, accessibility-audit.md
+- Validate → usability-testing.md
+- Deliver → design-delivery.md
+- Cross-phase → design-systems.md, figma-playbook.md
+
+I'm starting a new design project and need help getting oriented.
+Please ask me the following four questions (all at once is fine):
+
+1. What type of project is this?
+   (e.g., new product, feature addition, redesign, internal tool, client work)
+
+2. What phase are you entering?
+   (Discover / Define / Ideate / Prototype / Validate / Deliver — or "not sure")
+
+3. What do you have so far?
+   (nothing yet / a brief / a brief + research / existing designs)
+
+4. Are you working solo or with a team?
+
+Based on my answers, respond with:
+- Recommended starting phase and a one-sentence reason why
+- The specific skill file to upload next (exact filename)
+- A suggested first deliverable — specific, not a category
+- One prompt I can use right now, before uploading anything, to get started`;
 
   const phase = activePhase ? PHASES.find((p) => p.id === activePhase) : null;
 
@@ -419,7 +561,7 @@ export default function DesignProcessSystem() {
           <span style={{ fontFamily: "'DM Serif Display', serif", fontSize: 11, letterSpacing: 3, textTransform: "uppercase", color: "#999", fontWeight: 400 }}>Living System</span>
         </div>
         <h1 style={{ fontFamily: "'DM Serif Display', serif", fontSize: 42, fontWeight: 400, margin: "0 0 12px", lineHeight: 1.1, color: "#111" }}>
-          AI × UX Design Process
+          Agentic Design Process
         </h1>
         <p style={{ fontSize: 16, color: "#666", maxWidth: 600, lineHeight: 1.6, margin: 0 }}>
           A scalable framework for integrating AI into every phase of product design — from research through delivery. Built to grow with your practice.
@@ -449,14 +591,14 @@ export default function DesignProcessSystem() {
           </div>
 
           {/* Phase Decision Helper */}
-          <div style={{ background: "#fff", borderRadius: 16, padding: 24, border: "1px solid #eee", marginBottom: 12, display: "flex", alignItems: "center", gap: 20 }}>
+          <div style={{ background: "#fff", borderRadius: 16, padding: 24, border: "1px solid #eee", display: "flex", alignItems: "center", gap: 20 }}>
             <div style={{ width: 48, height: 48, borderRadius: 12, background: "#F59E0B", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
               <span style={{ fontSize: 24, color: "#fff" }}>🧭</span>
             </div>
             <div style={{ flex: 1 }}>
               <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 4 }}>Not sure which phase to start in?</div>
               <div style={{ fontSize: 13, color: "#888", lineHeight: 1.5 }}>
-                Have research data? Start in <strong style={{ color: "#22C55E" }}>Discover</strong>. Know the problem but need solutions? Jump to <strong style={{ color: "#F59E0B" }}>Ideate</strong>. Building a design system from scratch? <strong style={{ color: "#F59E0B" }}>Ideate</strong>'s Scaffolder prompt has you covered. Inheriting existing designs? Start in <strong style={{ color: "#3B82F6" }}>Prototype</strong> or <strong style={{ color: "#EF4444" }}>Validate</strong>.
+                Have research data? Start in <strong style={{ color: "#2D5A27" }}>Discover</strong>. Know the problem but need solutions? Jump to <strong style={{ color: "#8B5E00" }}>Ideate</strong>. Building a design system from scratch? <strong style={{ color: "#8B5E00" }}>Ideate</strong>'s Scaffolder prompt has you covered. Inheriting existing designs? Start in <strong style={{ color: "#1A4B8C" }}>Prototype</strong> or <strong style={{ color: "#8C1A1A" }}>Validate</strong>.
               </div>
             </div>
           </div>
@@ -531,6 +673,7 @@ export default function DesignProcessSystem() {
             {[
               { id: "prompts", label: "AI Prompts & Workflows", count: phase.prompts.length },
               { id: "skills", label: "Skill Docs", count: phase.skillDocs ? phase.skillDocs.length : 0 },
+              { id: "handoff", label: "Phase Handoff", count: phase.handoff ? phase.handoff.blocks.length : 0 },
               { id: "figma", label: "Figma Playbook", count: phase.figmaActions ? phase.figmaActions.length : 0 },
               { id: "templates", label: "Templates", count: phase.templates.length },
               { id: "tools", label: "Recommended Tools", count: phase.aiTools.length },
@@ -681,6 +824,85 @@ export default function DesignProcessSystem() {
             </div>
           )}
 
+          {/* Phase Handoff Tab */}
+          {activeTab === "handoff" && phase.handoff && (
+            <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+              {/* Intro banner */}
+              <div style={{ background: phase.color, borderRadius: 12, padding: "16px 20px", borderLeft: `4px solid ${phase.accent}` }}>
+                <div style={{ fontSize: 13, fontWeight: 600, color: phase.accent, marginBottom: 4 }}>
+                  {phase.handoff.direction}
+                </div>
+                <div style={{ fontSize: 12, color: phase.accent, opacity: 0.75, lineHeight: 1.5 }}>
+                  {phase.handoff.description}
+                </div>
+              </div>
+
+              {/* How to use */}
+              <div style={{ background: "#fff", borderRadius: 16, padding: "20px 24px", border: "1px solid #eee" }}>
+                <div style={{ fontSize: 11, fontFamily: "'JetBrains Mono', monospace", textTransform: "uppercase", letterSpacing: 2, color: "#999", marginBottom: 12 }}>How to Use</div>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+                  <div>
+                    <div style={{ fontSize: 12, fontWeight: 600, color: "#333", marginBottom: 6 }}>Close this phase</div>
+                    <div style={{ background: "#1a1a1a", borderRadius: 8, padding: "10px 14px" }}>
+                      <code style={{ fontSize: 12, color: "#e0e0e0", fontFamily: "'JetBrains Mono', monospace" }}>
+                        "Generate the Phase Handoff Block for this session."
+                      </code>
+                    </div>
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 12, fontWeight: 600, color: "#333", marginBottom: 6 }}>Open the next phase</div>
+                    <div style={{ background: "#1a1a1a", borderRadius: 8, padding: "10px 14px" }}>
+                      <code style={{ fontSize: 12, color: "#e0e0e0", fontFamily: "'JetBrains Mono', monospace" }}>
+                        "Starting {phase.handoff.nextPhase}. Here's the handoff: [paste block]"
+                      </code>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Handoff blocks */}
+              {phase.handoff.blocks.map((block, i) => (
+                <div key={i} style={{ background: "#fff", borderRadius: 16, border: "1px solid #eee", overflow: "hidden" }}>
+                  <div style={{ padding: "20px 24px 16px", borderBottom: "1px solid #f4f4f2" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                      <div>
+                        <div style={{ fontWeight: 700, fontSize: 16, marginBottom: 4 }}>{block.title}</div>
+                        <div style={{ fontSize: 12, color: "#888" }}>{block.subtitle}</div>
+                      </div>
+                      <span style={{ fontSize: 10, fontFamily: "'JetBrains Mono', monospace", background: phase.color, color: phase.accent, padding: "4px 10px", borderRadius: 6, fontWeight: 500, whiteSpace: "nowrap" }}>
+                        {block.from} → {block.to}
+                      </span>
+                    </div>
+                  </div>
+                  <div style={{ padding: "16px 24px" }}>
+                    <div style={{ fontSize: 11, fontFamily: "'JetBrains Mono', monospace", textTransform: "uppercase", letterSpacing: 2, color: "#999", marginBottom: 10 }}>Key Fields</div>
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+                      {block.fields.map((field, j) => (
+                        <div key={j} style={{ display: "flex", alignItems: "flex-start", gap: 8, padding: "8px 12px", background: "#FAFAF8", borderRadius: 8, border: "1px solid #eee" }}>
+                          <span style={{ color: phase.accent, fontSize: 12, flexShrink: 0, marginTop: 1 }}>→</span>
+                          <span style={{ fontSize: 12, color: "#555", lineHeight: 1.4 }}>{field}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  <div style={{ padding: "0 24px 16px" }}>
+                    <div style={{ fontSize: 11, fontFamily: "'JetBrains Mono', monospace", textTransform: "uppercase", letterSpacing: 2, color: "#999", marginBottom: 8 }}>What it carries forward</div>
+                    <div style={{ fontSize: 13, color: "#555", lineHeight: 1.6, background: phase.color + "66", borderRadius: 8, padding: "10px 14px" }}>
+                      {block.carries}
+                    </div>
+                  </div>
+                </div>
+              ))}
+
+              {/* Skill file reference */}
+              <div style={{ padding: "12px 16px", background: "#FAFAF8", borderRadius: 8, border: "1px solid #eee" }}>
+                <span style={{ fontSize: 11, color: "#aaa", fontFamily: "'JetBrains Mono', monospace" }}>
+                  Full handoff templates → skills/phase-handoff.md and each phase skill file
+                </span>
+              </div>
+            </div>
+          )}
+
           {/* Figma Playbook Tab */}
           {activeTab === "figma" && phase.figmaActions && (
             <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
@@ -770,43 +992,138 @@ export default function DesignProcessSystem() {
         </div>
       )}
 
-      {/* Bottom sections — only when no phase selected */}
+      {/* Bottom guidance */}
       {!activePhase && (
-        <div style={{ padding: "16px 32px 48px", maxWidth: 1100, margin: "0 auto" }}>
+        <div style={{ padding: "32px 32px 48px", maxWidth: 1100, margin: "0 auto" }}>
 
-          {/* Skill Chaining — Phase Handoff System */}
-          <div style={{ background: "#fff", borderRadius: 16, padding: 32, border: "1px solid #eee" }}>
-            <div style={{ fontSize: 11, fontFamily: "'JetBrains Mono', monospace", textTransform: "uppercase", letterSpacing: 2, color: "#999", marginBottom: 16 }}>Skill Chaining — Phase Handoff System</div>
-            <p style={{ fontSize: 14, color: "#666", lineHeight: 1.6, margin: "0 0 20px" }}>
-              Each phase produces a structured handoff block that becomes the opening context for the next phase. This eliminates context loss between conversations and turns six separate sessions into one continuous workflow.
-            </p>
-            <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
-              {PHASES.map((p, i) => (
-                <div key={p.id} style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <div style={{
-                    background: p.color, border: `2px solid ${p.accent}`, borderRadius: 10, padding: "10px 16px",
-                    textAlign: "center", minWidth: 90,
-                  }}>
-                    <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: p.accent, opacity: 0.6 }}>{p.number}</div>
-                    <div style={{ fontWeight: 700, fontSize: 13, color: p.accent }}>{p.name}</div>
+          {/* START HERE — Kickoff Prompt */}
+          <div style={{ marginBottom: 16, background: "#0F172A", borderRadius: 16, border: "1px solid #334155", overflow: "hidden" }}>
+            <button
+              onClick={() => setKickoffOpen(!kickoffOpen)}
+              style={{ width: "100%", display: "flex", justifyContent: "space-between", alignItems: "center", padding: "20px 28px", background: "none", border: "none", cursor: "pointer", textAlign: "left" }}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+                <div style={{ background: "#14B8A6", borderRadius: 6, padding: "3px 10px" }}>
+                  <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, fontWeight: 700, color: "#0F172A", letterSpacing: 2, textTransform: "uppercase" }}>Start Here</span>
+                </div>
+                <div>
+                  <div style={{ fontWeight: 700, fontSize: 15, color: "#F8FAFC" }}>Kickoff Prompt</div>
+                  <div style={{ fontSize: 12, color: "#64748B", marginTop: 2 }}>New to the framework? Paste this into Claude before uploading any skill file.</div>
+                </div>
+              </div>
+              <span style={{ fontSize: 18, color: "#334155", transform: kickoffOpen ? "rotate(180deg)" : "none", transition: "transform 0.2s" }}>↓</span>
+            </button>
+
+            {kickoffOpen && (
+              <div style={{ borderTop: "1px solid #1E293B", padding: "0 28px 24px" }}>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24, marginTop: 24 }}>
+                  {/* Left: what it does */}
+                  <div>
+                    <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: "#14B8A6", letterSpacing: 2, textTransform: "uppercase", marginBottom: 14 }}>Four questions Claude will ask</div>
+                    {[
+                      { n: "01", q: "What type of project is this?", hint: "New product, feature, redesign, internal tool, client work" },
+                      { n: "02", q: "What phase are you entering?", hint: "Discover / Define / Ideate / Prototype / Validate / Deliver — or \"not sure\"" },
+                      { n: "03", q: "What do you have so far?", hint: "Nothing yet / a brief / brief + research / existing designs" },
+                      { n: "04", q: "Are you working solo or with a team?", hint: "" },
+                    ].map(({ n, q, hint }) => (
+                      <div key={n} style={{ marginBottom: 14 }}>
+                        <div style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
+                          <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: "#334155", marginTop: 2, flexShrink: 0 }}>{n}</span>
+                          <div>
+                            <div style={{ fontSize: 13, fontWeight: 600, color: "#F8FAFC", lineHeight: 1.4 }}>{q}</div>
+                            {hint && <div style={{ fontSize: 11, color: "#64748B", marginTop: 3, lineHeight: 1.4 }}>{hint}</div>}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                    <div style={{ marginTop: 20, paddingTop: 16, borderTop: "1px solid #1E293B" }}>
+                      <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: "#14B8A6", letterSpacing: 2, textTransform: "uppercase", marginBottom: 10 }}>Claude responds with</div>
+                      {["Recommended starting phase + reason why", "The exact skill file to upload next", "A specific first deliverable", "One prompt you can use right now"].map((r) => (
+                        <div key={r} style={{ fontSize: 12, color: "#94A3B8", marginBottom: 6, display: "flex", gap: 8 }}>
+                          <span style={{ color: "#14B8A6", flexShrink: 0 }}>→</span>{r}
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                  {i < PHASES.length - 1 && (
-                    <div style={{ fontSize: 16, color: "#ccc", fontWeight: 700 }}>→</div>
+
+                  {/* Right: prompt code block */}
+                  <div style={{ background: "#1E293B", borderRadius: 10, border: "1px solid #334155", padding: "18px 20px", display: "flex", flexDirection: "column" }}>
+                    <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: "#14B8A6", letterSpacing: 2, textTransform: "uppercase", marginBottom: 14 }}>Copy &amp; paste into Claude</div>
+                    <pre style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: "#94A3B8", lineHeight: 1.7, whiteSpace: "pre-wrap", margin: 0, flex: 1, overflowY: "auto", maxHeight: 320 }}>{KICKOFF_PROMPT}</pre>
+                    <button
+                      onClick={() => { navigator.clipboard.writeText(KICKOFF_PROMPT); setKickoffCopied(true); setTimeout(() => setKickoffCopied(false), 2000); }}
+                      style={{ marginTop: 14, background: kickoffCopied ? "#0D9488" : "#14B8A6", color: "#0F172A", border: "none", borderRadius: 7, padding: "9px 0", fontWeight: 700, fontSize: 12, cursor: "pointer", width: "100%", transition: "background 0.2s" }}
+                    >
+                      {kickoffCopied ? "✓ Copied to clipboard" : "Copy Kickoff Prompt"}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Skill Chaining */}
+          <div style={{ marginTop: 16, background: "#fff", borderRadius: 16, padding: 32, border: "1px solid #eee", borderTop: "3px solid #6366F1" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 24 }}>
+              <div>
+                <div style={{ fontSize: 11, fontFamily: "'JetBrains Mono', monospace", textTransform: "uppercase", letterSpacing: 2, color: "#6366F1", marginBottom: 8 }}>Skill Chaining — Phase Handoff System</div>
+                <div style={{ fontFamily: "'DM Serif Display', serif", fontSize: 22, color: "#111", marginBottom: 6 }}>One continuous thread, not six separate conversations</div>
+                <p style={{ fontSize: 13, color: "#888", margin: 0, lineHeight: 1.5, maxWidth: 520 }}>
+                  Each phase closes with a handoff block Claude generates from the session. Paste it as the first message of the next phase — Claude picks up with full context.
+                </p>
+              </div>
+              <span style={{ fontSize: 10, fontFamily: "'JetBrains Mono', monospace", background: "#EEF2FF", color: "#6366F1", padding: "6px 12px", borderRadius: 6, fontWeight: 500, whiteSpace: "nowrap" }}>
+                skills/phase-handoff.md
+              </span>
+            </div>
+
+            {/* Chain diagram */}
+            <div style={{ display: "flex", alignItems: "center", gap: 0, marginBottom: 24, overflowX: "auto", paddingBottom: 4 }}>
+              {[
+                { n: "01", name: "Discover", color: "#E8F0E8", accent: "#2D5A27", out: "Themes · Pain points · Opportunities" },
+                { n: "02", name: "Define", color: "#E8E4F0", accent: "#4A3166", out: "Problem statement · Constraints · Scope" },
+                { n: "03", name: "Ideate", color: "#FFF3E0", accent: "#8B5E00", out: "Selected concept · Visual tokens" },
+                { n: "04", name: "Prototype", color: "#E3F2FD", accent: "#1A4B8C", out: "Prototype link · Hypotheses · Tasks" },
+                { n: "05", name: "Validate", color: "#FDE8E8", accent: "#8C1A1A", out: "Findings · Validated assumptions · Metrics" },
+                { n: "06", name: "Deliver", color: "#E8F0F0", accent: "#1A5C5C", out: "Retrospective · v2 backlog · Re-entry prompt" },
+              ].map((p, i) => (
+                <div key={p.n} style={{ display: "flex", alignItems: "center", flexShrink: 0 }}>
+                  <div style={{ background: p.color, borderRadius: 12, padding: "14px 16px", minWidth: 120 }}>
+                    <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: p.accent, opacity: 0.6, marginBottom: 4 }}>{p.n}</div>
+                    <div style={{ fontWeight: 700, fontSize: 13, color: p.accent, marginBottom: 6 }}>{p.name}</div>
+                    <div style={{ fontSize: 10, color: p.accent, opacity: 0.7, lineHeight: 1.4 }}>{p.out}</div>
+                  </div>
+                  {i < 5 && (
+                    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", padding: "0 6px" }}>
+                      <div style={{ fontSize: 16, color: "#6366F1" }}>→</div>
+                      <div style={{ fontSize: 9, color: "#aaa", fontFamily: "'JetBrains Mono', monospace", whiteSpace: "nowrap" }}>handoff</div>
+                    </div>
                   )}
                 </div>
               ))}
             </div>
-            <div style={{ marginTop: 20, display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
+
+            {/* How to use */}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
               {[
-                { title: "Structured Outputs", desc: "Each phase closes with a handoff block: validated problem statements, token sets, prototype links, test findings." },
-                { title: "Context Carrying", desc: "Paste the handoff block at the start of your next conversation. Claude picks up exactly where you left off." },
-                { title: "Team Continuity", desc: "Handoff blocks double as project briefs. New collaborators get full context without reading every prior conversation." },
+                { step: "01", title: "Close a phase", cmd: '"Generate the Phase Handoff Block for this session."', desc: "Ask Claude at the end of any phase session" },
+                { step: "02", title: "Open the next phase", cmd: '"Starting [phase]. Here\'s the handoff: [paste block]"', desc: "First message in your next conversation" },
+                { step: "03", title: "Re-enter mid-project", cmd: '"Here are all handoffs so far: [...]. We\'re in [phase]."', desc: "Paste the full chain to restore complete context" },
               ].map((item) => (
-                <div key={item.title} style={{ padding: 16, background: "#FAFAF8", borderRadius: 10, border: "1px solid #eee" }}>
-                  <div style={{ fontWeight: 700, fontSize: 13, marginBottom: 6 }}>{item.title}</div>
-                  <div style={{ fontSize: 12, color: "#888", lineHeight: 1.5 }}>{item.desc}</div>
+                <div key={item.step} style={{ padding: 16, borderRadius: 10, background: "#FAFAF8", border: "1px solid #eee" }}>
+                  <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: "#6366F1", marginBottom: 6 }}>{item.step}</div>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: "#333", marginBottom: 8 }}>{item.title}</div>
+                  <div style={{ background: "#1a1a1a", borderRadius: 6, padding: "8px 10px", marginBottom: 8 }}>
+                    <code style={{ fontSize: 11, color: "#e0e0e0", fontFamily: "'JetBrains Mono', monospace", lineHeight: 1.5 }}>{item.cmd}</code>
+                  </div>
+                  <div style={{ fontSize: 11, color: "#999", lineHeight: 1.4 }}>{item.desc}</div>
                 </div>
               ))}
+            </div>
+            <div style={{ marginTop: 12, padding: "10px 14px", background: "#EEF2FF", borderRadius: 8, borderLeft: "3px solid #6366F1" }}>
+              <span style={{ fontSize: 12, color: "#4338CA" }}>
+                <strong>Each phase has a "Phase Handoff" tab</strong> — click any phase above, then open that tab to see the block fields and copy the exact prompts.
+              </span>
             </div>
           </div>
 
