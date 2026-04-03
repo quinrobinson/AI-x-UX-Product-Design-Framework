@@ -175,7 +175,7 @@ function SectionHeader({ step, title, desc }) {
           padding: "2px 8px", borderRadius: 4,
         }}>Step {step}</span>
         <span style={{
-          fontSize: 16, fontWeight: 600,
+          fontSize: "clamp(16px, 1.5vw, 22px)", fontWeight: 600,
           fontFamily: "'DM Serif Display', serif", color: T.text,
         }}>{title}</span>
       </div>
@@ -566,7 +566,7 @@ Use this exact structure:
 
       {/* Header */}
       <div style={{
-        borderBottom: `1px solid ${T.border}`, padding: "18px clamp(16px, 4vw, 40px)",
+        borderBottom: `1px solid ${T.border}`, padding: "0 clamp(24px, 5vw, 80px)", height: 60,
         display: "flex", alignItems: "center", justifyContent: "space-between",
       }}>
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>

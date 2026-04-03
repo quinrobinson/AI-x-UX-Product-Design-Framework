@@ -546,7 +546,7 @@ Structure:
       {/* Header */}
       <div style={{
         borderBottom: `1px solid ${T.border}`,
-        padding: "18px clamp(16px, 4vw, 40px)",
+        padding: "0 clamp(24px, 5vw, 80px)", height: 60,
         display: "flex", alignItems: "center", justifyContent: "space-between",
       }}>
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
@@ -575,7 +575,7 @@ Structure:
       </div>
 
       {/* Main */}
-      <div style={{ maxWidth: 1100, margin: "0 auto", padding: "40px clamp(16px, 4vw, 48px) 80px" }}>
+      <div style={{ maxWidth: 1440, margin: "0 auto", padding: "48px clamp(24px, 5vw, 80px) 96px" }}>
 
         <StepIndicator current={step} completed={completed} />
 

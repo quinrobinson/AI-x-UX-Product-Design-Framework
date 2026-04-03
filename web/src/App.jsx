@@ -516,7 +516,7 @@ function PhasePath({ onOpenTool, onOpenSkill }) {
                     {phase.id} — {phase.label}
                   </span>
                 </div>
-                <p style={{ fontSize: 13, color: T.muted, lineHeight: 1.6, maxWidth: 480 }}>{phase.desc}</p>
+                <p style={{ fontSize: 14, color: T.muted, lineHeight: 1.6, maxWidth: 640 }}>{phase.desc}</p>
               </div>
               <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
                 {phase.tools > 0 && <Mono color={T.dim}>{phase.tools} tool{phase.tools > 1 ? "s" : ""}</Mono>}
@@ -1155,7 +1155,7 @@ function SkillsLibraryOverlay({ onBack, onOpenSkill }) {
 
       {/* Header */}
       <div style={{
-        borderBottom: `1px solid ${T.border}`, padding: "0 clamp(16px, 4vw, 48px)", height: 52,
+        borderBottom: `1px solid ${T.border}`, padding: "0 clamp(24px, 5vw, 80px)", height: 60,
         display: "flex", alignItems: "center", justifyContent: "space-between",
         position: "sticky", top: 0, zIndex: 50,
         background: `${T.bg}f0`, backdropFilter: "blur(12px)",
@@ -1183,7 +1183,7 @@ function SkillsLibraryOverlay({ onBack, onOpenSkill }) {
         </div>
       </div>
 
-      <div style={{ maxWidth: 1100, margin: "0 auto", padding: "40px clamp(20px, 5vw, 64px) 80px" }}>
+      <div style={{ maxWidth: 1440, margin: "0 auto", padding: "40px clamp(24px, 5vw, 80px) 80px" }}>
 
         {/* What is a Skill */}
         <div style={{
@@ -1404,12 +1404,12 @@ function renderMarkdown(text) {
 
     // H1
     if (line.startsWith("# ")) {
-      elements.push(<h1 key={`h1-${i}`} style={{ fontFamily: "'DM Serif Display', serif", fontSize: 28, fontWeight: 400, color: "#F2F2F2", marginBottom: 8, marginTop: 8, lineHeight: 1.2 }} dangerouslySetInnerHTML={{ __html: inlineFormat(line.slice(2)) }} />);
+      elements.push(<h1 key={`h1-${i}`} style={{ fontFamily: "'DM Serif Display', serif", fontSize: "clamp(28px, 3vw, 40px)", fontWeight: 400, color: "#F2F2F2", marginBottom: 10, marginTop: 8, lineHeight: 1.15 }} dangerouslySetInnerHTML={{ __html: inlineFormat(line.slice(2)) }} />);
       i++; continue;
     }
     // H2
     if (line.startsWith("## ")) {
-      elements.push(<h2 key={`h2-${i}`} style={{ fontSize: 16, fontWeight: 600, color: "#F2F2F2", marginBottom: 10, marginTop: 28, paddingBottom: 8, borderBottom: "1px solid #2A2A2A" }} dangerouslySetInnerHTML={{ __html: inlineFormat(line.slice(3)) }} />);
+      elements.push(<h2 key={`h2-${i}`} style={{ fontSize: "clamp(15px, 1.5vw, 19px)", fontWeight: 600, color: "#F2F2F2", marginBottom: 10, marginTop: 32, paddingBottom: 10, borderBottom: "1px solid #2A2A2A" }} dangerouslySetInnerHTML={{ __html: inlineFormat(line.slice(3)) }} />);
       i++; continue;
     }
     // H3
@@ -1533,7 +1533,7 @@ function SkillDetailPage({ skill, onBack }) {
       <div style={{
         position: "sticky", top: 0, zIndex: 50,
         borderBottom: `1px solid ${T.border}`,
-        padding: "0 clamp(16px, 4vw, 48px)", height: 52,
+        padding: "0 clamp(24px, 5vw, 80px)", height: 60,
         display: "flex", alignItems: "center", justifyContent: "space-between",
         background: `${T.bg}f0`, backdropFilter: "blur(12px)",
       }}>
@@ -1575,7 +1575,7 @@ function SkillDetailPage({ skill, onBack }) {
       </div>
 
       {/* Content */}
-      <div style={{ maxWidth: 900, margin: "0 auto", padding: "48px clamp(20px, 5vw, 64px) 80px" }}>
+      <div style={{ maxWidth: 1440, margin: "0 auto", padding: "56px clamp(24px, 5vw, 80px) 96px" }}>
         {loading && (
           <div style={{ textAlign: "center", padding: "80px 0" }}>
             <span style={{ fontSize: 12, fontFamily: "'JetBrains Mono', monospace", color: T.dim, letterSpacing: "0.08em", textTransform: "uppercase" }}>Loading skill…</span>
@@ -1679,26 +1679,26 @@ export default function App() {
       </div>
 
       {/* Main content */}
-      <div style={{ maxWidth: 1100, margin: "0 auto", padding: "56px clamp(20px, 5vw, 64px) 80px" }}>
+      <div style={{ maxWidth: 1440, margin: "0 auto", padding: "72px clamp(24px, 5vw, 80px) 96px" }}>
 
         {/* Home pill — only when a path is active */}
         {activePath && <HomePill onClick={() => setActivePath(null)} />}
 
         {/* What it is */}
         {!activePath && (
-          <div style={{ marginBottom: 48 }}>
-            <div style={{ marginBottom: 16 }}>
-              <Mono color={T.dim}>Framework</Mono>
+          <div style={{ marginBottom: 64 }}>
+            <div style={{ marginBottom: 20 }}>
+              <Mono color={T.dim} size={13}>Framework</Mono>
             </div>
             <h1 style={{
               fontFamily: "'DM Serif Display', serif",
-              fontSize: 44, fontWeight: 400, lineHeight: 1.1,
+              fontSize: "clamp(40px, 5vw, 72px)", fontWeight: 400, lineHeight: 1.05,
               color: T.text, marginBottom: 16, letterSpacing: "-0.3px",
             }}>
               A system for using Claude<br />
               <em style={{ fontStyle: "italic", color: T.muted }}>across every phase of product design.</em>
             </h1>
-            <p style={{ fontSize: 14, color: T.muted, lineHeight: 1.7, maxWidth: 480, marginBottom: 0 }}>
+            <p style={{ fontSize: 16, color: T.muted, lineHeight: 1.7, maxWidth: 600, marginBottom: 0 }}>
               From research through delivery — skills, tools, and prompts that integrate Claude into how your team already works.
             </p>
           </div>
@@ -1709,8 +1709,8 @@ export default function App() {
 
         {/* Path chooser — styled strip, doubles as entry point */}
         {!activePath && (
-          <div style={{ marginBottom: 16 }}>
-            <Mono color={T.dim}>How do you want to start?</Mono>
+          <div style={{ marginBottom: 20 }}>
+            <Mono color={T.dim} size={12}>How do you want to start?</Mono>
           </div>
         )}
 
