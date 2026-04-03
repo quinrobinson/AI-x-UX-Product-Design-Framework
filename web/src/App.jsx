@@ -1652,7 +1652,7 @@ export default function App() {
           </span>
         </div>
         <div style={{ display: "flex", gap: 16, alignItems: "center" }}>
-          <button onClick={() => setShowChatGuides(true)} style={{
+          <button onClick={() => setShowSkillsLibrary(true)} style={{
             fontSize: 11, fontFamily: "'JetBrains Mono', monospace",
             letterSpacing: "0.06em", textTransform: "uppercase",
             color: T.dim, background: "none", border: "none",
