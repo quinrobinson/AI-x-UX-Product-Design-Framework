@@ -2479,26 +2479,24 @@ function DeliverablePath({ onOpenTool }) {
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
               {[
                 {
-                  type: "tool", color: "#22C55E", dim: "rgba(34,197,94,0.08)", border: "rgba(34,197,94,0.25)",
                   badge: "Interactive", headline: "Tools",
                   desc: "Guided multi-step workflows with real-time AI generation. Walk through structured steps — Claude produces each output as you go. Best when you want a complete, well-structured deliverable without manually writing prompts.",
                   when: "When you want a full workflow in one session",
                 },
                 {
-                  type: "prompt", color: "#8B5CF6", dim: "rgba(139,92,246,0.08)", border: "rgba(139,92,246,0.25)",
                   badge: "Copy + Paste", headline: "Prompts",
                   desc: "Pre-engineered prompts for Claude Chat. Copy, paste your context, and get a targeted output. Best when you need something fast, want to stay in an existing Claude conversation, or need to iterate quickly.",
                   when: "When you need something fast or want to stay in chat",
                 },
               ].map(item => (
-                <div key={item.type} style={{ background: item.dim, border: `1px solid ${item.border}`, borderRadius: 8, padding: "16px 18px" }}>
+                <div key={item.headline} style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 8, padding: "16px 18px" }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
-                    <span style={{ fontSize: 9, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.08em", textTransform: "uppercase", padding: "2px 7px", borderRadius: 3, background: `${item.color}18`, border: `1px solid ${item.color}40`, color: item.color }}>{item.badge}</span>
+                    <span style={{ fontSize: 9, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.08em", textTransform: "uppercase", padding: "2px 7px", borderRadius: 3, background: "rgba(255,255,255,0.06)", border: `1px solid ${T.border}`, color: T.muted }}>{item.badge}</span>
                     <span style={{ fontSize: 13, fontWeight: 600, color: T.text }}>{item.headline}</span>
                   </div>
                   <p style={{ fontSize: 12, color: T.muted, lineHeight: 1.6, margin: "0 0 10px" }}>{item.desc}</p>
                   <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                    <span style={{ fontSize: 10, color: item.color, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.06em", textTransform: "uppercase" }}>Use when</span>
+                    <span style={{ fontSize: 10, color: T.dim, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.06em", textTransform: "uppercase" }}>Use when</span>
                     <span style={{ fontSize: 11, color: T.muted }}>{item.when}</span>
                   </div>
                 </div>
