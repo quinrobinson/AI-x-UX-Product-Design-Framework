@@ -1701,7 +1701,7 @@ function PhasePath({ onOpenTool }) {
                   ].map(item => (
                     <div key={item.label} className="three-ways-row" style={{ background: T.card, borderRadius: 8, border: `1px solid ${T.border}` }}>
                       <div style={{ flex: 1 }}>
-                        <span className="three-ways-badge" style={{ fontSize: 9, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.08em", textTransform: "uppercase", padding: "2px 7px", borderRadius: 3, background: "rgba(255,255,255,0.06)", border: `1px solid ${T.border}`, color: T.muted }}>{item.badge}</span>
+                        <span className="three-ways-badge three-ways-badge-wrap" style={{ fontSize: 9, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.08em", textTransform: "uppercase", padding: "2px 7px", borderRadius: 3, background: "rgba(255,255,255,0.06)", border: `1px solid ${T.border}`, color: T.muted }}>{item.badge}</span>
                         <div style={{ fontSize: 12, fontWeight: 600, color: T.text, marginBottom: 3 }}>{item.label}</div>
                         <div style={{ fontSize: 11, color: T.muted, lineHeight: 1.5 }}>{item.desc}</div>
                       </div>
@@ -1725,7 +1725,7 @@ function PhasePath({ onOpenTool }) {
                 </div>
                 <p style={{ fontSize: 13, color: T.muted, lineHeight: 1.6, maxWidth: 600, margin: 0 }}>{phase.desc}</p>
               </div>
-              <div style={{ display: "flex", gap: 8, flexShrink: 0, marginLeft: 16 }}>
+              <div className="phase-counts">
                 {phase.tools > 0 && <Mono color={T.dim}>{phase.tools} tool{phase.tools !== 1 ? "s" : ""}</Mono>}
                 {phase.skills > 0 && <Mono color={T.dim}>{phase.skills} skill{phase.skills !== 1 ? "s" : ""}</Mono>}
                 {phase.prompts > 0 && <Mono color={T.dim}>{phase.prompts} prompt{phase.prompts !== 1 ? "s" : ""}</Mono>}
@@ -1777,15 +1777,15 @@ function PhasePath({ onOpenTool }) {
                 {phaseSkills.length === 0 ? (
                   <div style={{ padding: "20px 0", textAlign: "center" }}><Mono color={T.dim}>No skills yet for this phase</Mono></div>
                 ) : phaseSkills.map(skill => (
-                  <div key={skill.file} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 14px", background: T.card, borderRadius: 6, border: `1px solid ${T.border}` }}>
-                    <div style={{ flex: 1, marginRight: 12 }}>
+                  <div key={skill.file} className="skill-row" style={{ background: T.card, borderRadius: 6, border: `1px solid ${T.border}` }}>
+                    <div style={{ flex: 1 }}>
                       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 3 }}>
                         <Mono color={T.muted} size={11}>{skill.file}</Mono>
                         <SkillBadge surface={skill.surface} />
                       </div>
                       <div style={{ fontSize: 11, color: T.dim, lineHeight: 1.5 }}>{skill.desc}</div>
                     </div>
-                    <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
+                    <div className="skill-actions">
                       <button onClick={() => setActiveSkill(skill)} style={{ padding: "5px 10px", borderRadius: 5, fontSize: 10, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.06em", textTransform: "uppercase", background: "transparent", border: `1px solid ${T.border}`, color: T.muted, cursor: "pointer", whiteSpace: "nowrap", transition: "all 0.15s" }}
                         onMouseEnter={e => { e.currentTarget.style.borderColor = p.color + "55"; e.currentTarget.style.color = p.color; }}
                         onMouseLeave={e => { e.currentTarget.style.borderColor = T.border; e.currentTarget.style.color = T.muted; }}
@@ -1805,8 +1805,8 @@ function PhasePath({ onOpenTool }) {
                 {phaseTools.length === 0 ? (
                   <div style={{ padding: "20px 0", textAlign: "center" }}><Mono color={T.dim}>No tools yet for this phase</Mono></div>
                 ) : phaseTools.map(tool => (
-                  <div key={tool.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 16px", background: T.card, borderRadius: 8, border: `1px solid ${T.border}` }}>
-                    <div style={{ flex: 1, marginRight: 12 }}>
+                  <div key={tool.id} className="tool-row" style={{ background: T.card, borderRadius: 8, border: `1px solid ${T.border}` }}>
+                    <div style={{ flex: 1 }}>
                       <div style={{ fontSize: 13, fontWeight: 500, color: T.text, marginBottom: 3 }}>{tool.name}</div>
                       <div style={{ fontSize: 11, color: T.muted, lineHeight: 1.4 }}>{tool.subtitle}</div>
                     </div>
@@ -1829,7 +1829,7 @@ function PhasePath({ onOpenTool }) {
                   <p style={{ fontSize: 13, color: T.text, lineHeight: 1.6, margin: 0 }}>{phase.howToUse.goal}</p>
                 </div>
 
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+                <div className="how-grid">
                   {/* What comes in */}
                   <div>
                     <div style={{ fontSize: 10, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.1em", textTransform: "uppercase", color: T.dim, marginBottom: 8 }}>What comes in</div>
@@ -1856,8 +1856,8 @@ function PhasePath({ onOpenTool }) {
                 </div>
 
                 {/* Figma */}
-                <div style={{ padding: "12px 14px", background: T.card, border: `1px solid ${T.border}`, borderRadius: 8, display: "flex", gap: 10, alignItems: "flex-start" }}>
-                  <span style={{ fontSize: 10, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.08em", textTransform: "uppercase", color: "#F59E0B", background: "rgba(245,158,11,0.1)", border: "1px solid rgba(245,158,11,0.25)", padding: "2px 7px", borderRadius: 3, flexShrink: 0 }}>Figma MCP</span>
+                <div className="how-figma" style={{ padding: "12px 14px", background: T.card, border: `1px solid ${T.border}`, borderRadius: 8 }}>
+                  <span style={{ fontSize: 10, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.08em", textTransform: "uppercase", color: T.muted, background: T.surface, border: `1px solid ${T.border}`, padding: "2px 7px", borderRadius: 3, flexShrink: 0, display: "inline-block", marginBottom: 4 }}>Figma MCP</span>
                   <p style={{ fontSize: 12, color: T.muted, lineHeight: 1.5, margin: 0 }}>{phase.howToUse.figma}</p>
                 </div>
 
@@ -3280,15 +3280,31 @@ export default function App() {
         .figma-callout-inner { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: nowrap; }
         .deliverable-row { display: flex; align-items: center; padding: 13px 16px; gap: 14px; }
         .deliverable-label { display: inline; }
+        .phase-counts { display: flex; gap: 8px; flex-shrink: 0; margin-left: 16px; }
+        .three-ways-badge-wrap { display: inline-block; margin-bottom: 8px; }
+        .skill-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; }
+        .skill-actions { display: flex; gap: 6px; flex-shrink: 0; }
+        .tool-row { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; }
+        .how-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        .how-figma { display: flex; gap: 10px; align-items: flex-start; }
         @media (max-width: 600px) {
           .path-grid { grid-template-columns: 1fr !important; }
           .path-grid-item { border-right: none !important; border-bottom: 1px solid #2C2C2C; }
           .path-grid-item:last-child { border-bottom: none; }
           .three-ways-badge { display: block; margin-bottom: 6px; }
           .three-ways-row { flex-direction: column; gap: 8px; }
+          .three-ways-badge-wrap { background: none !important; border: none !important; padding: 0 !important; font-size: 10px !important; color: #666 !important; }
           .figma-callout-inner { flex-direction: column; align-items: flex-start; gap: 8px; }
           .deliverable-row { flex-wrap: wrap; gap: 10px; }
           .deliverable-label { display: none; }
+          .phase-counts { display: none; }
+          .skill-row { flex-direction: column; align-items: flex-start; gap: 10px; }
+          .skill-actions { width: 100%; }
+          .skill-actions a, .skill-actions button { flex: 1; text-align: center; justify-content: center; }
+          .tool-row { flex-direction: column; align-items: flex-start; gap: 10px; }
+          .tool-row button { width: 100%; }
+          .how-grid { grid-template-columns: 1fr; }
+          .how-figma { flex-direction: column; gap: 6px; }
         }
         .hide-mobile { display: inline; }
         .show-mobile { display: none; }
