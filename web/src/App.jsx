@@ -2744,19 +2744,18 @@ function ZipDownloadBtn({ skills }) {
 // ── Skills Library Overlay ───────────────────────────────────────────────────
 function SkillsLibraryOverlay({ onBack }) {
   const [activeSkill, setActiveSkill] = useState(null);
-  const [phaseFilter, setPhaseFilter] = useState("all");
+  const [selected, setSelected] = useState(null);
   const [surfaceFilter, setSurfaceFilter] = useState("all");
 
-  const PHASE_FILTERS = [
-    { id: "all",   label: "All" },
-    { id: "01",    label: "Discover" },
-    { id: "02",    label: "Define" },
-    { id: "03",    label: "Ideate" },
-    { id: "04",    label: "Prototype" },
-    { id: "05",    label: "Validate" },
-    { id: "06",    label: "Deliver" },
-    { id: "cross", label: "Cross-phase" },
-  ];
+  const PHASES_ORDER = ["01","02","03","04","05","06"];
+  const PHASE_META = {
+    "01": { label: "Discover",  color: "#22C55E", dim: "rgba(34,197,94,0.12)",  border: "rgba(34,197,94,0.25)"  },
+    "02": { label: "Define",    color: "#8B5CF6", dim: "rgba(139,92,246,0.12)", border: "rgba(139,92,246,0.25)" },
+    "03": { label: "Ideate",    color: "#F59E0B", dim: "rgba(245,158,11,0.12)", border: "rgba(245,158,11,0.25)" },
+    "04": { label: "Prototype", color: "#3B82F6", dim: "rgba(59,130,246,0.12)", border: "rgba(59,130,246,0.25)" },
+    "05": { label: "Validate",  color: "#EF4444", dim: "rgba(239,68,68,0.12)",  border: "rgba(239,68,68,0.25)"  },
+    "06": { label: "Deliver",   color: "#14B8A6", dim: "rgba(20,184,166,0.12)", border: "rgba(20,184,166,0.25)" },
+  };
 
   const SURFACE_FILTERS = [
     { id: "all",              label: "All" },
@@ -2765,34 +2764,62 @@ function SkillsLibraryOverlay({ onBack }) {
     { id: "code + figma mcp", label: "Figma MCP" },
   ];
 
-  const filtered = SKILL_FILES.filter(s => {
-    const phaseMatch = phaseFilter === "all" ? true
-      : phaseFilter === "cross" ? s.phase === null
-      : s.phase === phaseFilter;
-    const surfaceMatch = surfaceFilter === "all" ? true : s.surface === surfaceFilter;
-    return phaseMatch && surfaceMatch;
-  });
+  const surfaceColors = {
+    "chat":             { color: "#22C55E", bg: "rgba(34,197,94,0.1)",   border: "rgba(34,197,94,0.25)"  },
+    "chat + code":      { color: "#3B82F6", bg: "rgba(59,130,246,0.1)",  border: "rgba(59,130,246,0.25)" },
+    "code + figma mcp": { color: "#F59E0B", bg: "rgba(245,158,11,0.1)",  border: "rgba(245,158,11,0.25)" },
+  };
 
-  function FilterPills({ options, active, onChange }) {
+  const applyFilters = (skills) => surfaceFilter === "all" ? skills : skills.filter(s => s.surface === surfaceFilter);
+
+  const phaseSkills = selected ? applyFilters(SKILL_FILES.filter(s => s.phase === selected)) : [];
+  const crossSkills = applyFilters(SKILL_FILES.filter(s => s.phase === null));
+  const allFiltered = applyFilters(SKILL_FILES);
+
+  const meta = selected ? PHASE_META[selected] : null;
+
+  function SkillCard({ skill }) {
+    const dir = skill.phase ? `${skill.phase}-${PHASE_META[skill.phase]?.label.toLowerCase()}` : "";
+    const url = dir ? `${RAW}/${dir}/${skill.file}` : `${RAW}/${skill.file}`;
+    const sc = surfaceColors[skill.surface] || surfaceColors["chat"];
+    const phaseColor = skill.phase ? PHASE_META[skill.phase]?.color : T.dim;
     return (
-      <div style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
-        {options.map(opt => {
-          const isActive = active === opt.id;
-          const phaseColor = opt.id !== "all" && opt.id !== "cross" && T.phases[opt.id]
-            ? T.phases[opt.id].color : "#3B82F6";
-          const activeColor = opt.id === "all" || opt.id === "cross" ? "#3B82F6" : phaseColor;
-          return (
-            <button key={opt.id} onClick={() => onChange(opt.id)} style={{
-              padding: "4px 10px", borderRadius: 20, cursor: "pointer",
-              fontSize: 10, fontFamily: "'JetBrains Mono', monospace",
-              letterSpacing: "0.07em", textTransform: "uppercase",
-              border: `1px solid ${isActive ? T.borderHover : T.border}`,
-              background: isActive ? T.card : "transparent",
-              color: isActive ? T.text : T.dim,
-              transition: "all 0.12s",
-            }}>{opt.label}</button>
-          );
-        })}
+      <div style={{
+        display: "flex", alignItems: "flex-start", justifyContent: "space-between",
+        padding: "14px 16px", background: T.surface, borderRadius: 8,
+        border: `1px solid ${T.border}`, gap: 16, transition: "border-color 0.15s",
+      }}
+        onMouseEnter={e => e.currentTarget.style.borderColor = T.borderHover}
+        onMouseLeave={e => e.currentTarget.style.borderColor = T.border}
+      >
+        <div style={{ flex: 1 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6, flexWrap: "wrap" }}>
+            <span style={{ fontSize: 12, fontFamily: "'JetBrains Mono', monospace", color: T.muted }}>{skill.file}</span>
+            {skill.phase && (
+              <span style={{ fontSize: 9, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.08em", textTransform: "uppercase", color: phaseColor, display: "inline-flex", alignItems: "center", gap: 4 }}>
+                <span style={{ width: 4, height: 4, borderRadius: "50%", background: phaseColor, display: "inline-block" }} />
+                {skill.phase} — {PHASE_META[skill.phase]?.label}
+              </span>
+            )}
+            {!skill.phase && (
+              <span style={{ fontSize: 9, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.08em", textTransform: "uppercase", color: T.dim }}>Cross-phase</span>
+            )}
+            <span style={{ fontSize: 9, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.08em", textTransform: "uppercase", padding: "2px 7px", borderRadius: 3, background: sc.bg, border: `1px solid ${sc.border}`, color: sc.color }}>
+              {skill.surface === "chat" ? "Chat" : skill.surface === "chat + code" ? "Chat + Code" : "Figma MCP"}
+            </span>
+          </div>
+          <p style={{ fontSize: 12, color: T.dim, lineHeight: 1.55, margin: 0 }}>{skill.desc}</p>
+        </div>
+        <div style={{ display: "flex", gap: 6, flexShrink: 0, alignItems: "center" }}>
+          <button onClick={() => setActiveSkill(skill)} style={{ padding: "5px 12px", borderRadius: 5, fontSize: 10, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.06em", textTransform: "uppercase", background: "transparent", border: `1px solid ${T.border}`, color: T.muted, cursor: "pointer", whiteSpace: "nowrap", transition: "all 0.15s" }}
+            onMouseEnter={e => { e.currentTarget.style.borderColor = T.borderHover; e.currentTarget.style.color = T.text; }}
+            onMouseLeave={e => { e.currentTarget.style.borderColor = T.border; e.currentTarget.style.color = T.muted; }}
+          >Preview →</button>
+          <a href={url} download style={{ padding: "5px 10px", borderRadius: 5, fontSize: 10, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.06em", textTransform: "uppercase", background: "transparent", border: `1px solid ${T.border}`, color: T.muted, textDecoration: "none", whiteSpace: "nowrap", transition: "all 0.15s" }}
+            onMouseEnter={e => { e.currentTarget.style.borderColor = T.borderHover; e.currentTarget.style.color = T.text; }}
+            onMouseLeave={e => { e.currentTarget.style.borderColor = T.border; e.currentTarget.style.color = T.muted; }}
+          >↓</a>
+        </div>
       </div>
     );
   }
@@ -2807,21 +2834,9 @@ function SkillsLibraryOverlay({ onBack }) {
       `}</style>
 
       {/* Header */}
-      <div style={{
-        borderBottom: `1px solid ${T.border}`, padding: "0 clamp(24px, 5vw, 80px)", height: 60,
-        display: "flex", alignItems: "center", justifyContent: "space-between",
-        position: "sticky", top: 0, zIndex: 50,
-        background: `${T.bg}f0`, backdropFilter: "blur(12px)",
-      }}>
+      <div style={{ borderBottom: `1px solid ${T.border}`, padding: "0 clamp(24px, 5vw, 80px)", height: 60, display: "flex", alignItems: "center", justifyContent: "space-between", position: "sticky", top: 0, zIndex: 50, background: `${T.bg}f0`, backdropFilter: "blur(12px)" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <button onClick={onBack} style={{
-            display: "inline-flex", alignItems: "center", gap: 6,
-            background: "transparent", border: `1px solid ${T.border}`,
-            borderRadius: 6, padding: "5px 12px", cursor: "pointer",
-            fontSize: 11, fontFamily: "'JetBrains Mono', monospace",
-            letterSpacing: "0.06em", textTransform: "uppercase",
-            color: T.muted, transition: "all 0.15s",
-          }}>← Home</button>
+          <button onClick={onBack} style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "transparent", border: `1px solid ${T.border}`, borderRadius: 6, padding: "5px 12px", cursor: "pointer", fontSize: 11, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.06em", textTransform: "uppercase", color: T.muted, transition: "all 0.15s" }}>← Home</button>
           <div style={{ width: 1, height: 16, background: T.border }} />
           <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
             <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#3B82F6", boxShadow: "0 0 6px #3B82F6" }} />
@@ -2830,19 +2845,16 @@ function SkillsLibraryOverlay({ onBack }) {
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <span style={{ fontSize: 10, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.08em", textTransform: "uppercase", color: T.dim }}>
-            {filtered.length} skill{filtered.length !== 1 ? "s" : ""}
+            {allFiltered.length} skill{allFiltered.length !== 1 ? "s" : ""}
           </span>
-          <ZipDownloadBtn skills={filtered} />
+          <ZipDownloadBtn skills={allFiltered} />
         </div>
       </div>
 
       <div style={{ maxWidth: 1440, margin: "0 auto", padding: "40px clamp(24px, 5vw, 80px) 80px" }}>
 
         {/* What is a Skill */}
-        <div style={{
-          background: "rgba(59,130,246,0.06)", border: "1px solid rgba(59,130,246,0.2)",
-          borderRadius: 10, padding: "20px 24px", marginBottom: 32,
-        }}>
+        <div style={{ background: "rgba(59,130,246,0.06)", border: "1px solid rgba(59,130,246,0.2)", borderRadius: 10, padding: "20px 24px", marginBottom: 28 }}>
           <div style={{ display: "flex", alignItems: "flex-start", gap: 14 }}>
             <div style={{ width: 32, height: 32, borderRadius: 6, background: "rgba(59,130,246,0.15)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
               <span style={{ fontSize: 14 }}>📎</span>
@@ -2853,11 +2865,7 @@ function SkillsLibraryOverlay({ onBack }) {
                 Skill files are <code style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, background: T.card, padding: "1px 5px", borderRadius: 3 }}>.md</code> files you attach to a Claude Chat conversation before starting work. They give Claude the full context, methods, templates, and quality standards for a specific design phase — so every response is grounded in the framework rather than generic advice.
               </p>
               <div style={{ display: "flex", gap: 20 }}>
-                {[
-                  "Download the .md file",
-                  "Attach it to a new Claude Chat",
-                  "Start working — Claude has full context",
-                ].map((step, i) => (
+                {["Download the .md file", "Attach it to a new Claude Chat", "Start working — Claude has full context"].map((step, i) => (
                   <div key={i} style={{ display: "flex", alignItems: "center", gap: 6 }}>
                     <span style={{ fontSize: 9, fontFamily: "'JetBrains Mono', monospace", color: "#3B82F6", fontWeight: 700 }}>0{i + 1}</span>
                     <span style={{ fontSize: 11, color: T.muted }}>{step}</span>
@@ -2868,102 +2876,80 @@ function SkillsLibraryOverlay({ onBack }) {
           </div>
         </div>
 
-        {/* Filters */}
-        <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 20 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            <span style={{ fontSize: 10, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.07em", textTransform: "uppercase", color: T.dim, minWidth: 52 }}>Phase</span>
-            <FilterPills options={PHASE_FILTERS} active={phaseFilter} onChange={setPhaseFilter} />
-          </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            <span style={{ fontSize: 10, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.07em", textTransform: "uppercase", color: T.dim, minWidth: 52 }}>Surface</span>
-            <FilterPills options={SURFACE_FILTERS} active={surfaceFilter} onChange={setSurfaceFilter} />
-          </div>
-        </div>
-
-        {/* Skill list */}
-        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-          {filtered.length === 0 ? (
-            <div style={{ padding: "32px 0", textAlign: "center" }}>
-              <span style={{ fontSize: 12, color: T.dim, fontFamily: "'JetBrains Mono', monospace" }}>No guides match these filters</span>
-            </div>
-          ) : filtered.map(skill => {
-            const dir = skill.phase ? `${skill.phase}-${T.phases[skill.phase]?.label.toLowerCase()}` : "";
-            const url = dir ? `${RAW}/${dir}/${skill.file}` : `${RAW}/${skill.file}`;
-            const surfaceColors = {
-              "chat": { color: "#22C55E", bg: "rgba(34,197,94,0.1)", border: "rgba(34,197,94,0.25)" },
-              "chat + code": { color: "#3B82F6", bg: "rgba(59,130,246,0.1)", border: "rgba(59,130,246,0.25)" },
-              "code + figma mcp": { color: "#F59E0B", bg: "rgba(245,158,11,0.1)", border: "rgba(245,158,11,0.25)" },
-            };
-            const sc = surfaceColors[skill.surface] || surfaceColors["chat"];
-            const phaseColor = skill.phase ? T.phases[skill.phase]?.color : T.dim;
-
+        {/* Phase strip */}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(6, minmax(0, 1fr))", border: `1px solid ${T.border}`, borderRadius: 10, overflow: "hidden", marginBottom: 1 }}>
+          {PHASES_ORDER.map((ph, i) => {
+            const m = PHASE_META[ph];
+            const isActive = selected === ph;
+            const count = SKILL_FILES.filter(s => s.phase === ph).length;
             return (
-              <div key={skill.file} style={{
-                display: "flex", alignItems: "flex-start", justifyContent: "space-between",
-                padding: "14px 16px", background: T.surface, borderRadius: 8,
-                border: `1px solid ${T.border}`, gap: 16,
-                transition: "border-color 0.15s",
-              }}
-                onMouseEnter={e => e.currentTarget.style.borderColor = T.borderHover}
-                onMouseLeave={e => e.currentTarget.style.borderColor = T.border}
+              <button key={ph}
+                onClick={() => setSelected(selected === ph ? null : ph)}
+                style={{ padding: "14px 10px 12px", border: "none", borderRight: i < 5 ? `1px solid ${T.border}` : "none", borderBottom: isActive ? `2px solid ${m.color}` : "2px solid transparent", background: isActive ? T.surface : "transparent", cursor: "pointer", textAlign: "center", transition: "all 0.15s", outline: "none" }}
+                onMouseEnter={e => { if (!isActive) e.currentTarget.style.background = T.card; }}
+                onMouseLeave={e => { if (!isActive) e.currentTarget.style.background = "transparent"; }}
               >
-                <div style={{ flex: 1 }}>
-                  {/* Top row */}
-                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6, flexWrap: "wrap" }}>
-                    <span style={{ fontSize: 12, fontFamily: "'JetBrains Mono', monospace", color: T.muted }}>{skill.file}</span>
-                    {skill.phase && (
-                      <span style={{
-                        fontSize: 9, fontFamily: "'JetBrains Mono', monospace",
-                        letterSpacing: "0.08em", textTransform: "uppercase",
-                        color: phaseColor,
-                        display: "inline-flex", alignItems: "center", gap: 4,
-                      }}>
-                        <span style={{ width: 4, height: 4, borderRadius: "50%", background: phaseColor, display: "inline-block" }} />
-                        {skill.phase} — {T.phases[skill.phase]?.label}
-                      </span>
-                    )}
-                    {!skill.phase && (
-                      <span style={{ fontSize: 9, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.08em", textTransform: "uppercase", color: T.dim }}>Cross-phase</span>
-                    )}
-                    <span style={{
-                      fontSize: 9, fontFamily: "'JetBrains Mono', monospace",
-                      letterSpacing: "0.08em", textTransform: "uppercase",
-                      padding: "2px 7px", borderRadius: 3,
-                      background: sc.bg, border: `1px solid ${sc.border}`, color: sc.color,
-                    }}>{sc.color === "#22C55E" ? "Chat" : sc.color === "#3B82F6" ? "Chat + Code" : "Figma MCP"}</span>
-                  </div>
-                  {/* Description */}
-                  <p style={{ fontSize: 12, color: T.dim, lineHeight: 1.55, margin: 0 }}>{skill.desc}</p>
-                </div>
-                {/* Actions */}
-                <div style={{ display: "flex", gap: 6, flexShrink: 0, alignItems: "center" }}>
-                  <button onClick={() => setActiveSkill(skill)} style={{
-                    padding: "5px 12px", borderRadius: 5,
-                    fontSize: 10, fontFamily: "'JetBrains Mono', monospace",
-                    letterSpacing: "0.06em", textTransform: "uppercase",
-                    background: "transparent", border: `1px solid ${T.border}`,
-                    color: T.muted, cursor: "pointer", whiteSpace: "nowrap",
-                    transition: "all 0.15s",
-                  }}
-                    onMouseEnter={e => { e.currentTarget.style.borderColor = T.borderHover; e.currentTarget.style.color = T.text; }}
-                    onMouseLeave={e => { e.currentTarget.style.borderColor = T.border; e.currentTarget.style.color = T.muted; }}
-                  >Preview →</button>
-                  <a href={url} download style={{
-                    padding: "5px 10px", borderRadius: 5,
-                    fontSize: 10, fontFamily: "'JetBrains Mono', monospace",
-                    letterSpacing: "0.06em", textTransform: "uppercase",
-                    background: "transparent", border: `1px solid ${T.border}`,
-                    color: T.muted, textDecoration: "none", whiteSpace: "nowrap",
-                    transition: "all 0.15s",
-                  }}
-                    onMouseEnter={e => { e.currentTarget.style.borderColor = T.borderHover; e.currentTarget.style.color = T.text; }}
-                    onMouseLeave={e => { e.currentTarget.style.borderColor = T.border; e.currentTarget.style.color = T.muted; }}
-                  >↓</a>
-                </div>
-              </div>
+                <div style={{ width: 6, height: 6, borderRadius: "50%", background: m.color, margin: "0 auto 8px", boxShadow: isActive ? `0 0 8px ${m.color}` : "none", transition: "box-shadow 0.15s" }} />
+                <div style={{ fontSize: 9, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.08em", textTransform: "uppercase", color: isActive ? m.color : T.dim, marginBottom: 2 }}>{ph}</div>
+                <div style={{ fontSize: 11, fontWeight: 500, color: isActive ? T.text : T.muted, lineHeight: 1.2 }}>{m.label}</div>
+                <div style={{ fontSize: 9, color: T.dim, fontFamily: "'JetBrains Mono', monospace", marginTop: 3 }}>{count}</div>
+              </button>
             );
           })}
         </div>
+
+        {/* Phase detail panel */}
+        <div style={{ border: `1px solid ${T.border}`, borderTop: "none", borderRadius: "0 0 10px 10px", overflow: "hidden", marginBottom: 20 }}>
+          {!selected ? (
+            <div style={{ padding: "28px 24px 32px" }}>
+              <p style={{ fontSize: 12, color: T.muted, lineHeight: 1.7, margin: 0, maxWidth: 520 }}>
+                Select a phase above to browse skill files for that stage. Skill files are downloaded and attached to Claude Chat — they give Claude the methodology, templates, and quality standards for that phase automatically.
+              </p>
+            </div>
+          ) : (
+            <div style={{ padding: "20px 20px 24px" }}>
+              {/* Phase header + surface filter */}
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16, flexWrap: "wrap", gap: 10 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <div style={{ width: 7, height: 7, borderRadius: "50%", background: meta.color, boxShadow: `0 0 7px ${meta.color}` }} />
+                  <span style={{ fontSize: 11, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.1em", textTransform: "uppercase", color: meta.color }}>{selected} — {meta.label}</span>
+                  <span style={{ fontSize: 11, color: T.dim, fontFamily: "'JetBrains Mono', monospace" }}>{phaseSkills.length} skill{phaseSkills.length !== 1 ? "s" : ""}</span>
+                </div>
+                {/* Surface filter inline */}
+                <div style={{ display: "flex", gap: 5 }}>
+                  {SURFACE_FILTERS.map(f => {
+                    const isActive = surfaceFilter === f.id;
+                    return (
+                      <button key={f.id} onClick={() => setSurfaceFilter(f.id)} style={{ padding: "3px 11px", borderRadius: 20, cursor: "pointer", fontSize: 9, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.07em", textTransform: "uppercase", border: `1px solid ${isActive ? T.borderHover : T.border}`, background: isActive ? T.card : "transparent", color: isActive ? T.text : T.dim, transition: "all 0.12s" }}>{f.label}</button>
+                    );
+                  })}
+                </div>
+              </div>
+              {phaseSkills.length === 0 ? (
+                <div style={{ padding: "20px 0", textAlign: "center" }}>
+                  <span style={{ fontSize: 12, color: T.dim, fontFamily: "'JetBrains Mono', monospace" }}>No skills match this surface filter</span>
+                </div>
+              ) : (
+                <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                  {phaseSkills.map(skill => <SkillCard key={skill.file} skill={skill} />)}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Cross-phase skills — always visible */}
+        <div style={{ marginBottom: 8 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+            <span style={{ fontSize: 10, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.1em", textTransform: "uppercase", color: T.dim }}>Cross-phase</span>
+            <div style={{ flex: 1, height: 1, background: T.border }} />
+            <span style={{ fontSize: 10, fontFamily: "'JetBrains Mono', monospace", color: T.dim }}>{crossSkills.length} skill{crossSkills.length !== 1 ? "s" : ""}</span>
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            {crossSkills.map(skill => <SkillCard key={skill.file} skill={skill} />)}
+          </div>
+        </div>
+
       </div>
       {activeSkill && <SkillDrawer skill={activeSkill} onClose={() => setActiveSkill(null)} />}
     </div>
