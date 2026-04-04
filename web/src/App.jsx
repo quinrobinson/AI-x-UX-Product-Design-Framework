@@ -2457,7 +2457,7 @@ function DeliverablePath({ onOpenTool }) {
               fontSize: 10, fontFamily: "'JetBrains Mono', monospace",
               letterSpacing: "0.07em", textTransform: "uppercase",
               border: `1px solid ${isActive ? (accent || T.borderHover) : T.border}`,
-              background: isActive ? `${accent || "#fff"}18` : "transparent",
+              background: isActive ? (accent ? `${accent}18` : T.card) : "transparent",
               color: isActive ? (accent || T.text) : T.dim,
               transition: "all 0.12s",
             }}>{f.label}</button>
