@@ -3401,7 +3401,7 @@ export default function App() {
           .path-grid-item:last-child { border-bottom: none; }
           .three-ways-badge { display: block; margin-bottom: 6px; }
           .ways-explainer-grid { grid-template-columns: 1fr; gap: 14px; }
-          .deliverable-info-grid { grid-template-columns: 1fr; }
+          .deliverable-info-grid { grid-template-columns: 1fr !important; }
           .three-ways-row { flex-direction: column; gap: 8px; }
           .three-ways-badge-wrap { background: none !important; border: none !important; padding: 0 !important; font-size: 10px !important; color: #666 !important; }
           .figma-callout-inner { flex-direction: column; align-items: flex-start; gap: 8px; }
