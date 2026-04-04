@@ -213,7 +213,7 @@ export default function AIBriefGenerator() {
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
           <span style={{ fontSize: 10, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.1em", textTransform: "uppercase", color: T.accent, background: T.accentDim, border: `1px solid ${T.accentBorder}`, padding: "3px 10px", borderRadius: 4 }}>Cross-phase · Tool 01</span>
         </div>
-        <h1 style={{ fontFamily: "'DM Serif Display', serif", fontSize: 32, fontWeight: 400, margin: "0 0 8px", color: T.text }}>AI Brief Generator</h1>
+        <h1 style={{ fontFamily: "'DM Serif Display', serif", fontSize: 32, fontWeight: 400, margin: "0 0 8px", color: T.text }}>Design Brief Generator</h1>
         <p style={{ fontSize: 14, color: T.muted, margin: 0, lineHeight: 1.6, maxWidth: 520 }}>Answer three questions about your project and get a Claude-ready prompt — with the right skill files, phase context, and a first action tailored to where you are.</p>
       </div>
       <div style={{ maxWidth: 760, margin: "0 auto" }}>

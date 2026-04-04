@@ -49,9 +49,9 @@ const RAW = "https://raw.githubusercontent.com/quinrobinson/Agentic-Product-Desi
 
 // ── Tool registry ────────────────────────────────────────────────────────────
 const TOOLS = [
-  { id: "brief",              number: "01", phase: "01", name: "AI Brief Generator",          subtitle: "Turn project context into a structured design brief",                             component: AIBriefGenerator },
+  { id: "brief",              number: "01", phase: null, name: "Design Brief Generator",      subtitle: "Turn project context into a Claude-ready design brief",                          component: AIBriefGenerator },
   { id: "deck",               number: "02", phase: null, name: "Client Deck Builder",          subtitle: "Build the right presentation for any stage of a project",                        component: ClientDeckBuilder },
-  { id: "design-system",      number: "03", phase: "03", name: "Design System Builder",       subtitle: "Upload, build, or bootstrap a design system for Claude",                         component: DesignSystemBuilder },
+  { id: "design-system",      number: "03", phase: null, name: "Design System Builder",       subtitle: "Upload, build, or bootstrap a design system for Claude",                         component: DesignSystemBuilder },
   { id: "research-synthesizer",number:"05", phase: "01", name: "Research Synthesizer",        subtitle: "Turn raw interviews into a structured Research Brief",                           component: ResearchSynthesizer },
   { id: "service-blueprint",  number: "05", phase: "01", name: "Service Blueprint Generator", subtitle: "Map current and future state experiences across five swim lanes",                component: ServiceBlueprintGenerator },
   { id: "competitive-snapshot", number: "06", phase: "01", name: "Competitive Snapshot Builder", subtitle: "Map the landscape, audit competitors, and find differentiation opportunities",    component: CompetitiveSnapshotBuilder },
@@ -1270,7 +1270,7 @@ const DELIVERABLES = [
   // Ideate
   { phase: "03", name: "Concept Set",             type: "tool",   ref: "concept-generator",       label: "Concept Generator",              desc: "Generates concepts across five thinking angles including First Principles, Analogous, and Worst Idea First — breaking out of obvious directions.", output: "Named concept cards with strengths and risks" },
   { phase: "03", name: "Cluster Map",             type: "tool",   ref: "idea-clustering",         label: "Idea Clustering",                desc: "Groups a raw concept set by underlying strategic mechanism — not surface similarity — and maps tensions and gaps.", output: "Strategic landscape with recommended directions" },
-  { phase: "03", name: "Design System",           type: "tool",   ref: "design-system",           label: "Design System Builder",          desc: "Live token editor with presets and component previews. Set brand colors, type, and spacing — export CSS ready to drop into Figma.", output: "CSS tokens + client delivery checklist" },
+  { phase: null, name: "Design System",           type: "tool",   ref: "design-system",           label: "Design System Builder",          desc: "Live token editor with presets and component previews. Set brand colors, type, and spacing — export CSS ready to drop into Figma.", output: "CSS tokens + client delivery checklist" },
   // Prototype
   { phase: "04", name: "UX Copy",                 type: "tool",   ref: "ux-copy-writer",          label: "UX Copy Writer",                 desc: "Locks voice and tone first, then writes all flow copy, error states, empty states, and confirmations — grounded in the brief.", output: "Complete copy document for prototyping" },
   { phase: "04", name: "User Flow",               type: "tool",   ref: "user-flow-mapper",        label: "User Flow Mapper",               desc: "Maps the happy path, every branch, and every error state — producing a screen inventory and scoped prototype brief.", output: "Screen inventory + prototype brief" },
@@ -1281,8 +1281,8 @@ const DELIVERABLES = [
   { phase: "05", name: "Test Findings",           type: "tool",   ref: "findings-synthesizer",    label: "Findings Synthesizer",           desc: "Structures raw session notes, synthesizes patterns across participants, rates severity, and produces a Go/No-Go decision.", output: "Severity-rated issue list + Go/No-Go" },
   { phase: "05", name: "Findings Report",         type: "tool",   ref: "insight-report",          label: "Insight Report Generator",       desc: "Generates audience-specific versions of findings — engineering, executive, design team — plus an iteration brief for the next cycle.", output: "Three stakeholder reports + iteration brief" },
   // Deliver
-  { phase: "06", name: "Design Brief",            type: "tool",   ref: "brief",                   label: "AI Brief Generator",             desc: "Answers a few questions about your project and generates a structured brief with problem statement, phase roadmap, and a first Claude prompt.", output: "Project brief + ready-to-paste first prompt" },
-  { phase: "06", name: "Client Deck",             type: "tool",   ref: "deck",                    label: "Client Deck Builder",            desc: "Identifies the right deck type for your situation, then writes slide-by-slide structure with speaker notes and opening hook.", output: "Slide structure + speaker notes" },
+  { phase: null, name: "Design Brief",            type: "tool",   ref: "brief",                   label: "Design Brief Generator",         desc: "Answers a few questions about your project and generates a Claude-ready brief — problem statement, phase roadmap, skill files, and a first prompt.", output: "Claude-ready project brief" },
+  { phase: null, name: "Client Deck",             type: "tool",   ref: "deck",                    label: "Client Deck Builder",            desc: "Identifies the right deck type for your situation, then writes slide-by-slide structure with speaker notes and opening hook.", output: "Slide structure + speaker notes" },
   { phase: "06", name: "Component Spec",          type: "tool",   ref: "component-spec",          label: "Component Spec Generator",       desc: "Documents component anatomy, all interactive states, behavior, spacing, edge cases — complete enough for a developer to build without questions.", output: "Full component spec document" },
   { phase: "06", name: "QA Issue Log",            type: "tool",   ref: "design-qa",               label: "Design QA Logger",               desc: "Structures implementation review notes into a P0–P3 severity-rated issue log with an explicit launch recommendation.", output: "QA report + launch sign-off decision" },
 ];
@@ -2598,6 +2598,40 @@ function DeliverablePath({ onOpenTool }) {
             )}
           </div>
         )}
+      </div>
+
+      {/* Cross-phase tools — always visible */}
+      <div style={{ marginBottom: 12 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+          <span style={{ fontSize: 10, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.1em", textTransform: "uppercase", color: T.dim }}>Cross-phase</span>
+          <div style={{ flex: 1, height: 1, background: T.border }} />
+          <span style={{ fontSize: 10, fontFamily: "'JetBrains Mono', monospace", color: T.dim }}>{DELIVERABLES.filter(d => d.phase === null && (typeFilter === "all" || d.type === typeFilter)).length} tool{DELIVERABLES.filter(d => d.phase === null && (typeFilter === "all" || d.type === typeFilter)).length !== 1 ? "s" : ""}</span>
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(250px, 1fr))", gap: 10 }}>
+          {DELIVERABLES.filter(d => d.phase === null && (typeFilter === "all" || d.type === typeFilter)).map(d => (
+            <div key={d.ref} style={{ background: T.surface, border: `1px solid ${T.border}`, borderRadius: 8, padding: "14px 16px", display: "flex", flexDirection: "column", gap: 8, transition: "border-color 0.12s" }}
+              onMouseEnter={e => e.currentTarget.style.borderColor = T.borderHover}
+              onMouseLeave={e => e.currentTarget.style.borderColor = T.border}
+            >
+              <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 8 }}>
+                <span style={{ fontSize: 13, fontWeight: 600, color: T.text, lineHeight: 1.3 }}>{d.name}</span>
+                <span style={{ fontSize: 9, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.08em", textTransform: "uppercase", padding: "2px 7px", borderRadius: 3, flexShrink: 0, background: "rgba(255,255,255,0.06)", border: `1px solid ${T.border}`, color: T.muted }}>{d.type}</span>
+              </div>
+              <p style={{ fontSize: 12, color: T.muted, lineHeight: 1.55, margin: 0 }}>{d.desc}</p>
+              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                <span style={{ fontSize: 10, color: T.dim, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.06em", textTransform: "uppercase", flexShrink: 0 }}>Output</span>
+                <span style={{ fontSize: 11, color: T.muted, background: T.card, border: `1px solid ${T.border}`, borderRadius: 20, padding: "2px 9px" }}>{d.output}</span>
+              </div>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 2 }}>
+                <span style={{ fontSize: 11, color: T.dim }}>{d.label}</span>
+                <button onClick={() => onOpenTool(d.ref)} style={{ padding: "5px 14px", borderRadius: 5, flexShrink: 0, fontSize: 11, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.06em", textTransform: "uppercase", background: "transparent", border: `1px solid ${T.border}`, color: T.muted, cursor: "pointer", transition: "all 0.12s" }}
+                  onMouseEnter={e => { e.currentTarget.style.borderColor = T.borderHover; e.currentTarget.style.color = T.text; }}
+                  onMouseLeave={e => { e.currentTarget.style.borderColor = T.border; e.currentTarget.style.color = T.muted; }}
+                >Open tool</button>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
 
       {/* Don't see what you need */}
