@@ -2421,152 +2421,193 @@ function DeliverablePath({ onOpenTool }) {
   };
   const PHASES_ORDER = ["01","02","03","04","05","06"];
 
+  const [selected, setSelected] = useState(null);
   const [typeFilter, setTypeFilter] = useState("all");
-  const [openPhases, setOpenPhases] = useState({});
   const [guideCopied, setGuideCopied] = useState(false);
-
-  function togglePhase(ph) {
-    setOpenPhases(prev => ({ ...prev, [ph]: !prev[ph] }));
-  }
+  const [guideOpen, setGuideOpen] = useState(false);
 
   const typeColor = { tool: "#22C55E", prompt: "#8B5CF6" };
 
-  const filtered = DELIVERABLES.filter(d =>
-    typeFilter === "all" ? true : d.type === typeFilter
-  );
+  const phaseItems = selected
+    ? DELIVERABLES.filter(d => d.phase === selected && (typeFilter === "all" || d.type === typeFilter))
+    : [];
 
-  const byPhase = PHASES_ORDER.map(ph => ({
-    ph,
-    items: filtered.filter(d => d.phase === ph),
-  })).filter(g => g.items.length > 0);
+  const meta = selected ? PHASE_META[selected] : null;
 
   return (
     <div>
-      {/* Type filter */}
-      <div style={{ display: "flex", gap: 6, marginBottom: 20 }}>
-        {[
-          { id: "all", label: "All" },
-          { id: "tool", label: "Tool" },
-          { id: "prompt", label: "Prompt" },
-        ].map(f => {
-          const isActive = typeFilter === f.id;
-          const accent = f.id === "tool" ? typeColor.tool : f.id === "prompt" ? typeColor.prompt : null;
+      {/* Phase strip */}
+      <div style={{
+        display: "grid", gridTemplateColumns: "repeat(6, minmax(0, 1fr))",
+        border: `1px solid ${T.border}`, borderRadius: 10,
+        overflow: "hidden", marginBottom: 1,
+      }}>
+        {PHASES_ORDER.map((ph, i) => {
+          const m = PHASE_META[ph];
+          const isActive = selected === ph;
+          const count = DELIVERABLES.filter(d => d.phase === ph).length;
           return (
-            <button key={f.id} onClick={() => setTypeFilter(f.id)} style={{
-              padding: "4px 14px", borderRadius: 20, cursor: "pointer",
-              fontSize: 10, fontFamily: "'JetBrains Mono', monospace",
-              letterSpacing: "0.07em", textTransform: "uppercase",
-              border: `1px solid ${isActive ? (accent || T.borderHover) : T.border}`,
-              background: isActive ? (accent ? `${accent}18` : T.card) : "transparent",
-              color: isActive ? (accent || T.text) : T.dim,
-              transition: "all 0.12s",
-            }}>{f.label}</button>
+            <button key={ph}
+              onClick={() => setSelected(selected === ph ? null : ph)}
+              style={{
+                padding: "14px 10px 12px", border: "none",
+                borderRight: i < 5 ? `1px solid ${T.border}` : "none",
+                borderBottom: isActive ? `2px solid ${m.color}` : "2px solid transparent",
+                background: isActive ? T.surface : "transparent",
+                cursor: "pointer", textAlign: "center", transition: "all 0.15s", outline: "none",
+              }}
+              onMouseEnter={e => { if (!isActive) e.currentTarget.style.background = T.card; }}
+              onMouseLeave={e => { if (!isActive) e.currentTarget.style.background = "transparent"; }}
+            >
+              <div style={{ width: 6, height: 6, borderRadius: "50%", background: m.color, margin: "0 auto 8px", boxShadow: isActive ? `0 0 8px ${m.color}` : "none", transition: "box-shadow 0.15s" }} />
+              <div style={{ fontSize: 9, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.08em", textTransform: "uppercase", color: isActive ? m.color : T.dim, marginBottom: 2 }}>{ph}</div>
+              <div style={{ fontSize: 11, fontWeight: 500, color: isActive ? T.text : T.muted, lineHeight: 1.2 }}>{m.label}</div>
+              <div style={{ fontSize: 9, color: T.dim, fontFamily: "'JetBrains Mono', monospace", marginTop: 3 }}>{count}</div>
+            </button>
           );
         })}
-        <div style={{ marginLeft: "auto", display: "flex", alignItems: "center" }}>
-          <Mono color={T.dim} size={10}>{filtered.length} deliverable{filtered.length !== 1 ? "s" : ""}</Mono>
-        </div>
       </div>
 
-      {/* Phase groups */}
-      <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 16 }}>
-        {byPhase.map(({ ph, items }) => {
-          const meta = PHASE_META[ph];
-          const isOpen = !!openPhases[ph];
-          return (
-            <div key={ph} style={{ border: `1px solid ${isOpen ? meta.border : T.border}`, borderRadius: 10, overflow: "hidden", transition: "border-color 0.15s" }}>
-              {/* Phase header — clickable */}
-              <button onClick={() => togglePhase(ph)} style={{
-                width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between",
-                padding: "11px 14px", background: isOpen ? meta.dim : "transparent",
-                border: "none", cursor: "pointer", textAlign: "left", transition: "background 0.15s",
-              }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                  <span style={{
-                    fontSize: 9, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.1em",
-                    textTransform: "uppercase", padding: "2px 7px", borderRadius: 3,
-                    background: meta.dim, border: `1px solid ${meta.border}`, color: meta.color,
-                  }}>{ph}</span>
-                  <span style={{ fontSize: 13, fontWeight: 500, color: isOpen ? meta.color : T.text }}>{meta.label}</span>
-                  <span style={{ fontSize: 11, color: T.dim, fontFamily: "'JetBrains Mono', monospace" }}>
-                    {items.length} deliverable{items.length !== 1 ? "s" : ""}
-                  </span>
-                </div>
-                <span style={{ fontSize: 10, color: T.dim, transition: "transform 0.2s", display: "inline-block", transform: isOpen ? "rotate(180deg)" : "none" }}>▾</span>
-              </button>
-
-              {/* Cards grid — shown when open */}
-              {isOpen && (
-                <div style={{ padding: "12px 12px 14px", borderTop: `1px solid ${T.border}`, display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: 10 }}>
-                  {items.map(d => (
-                    <div key={d.ref} style={{
-                      background: T.surface, border: `1px solid ${T.border}`, borderRadius: 8,
-                      padding: "14px 16px", display: "flex", flexDirection: "column", gap: 8,
-                      transition: "border-color 0.12s",
-                    }}
-                      onMouseEnter={e => e.currentTarget.style.borderColor = T.borderHover}
-                      onMouseLeave={e => e.currentTarget.style.borderColor = T.border}
-                    >
-                      {/* Card header */}
-                      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 8 }}>
-                        <span style={{ fontSize: 13, fontWeight: 600, color: T.text, lineHeight: 1.3 }}>{d.name}</span>
-                        <span style={{
-                          fontSize: 9, fontFamily: "'JetBrains Mono', monospace",
-                          letterSpacing: "0.08em", textTransform: "uppercase",
-                          padding: "2px 7px", borderRadius: 3, flexShrink: 0,
-                          background: `${typeColor[d.type]}18`,
-                          border: `1px solid ${typeColor[d.type]}40`,
-                          color: typeColor[d.type],
-                        }}>{d.type}</span>
-                      </div>
-
-                      {/* Description */}
-                      <p style={{ fontSize: 12, color: T.muted, lineHeight: 1.55, margin: 0 }}>{d.desc}</p>
-
-                      {/* Output pill */}
-                      <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                        <span style={{ fontSize: 10, color: T.dim, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.06em", textTransform: "uppercase", flexShrink: 0 }}>Output</span>
-                        <span style={{ fontSize: 11, color: T.muted, background: T.card, border: `1px solid ${T.border}`, borderRadius: 20, padding: "2px 9px" }}>{d.output}</span>
-                      </div>
-
-                      {/* Tool label + action */}
-                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 2 }}>
-                        <span style={{ fontSize: 11, color: T.dim }}>{d.label}</span>
-                        {d.type === "tool" && (
-                          <button onClick={() => onOpenTool(d.ref)} style={{
-                            padding: "5px 14px", borderRadius: 5, flexShrink: 0,
-                            fontSize: 11, fontFamily: "'JetBrains Mono', monospace",
-                            letterSpacing: "0.06em", textTransform: "uppercase",
-                            background: "transparent", border: `1px solid ${meta.color}60`,
-                            color: meta.color, cursor: "pointer", transition: "all 0.12s",
-                          }}
-                            onMouseEnter={e => { e.currentTarget.style.background = meta.dim; }}
-                            onMouseLeave={e => { e.currentTarget.style.background = "transparent"; }}
-                          >Open tool</button>
-                        )}
-                        {d.type === "prompt" && (
-                          <CopyBtn text={PROMPTS.find(p => p.id === d.ref)?.text || ""} label="Copy prompt" />
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
+      {/* Detail panel */}
+      <div style={{ border: `1px solid ${T.border}`, borderTop: "none", borderRadius: "0 0 10px 10px", overflow: "hidden", minHeight: 200, marginBottom: 12 }}>
+        {!selected ? (
+          /* Default state */
+          <div style={{ padding: "32px 32px 36px", display: "flex", alignItems: "center", gap: 48, flexWrap: "wrap" }}>
+            <div style={{ flex: "1 1 260px", maxWidth: 340 }}>
+              <p style={{ fontSize: 13, fontWeight: 600, color: T.text, lineHeight: 1.5, marginBottom: 10 }}>
+                Know what you need to produce?
+              </p>
+              <p style={{ fontSize: 12, color: T.muted, lineHeight: 1.7, margin: 0 }}>
+                Select a phase above to see every deliverable available for that stage — with a description of what it produces and a direct link to the tool or prompt that makes it.
+              </p>
             </div>
-          );
-        })}
+            <div style={{ flex: "1 1 320px" }}>
+              <div style={{ fontSize: 10, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.1em", textTransform: "uppercase", color: T.dim, marginBottom: 12 }}>Deliverables by phase</div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 6 }}>
+                {PHASES_ORDER.map(ph => {
+                  const m = PHASE_META[ph];
+                  const count = DELIVERABLES.filter(d => d.phase === ph).length;
+                  return (
+                    <button key={ph} onClick={() => setSelected(ph)} style={{ padding: "8px 10px", borderRadius: 7, border: `1px solid ${T.border}`, background: "transparent", cursor: "pointer", textAlign: "left", transition: "all 0.12s" }}
+                      onMouseEnter={e => { e.currentTarget.style.borderColor = m.color; e.currentTarget.style.background = m.dim; }}
+                      onMouseLeave={e => { e.currentTarget.style.borderColor = T.border; e.currentTarget.style.background = "transparent"; }}
+                    >
+                      <div style={{ fontSize: 9, color: m.color, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 2 }}>{ph}</div>
+                      <div style={{ fontSize: 11, fontWeight: 500, color: T.text, marginBottom: 2 }}>{m.label}</div>
+                      <div style={{ fontSize: 10, color: T.dim, fontFamily: "'JetBrains Mono', monospace" }}>{count} deliverable{count !== 1 ? "s" : ""}</div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        ) : (
+          /* Phase deliverable cards */
+          <div style={{ padding: "20px 20px 24px" }}>
+            {/* Phase header + type filter inline */}
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16, flexWrap: "wrap", gap: 10 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <div style={{ width: 7, height: 7, borderRadius: "50%", background: meta.color, boxShadow: `0 0 7px ${meta.color}` }} />
+                <span style={{ fontSize: 11, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.1em", textTransform: "uppercase", color: meta.color }}>{selected} — {meta.label}</span>
+                <span style={{ fontSize: 11, color: T.dim, fontFamily: "'JetBrains Mono', monospace" }}>
+                  {phaseItems.length} deliverable{phaseItems.length !== 1 ? "s" : ""}
+                </span>
+              </div>
+              {/* Type filter */}
+              <div style={{ display: "flex", gap: 5 }}>
+                {[{ id: "all", label: "All" }, { id: "tool", label: "Tool" }, { id: "prompt", label: "Prompt" }].map(f => {
+                  const isActive = typeFilter === f.id;
+                  const accent = f.id === "tool" ? typeColor.tool : f.id === "prompt" ? typeColor.prompt : null;
+                  return (
+                    <button key={f.id} onClick={() => setTypeFilter(f.id)} style={{
+                      padding: "3px 11px", borderRadius: 20, cursor: "pointer",
+                      fontSize: 9, fontFamily: "'JetBrains Mono', monospace",
+                      letterSpacing: "0.07em", textTransform: "uppercase",
+                      border: `1px solid ${isActive ? (accent || T.borderHover) : T.border}`,
+                      background: isActive ? (accent ? `${accent}18` : T.card) : "transparent",
+                      color: isActive ? (accent || T.text) : T.dim,
+                      transition: "all 0.12s",
+                    }}>{f.label}</button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Cards */}
+            {phaseItems.length === 0 ? (
+              <div style={{ padding: "24px 0", textAlign: "center" }}>
+                <Mono color={T.dim} size={11}>No {typeFilter} deliverables in this phase</Mono>
+              </div>
+            ) : (
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(250px, 1fr))", gap: 10 }}>
+                {phaseItems.map(d => (
+                  <div key={d.ref} style={{
+                    background: T.surface, border: `1px solid ${T.border}`, borderRadius: 8,
+                    padding: "14px 16px", display: "flex", flexDirection: "column", gap: 8,
+                    transition: "border-color 0.12s",
+                  }}
+                    onMouseEnter={e => e.currentTarget.style.borderColor = T.borderHover}
+                    onMouseLeave={e => e.currentTarget.style.borderColor = T.border}
+                  >
+                    {/* Name + type badge */}
+                    <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 8 }}>
+                      <span style={{ fontSize: 13, fontWeight: 600, color: T.text, lineHeight: 1.3 }}>{d.name}</span>
+                      <span style={{
+                        fontSize: 9, fontFamily: "'JetBrains Mono', monospace",
+                        letterSpacing: "0.08em", textTransform: "uppercase",
+                        padding: "2px 7px", borderRadius: 3, flexShrink: 0,
+                        background: `${typeColor[d.type]}18`,
+                        border: `1px solid ${typeColor[d.type]}40`,
+                        color: typeColor[d.type],
+                      }}>{d.type}</span>
+                    </div>
+
+                    {/* Description */}
+                    <p style={{ fontSize: 12, color: T.muted, lineHeight: 1.55, margin: 0 }}>{d.desc}</p>
+
+                    {/* Output pill */}
+                    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                      <span style={{ fontSize: 10, color: T.dim, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.06em", textTransform: "uppercase", flexShrink: 0 }}>Output</span>
+                      <span style={{ fontSize: 11, color: T.muted, background: T.card, border: `1px solid ${T.border}`, borderRadius: 20, padding: "2px 9px" }}>{d.output}</span>
+                    </div>
+
+                    {/* Tool name + action */}
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 2 }}>
+                      <span style={{ fontSize: 11, color: T.dim }}>{d.label}</span>
+                      {d.type === "tool" && (
+                        <button onClick={() => onOpenTool(d.ref)} style={{
+                          padding: "5px 14px", borderRadius: 5, flexShrink: 0,
+                          fontSize: 11, fontFamily: "'JetBrains Mono', monospace",
+                          letterSpacing: "0.06em", textTransform: "uppercase",
+                          background: "transparent", border: `1px solid ${meta.color}60`,
+                          color: meta.color, cursor: "pointer", transition: "all 0.12s",
+                        }}
+                          onMouseEnter={e => { e.currentTarget.style.background = meta.dim; }}
+                          onMouseLeave={e => { e.currentTarget.style.background = "transparent"; }}
+                        >Open tool</button>
+                      )}
+                      {d.type === "prompt" && (
+                        <CopyBtn text={PROMPTS.find(p => p.id === d.ref)?.text || ""} label="Copy prompt" />
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Don't see what you need */}
       <div style={{ border: `1px solid ${T.border}`, borderRadius: 8, overflow: "hidden" }}>
-        <button onClick={() => setOpenPhases(prev => ({ ...prev, _guide: !prev._guide }))} style={{
+        <button onClick={() => setGuideOpen(!guideOpen)} style={{
           width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between",
           padding: "13px 16px", background: "transparent", border: "none", cursor: "pointer", textAlign: "left",
         }}>
           <span style={{ fontSize: 12, color: T.muted }}>Don't see the deliverable you need?</span>
-          <span style={{ fontSize: 11, color: T.dim, fontFamily: "'JetBrains Mono', monospace", display: "inline-block", transform: openPhases._guide ? "rotate(180deg)" : "none", transition: "transform 0.2s" }}>▾</span>
+          <span style={{ fontSize: 11, color: T.dim, fontFamily: "'JetBrains Mono', monospace", display: "inline-block", transform: guideOpen ? "rotate(180deg)" : "none", transition: "transform 0.2s" }}>▾</span>
         </button>
-        {openPhases._guide && (
+        {guideOpen && (
           <div style={{ borderTop: `1px solid ${T.border}`, padding: "16px 16px 18px" }}>
             <p style={{ fontSize: 12, color: T.muted, lineHeight: 1.6, marginBottom: 14 }}>
               Copy this prompt into Claude Chat. Claude will ask you three questions and recommend the right deliverable, method, and tool for your situation.
