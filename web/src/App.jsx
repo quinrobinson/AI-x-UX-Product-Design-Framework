@@ -2476,7 +2476,7 @@ function DeliverablePath({ onOpenTool }) {
             <p style={{ fontSize: 12, color: T.muted, lineHeight: 1.7, margin: "0 0 20px", maxWidth: 520 }}>
               Select a phase above to see every deliverable for that stage. Each deliverable is produced by either a Tool or a Prompt.
             </p>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
               {[
                 {
                   badge: "Interactive", headline: "Tools",
@@ -2489,15 +2489,12 @@ function DeliverablePath({ onOpenTool }) {
                   when: "When you need something fast or want to stay in chat",
                 },
               ].map(item => (
-                <div key={item.headline} style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 8, padding: "16px 18px" }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
-                    <span style={{ fontSize: 9, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.08em", textTransform: "uppercase", padding: "2px 7px", borderRadius: 3, background: "rgba(255,255,255,0.06)", border: `1px solid ${T.border}`, color: T.muted }}>{item.badge}</span>
-                    <span style={{ fontSize: 13, fontWeight: 600, color: T.text }}>{item.headline}</span>
-                  </div>
-                  <p style={{ fontSize: 12, color: T.muted, lineHeight: 1.6, margin: "0 0 10px" }}>{item.desc}</p>
-                  <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                    <span style={{ fontSize: 10, color: T.dim, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.06em", textTransform: "uppercase" }}>Use when</span>
-                    <span style={{ fontSize: 11, color: T.muted }}>{item.when}</span>
+                <div key={item.headline} style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
+                  <span style={{ fontSize: 9, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.08em", textTransform: "uppercase", color: T.dim, minWidth: 80, paddingTop: 2, flexShrink: 0 }}>{item.badge}</span>
+                  <div>
+                    <div style={{ fontSize: 12, fontWeight: 600, color: T.text, marginBottom: 2 }}>{item.headline}</div>
+                    <div style={{ fontSize: 11, color: T.muted, lineHeight: 1.55, marginBottom: 4 }}>{item.desc}</div>
+                    <div style={{ fontSize: 11, color: T.dim }}>{item.when}</div>
                   </div>
                 </div>
               ))}
