@@ -1,10 +1,18 @@
 import { useState } from "react";
 
 // ── Design tokens ─────────────────────────────────────────────────────────────
-const DS = {
-  dark: "#0F172A", darkCard: "#1E293B", darkBorder: "#334155",
-  white: "#FFFFFF", bodyLight: "#94A3B8", bodyDark: "#64748B",
-  light: "#F8FAFC", lightBorder: "#E2E8F0",
+const T = {
+  bg: "#0F0F0F", surface: "#161616", card: "#1C1C1C", border: "#2A2A2A",
+  text: "#F2F2F2", muted: "#999999", dim: "#666666",
+  borderHover: "#3A3A3A", proto: "#3B82F6",
+  phases: {
+    "01": { color: "#22C55E", dim: "rgba(34,197,94,0.12)",  label: "Discover"  },
+    "02": { color: "#8B5CF6", dim: "rgba(139,92,246,0.12)", label: "Define"    },
+    "03": { color: "#F59E0B", dim: "rgba(245,158,11,0.12)", label: "Ideate"    },
+    "04": { color: "#3B82F6", dim: "rgba(59,130,246,0.12)", label: "Prototype" },
+    "05": { color: "#EF4444", dim: "rgba(239,68,68,0.12)",  label: "Validate"  },
+    "06": { color: "#14B8A6", dim: "rgba(20,184,166,0.12)", label: "Deliver"   },
+  },
 };
 
 // ── Skill map by phase ────────────────────────────────────────────────────────
@@ -15,7 +23,7 @@ const PHASE_SKILLS = {
   prototype: { color: "#3B82F6", label: "Prototype", skills: ["prototyping.md", "accessibility-audit.md"] },
   validate:  { color: "#EF4444", label: "Validate",  skills: ["usability-testing.md"] },
   deliver:   { color: "#14B8A6", label: "Deliver",   skills: ["design-delivery.md", "design-system-audit.md"] },
-  unsure:    { color: "#64748B", label: "Not sure",  skills: ["user-research.md", "problem-framing.md"] },
+  unsure:    { color: T.muted, label: "Not sure",  skills: ["user-research.md", "problem-framing.md"] },
 };
 
 // ── Skill rationale ───────────────────────────────────────────────────────────
@@ -130,9 +138,9 @@ function Chip({ selected, onClick, children, color }) {
         display: "inline-flex", alignItems: "center", gap: 6,
         padding: "9px 16px", borderRadius: 999, cursor: "pointer",
         fontFamily: "'DM Sans', sans-serif", fontSize: 13, fontWeight: 500,
-        border: selected ? `1.5px solid ${c}` : `1px solid ${DS.lightBorder}`,
-        background: selected ? `${c}12` : DS.white,
-        color: selected ? c : DS.bodyDark,
+        border: selected ? `1.5px solid ${c}` : `1px solid ${T.surfaceBorder}`,
+        background: selected ? `${c}12` : T.text,
+        color: selected ? c : T.dim,
         transition: "all 0.15s ease",
         transform: hov && !selected ? "translateY(-1px)" : "none",
         outline: "none",
@@ -146,10 +154,10 @@ function StepDot({ n, active, done }) {
     <div style={{
       width: 28, height: 28, borderRadius: "50%",
       display: "flex", alignItems: "center", justifyContent: "center",
-      background: done ? "#22C55E" : active ? DS.dark : DS.light,
-      border: active || done ? "none" : `1px solid ${DS.lightBorder}`,
+      background: done ? "#22C55E" : active ? T.bg : T.surface,
+      border: active || done ? "none" : `1px solid ${T.surfaceBorder}`,
       fontSize: 11, fontWeight: 700,
-      color: done || active ? DS.white : DS.bodyDark,
+      color: done || active ? T.text : T.dim,
       flexShrink: 0, transition: "all 0.2s",
     }}>{done ? "✓" : n}</div>
   );
@@ -158,20 +166,20 @@ function StepDot({ n, active, done }) {
 function Field({ label, hint, value, onChange, multiline, placeholder }) {
   const base = {
     width: "100%", boxSizing: "border-box",
-    border: `1px solid ${DS.lightBorder}`, borderRadius: 10,
+    border: `1px solid ${T.surfaceBorder}`, borderRadius: 10,
     padding: "11px 14px", fontSize: 13, fontFamily: "'DM Sans', sans-serif",
-    color: "#0F172A", background: DS.white, outline: "none",
+    color: T.text, background: T.text, outline: "none",
     lineHeight: 1.6, resize: "vertical", transition: "border-color 0.15s",
   };
   return (
     <div style={{ marginBottom: 20 }}>
-      <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "#0F172A", marginBottom: 4 }}>{label}</label>
-      {hint && <div style={{ fontSize: 11, color: DS.bodyDark, marginBottom: 8, lineHeight: 1.5 }}>{hint}</div>}
+      <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: T.text, marginBottom: 4 }}>{label}</label>
+      {hint && <div style={{ fontSize: 11, color: T.dim, marginBottom: 8, lineHeight: 1.5 }}>{hint}</div>}
       {multiline
         ? <textarea rows={3} value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder} style={base}
-            onFocus={e => e.target.style.borderColor = "#22C55E"} onBlur={e => e.target.style.borderColor = DS.lightBorder} />
+            onFocus={e => e.target.style.borderColor = "#22C55E"} onBlur={e => e.target.style.borderColor = T.surfaceBorder} />
         : <input type="text" value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder} style={{ ...base, resize: undefined }}
-            onFocus={e => e.target.style.borderColor = "#22C55E"} onBlur={e => e.target.style.borderColor = DS.lightBorder} />
+            onFocus={e => e.target.style.borderColor = "#22C55E"} onBlur={e => e.target.style.borderColor = T.surfaceBorder} />
       }
     </div>
   );
@@ -194,16 +202,16 @@ function PromptResult({ prompt, form, onReset }) {
 
       {/* Header */}
       <div style={{ marginBottom: 28 }}>
-        <div style={{ fontSize: 10, fontFamily: "'JetBrains Mono', monospace", letterSpacing: 3, textTransform: "uppercase", color: DS.bodyDark, marginBottom: 10 }}>Prompt ready</div>
-        <h2 style={{ fontFamily: "'DM Serif Display', serif", fontSize: 34, fontWeight: 400, color: "#0F172A", margin: "0 0 8px", lineHeight: 1.1 }}>{form.projectName || "Your project"}</h2>
-        <p style={{ fontSize: 14, color: DS.bodyDark, margin: 0, lineHeight: 1.6 }}>
+        <div style={{ fontSize: 10, fontFamily: "'JetBrains Mono', monospace", letterSpacing: 3, textTransform: "uppercase", color: T.dim, marginBottom: 10 }}>Prompt ready</div>
+        <h2 style={{ fontFamily: "'DM Serif Display', serif", fontSize: 34, fontWeight: 400, color: T.text, margin: "0 0 8px", lineHeight: 1.1 }}>{form.projectName || "Your project"}</h2>
+        <p style={{ fontSize: 14, color: T.dim, margin: 0, lineHeight: 1.6 }}>
           Starting in <span style={{ color: phase.color, fontWeight: 600 }}>{phase.label}</span> · {phase.skills.length} skill {phase.skills.length === 1 ? "file" : "files"} recommended
         </p>
       </div>
 
       {/* How to use */}
-      <div style={{ background: DS.darkCard, border: `1px solid ${DS.darkBorder}`, borderRadius: 12, padding: "16px 20px", marginBottom: 12, display: "flex", gap: 14, alignItems: "flex-start" }}>
-        <div style={{ display: "flex", flexDirection: "column", gap: 8, fontSize: 13, color: DS.bodyLight, lineHeight: 1.6, flex: 1 }}>
+      <div style={{ background: T.bgCard, border: `1px solid ${T.bgBorder}`, borderRadius: 12, padding: "16px 20px", marginBottom: 12, display: "flex", gap: 14, alignItems: "flex-start" }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 8, fontSize: 13, color: T.muted, lineHeight: 1.6, flex: 1 }}>
           {[
             { n: "1", text: `Download and upload ${phase.skills.map(s => `\`${s}\``).join(" and ")} in Claude via Settings → Customize → Skills` },
             { n: "2", text: "Open a new Claude conversation" },
@@ -211,20 +219,20 @@ function PromptResult({ prompt, form, onReset }) {
           ].map(step => (
             <div key={step.n} style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
               <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: phase.color, marginTop: 2, flexShrink: 0, minWidth: 14 }}>{step.n}.</span>
-              <span dangerouslySetInnerHTML={{ __html: step.text.replace(/`([^`]+)`/g, `<code style="font-family:'JetBrains Mono',monospace;font-size:11px;background:#0F172A;color:#22C55E;padding:1px 6px;border-radius:4px">$1</code>`) }} />
+              <span dangerouslySetInnerHTML={{ __html: step.text.replace(/`([^`]+)`/g, `<code style="font-family:'JetBrains Mono',monospace;font-size:11px;background:T.card;color:#22C55E;padding:1px 6px;border-radius:4px">$1</code>`) }} />
             </div>
           ))}
         </div>
       </div>
 
       {/* The prompt — hero */}
-      <div style={{ background: DS.dark, borderRadius: 16, overflow: "hidden", marginBottom: 12 }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "16px 20px", borderBottom: `1px solid ${DS.darkBorder}` }}>
+      <div style={{ background: T.bg, borderRadius: 16, overflow: "hidden", marginBottom: 12 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "16px 20px", borderBottom: `1px solid ${T.bgBorder}` }}>
           <div style={{ fontSize: 10, fontFamily: "'JetBrains Mono', monospace", letterSpacing: 3, textTransform: "uppercase", color: phase.color }}>
             Your Claude prompt
           </div>
           <button onClick={copy} style={{
-            background: copied ? "#0D9488" : "#14B8A6", color: DS.dark,
+            background: copied ? "#0D9488" : "#14B8A6", color: T.bg,
             border: "none", borderRadius: 7, padding: "8px 18px",
             fontSize: 12, fontWeight: 700, cursor: "pointer",
             fontFamily: "'DM Sans', sans-serif", transition: "background 0.2s",
@@ -241,8 +249,8 @@ function PromptResult({ prompt, form, onReset }) {
       </div>
 
       {/* Skill stack */}
-      <div style={{ background: DS.white, border: `1px solid ${DS.lightBorder}`, borderRadius: 16, padding: "20px 24px", marginBottom: 24 }}>
-        <div style={{ fontSize: 10, fontFamily: "'JetBrains Mono', monospace", textTransform: "uppercase", letterSpacing: 2, color: DS.bodyDark, marginBottom: 16 }}>
+      <div style={{ background: T.text, border: `1px solid ${T.surfaceBorder}`, borderRadius: 16, padding: "20px 24px", marginBottom: 24 }}>
+        <div style={{ fontSize: 10, fontFamily: "'JetBrains Mono', monospace", textTransform: "uppercase", letterSpacing: 2, color: T.dim, marginBottom: 16 }}>
           Skills for this phase
         </div>
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
@@ -250,8 +258,8 @@ function PromptResult({ prompt, form, onReset }) {
             <div key={skill} style={{
               display: "grid", gridTemplateColumns: "auto 1fr",
               alignItems: "center", gap: 14,
-              background: DS.light, borderRadius: 10, padding: "12px 16px",
-              border: `1px solid ${DS.lightBorder}`,
+              background: T.surface, borderRadius: 10, padding: "12px 16px",
+              border: `1px solid ${T.surfaceBorder}`,
             }}>
               <div style={{
                 fontFamily: "'JetBrains Mono', monospace", fontSize: 11,
@@ -259,8 +267,8 @@ function PromptResult({ prompt, form, onReset }) {
                 border: `1px solid ${phase.color}44`,
                 padding: "4px 12px", borderRadius: 6, whiteSpace: "nowrap",
               }}>{skill}</div>
-              <div style={{ fontSize: 12, color: DS.bodyDark, lineHeight: 1.5 }}>
-                <span style={{ color: "#0F172A", fontWeight: 500 }}>
+              <div style={{ fontSize: 12, color: T.dim, lineHeight: 1.5 }}>
+                <span style={{ color: T.text, fontWeight: 500 }}>
                   {i === 0 ? "Upload first — " : "Upload after — "}
                 </span>
                 {SKILL_WHY[skill] || "activate the structured workflow for this phase"}
@@ -273,12 +281,12 @@ function PromptResult({ prompt, form, onReset }) {
       {/* Actions */}
       <div style={{ display: "flex", gap: 10 }}>
         <button onClick={onReset} style={{
-          background: DS.white, border: `1px solid ${DS.lightBorder}`,
+          background: T.text, border: `1px solid ${T.surfaceBorder}`,
           borderRadius: 8, padding: "10px 20px", fontSize: 13, fontWeight: 500,
-          color: DS.bodyDark, cursor: "pointer", fontFamily: "'DM Sans', sans-serif",
+          color: T.dim, cursor: "pointer", fontFamily: "'DM Sans', sans-serif",
         }}>← New brief</button>
         <button onClick={copy} style={{
-          background: copied ? "#0D9488" : "#14B8A6", color: DS.dark,
+          background: copied ? "#0D9488" : "#14B8A6", color: T.bg,
           border: "none", borderRadius: 8, padding: "10px 20px",
           fontSize: 13, fontWeight: 700, cursor: "pointer",
           fontFamily: "'DM Sans', sans-serif", transition: "background 0.2s",
@@ -315,24 +323,24 @@ export default function AIBriefGenerator() {
   const progress = prompt ? 100 : ((step - 1) / 3) * 100;
 
   return (
-    <div style={{ minHeight: "100vh", background: DS.light, fontFamily: "'DM Sans', sans-serif" }}>
+    <div style={{ minHeight: "100vh", background: T.surface, fontFamily: "'DM Sans', sans-serif" }}>
       <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;700&family=DM+Serif+Display&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
 
       {/* Top bar */}
-      <div style={{ background: DS.dark, borderBottom: `1px solid ${DS.darkBorder}`, padding: "0 40px", display: "flex", alignItems: "center", gap: 14, height: 56, position: "sticky", top: 0, zIndex: 10 }}>
+      <div style={{ background: T.bg, borderBottom: `1px solid ${T.bgBorder}`, padding: "0 40px", display: "flex", alignItems: "center", gap: 14, height: 56, position: "sticky", top: 0, zIndex: 10 }}>
         <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
           <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#3B82F6", display: "block" }} />
           <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: "#3B82F6", letterSpacing: 2, textTransform: "uppercase" }}>AI Brief Generator</span>
         </div>
-        <div style={{ width: 1, height: 16, background: DS.darkBorder }} />
-        <span style={{ fontSize: 13, color: DS.bodyLight }}>
+        <div style={{ width: 1, height: 16, background: T.bgBorder }} />
+        <span style={{ fontSize: 13, color: T.muted }}>
           {prompt ? "Prompt ready — copy and paste into Claude" : "Answer 3 questions. Get a Claude-ready project prompt."}
         </span>
-        <div style={{ marginLeft: "auto", fontSize: 11, color: DS.bodyDark, fontFamily: "'JetBrains Mono', monospace" }}>Agentic Product Design Framework</div>
+        <div style={{ marginLeft: "auto", fontSize: 11, color: T.dim, fontFamily: "'JetBrains Mono', monospace" }}>Agentic Product Design Framework</div>
       </div>
 
       {/* Progress */}
-      <div style={{ height: 2, background: DS.darkBorder }}>
+      <div style={{ height: 2, background: T.bgBorder }}>
         <div style={{ height: "100%", background: "#3B82F6", width: `${progress}%`, transition: "width 0.4s ease" }} />
       </div>
 
@@ -350,9 +358,9 @@ export default function AIBriefGenerator() {
                 <div key={s.n} style={{ display: "flex", alignItems: "center" }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                     <StepDot n={s.n} active={step === s.n} done={step > s.n} />
-                    <span style={{ fontSize: 12, fontWeight: step === s.n ? 600 : 400, color: step === s.n ? "#0F172A" : DS.bodyDark }}>{s.label}</span>
+                    <span style={{ fontSize: 12, fontWeight: step === s.n ? 600 : 400, color: step === s.n ? T.text : T.dim }}>{s.label}</span>
                   </div>
-                  {i < 2 && <div style={{ width: 32, height: 1, background: DS.lightBorder, margin: "0 12px" }} />}
+                  {i < 2 && <div style={{ width: 32, height: 1, background: T.surfaceBorder, margin: "0 12px" }} />}
                 </div>
               ))}
             </div>
@@ -360,11 +368,11 @@ export default function AIBriefGenerator() {
             {/* Step 1 */}
             {step === 1 && (
               <div style={{ animation: "fadeIn 0.3s ease" }}>
-                <h2 style={{ fontFamily: "'DM Serif Display', serif", fontSize: 28, fontWeight: 400, color: "#0F172A", margin: "0 0 6px" }}>What kind of project is this?</h2>
-                <p style={{ fontSize: 14, color: DS.bodyDark, margin: "0 0 32px", lineHeight: 1.6 }}>This shapes how Claude frames the problem and what it focuses on first.</p>
+                <h2 style={{ fontFamily: "'DM Serif Display', serif", fontSize: 28, fontWeight: 400, color: T.text, margin: "0 0 6px" }}>What kind of project is this?</h2>
+                <p style={{ fontSize: 14, color: T.dim, margin: "0 0 32px", lineHeight: 1.6 }}>This shapes how Claude frames the problem and what it focuses on first.</p>
 
                 <div style={{ marginBottom: 28 }}>
-                  <div style={{ fontSize: 12, fontWeight: 600, color: "#0F172A", marginBottom: 12 }}>Project type</div>
+                  <div style={{ fontSize: 12, fontWeight: 600, color: T.text, marginBottom: 12 }}>Project type</div>
                   <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
                     {[
                       { id: "new-product",   label: "New Product",      icon: "✦" },
@@ -381,8 +389,8 @@ export default function AIBriefGenerator() {
                 </div>
 
                 <div style={{ marginBottom: 32 }}>
-                  <div style={{ fontSize: 12, fontWeight: 600, color: "#0F172A", marginBottom: 4 }}>Which phase are you entering?</div>
-                  <div style={{ fontSize: 11, color: DS.bodyDark, marginBottom: 12 }}>Pick your starting point — or "Not sure yet" and Claude will recommend.</div>
+                  <div style={{ fontSize: 12, fontWeight: 600, color: T.text, marginBottom: 4 }}>Which phase are you entering?</div>
+                  <div style={{ fontSize: 11, color: T.dim, marginBottom: 12 }}>Pick your starting point — or "Not sure yet" and Claude will recommend.</div>
                   <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
                     {Object.entries(PHASE_SKILLS).map(([id, p]) => (
                       <Chip key={id} selected={form.phase === id} onClick={() => set("phase", id)} color={p.color}>
@@ -394,7 +402,7 @@ export default function AIBriefGenerator() {
                 </div>
 
                 <button onClick={() => setStep(2)} disabled={!canNext1}
-                  style={{ background: canNext1 ? "#0F172A" : DS.lightBorder, color: canNext1 ? DS.white : DS.bodyDark, border: "none", borderRadius: 10, padding: "13px 28px", fontSize: 14, fontWeight: 600, cursor: canNext1 ? "pointer" : "default", fontFamily: "'DM Sans', sans-serif", transition: "all 0.15s" }}>
+                  style={{ background: canNext1 ? T.proto : T.card, color: canNext1 ? T.text : T.dim, border: "none", borderRadius: 10, padding: "13px 28px", fontSize: 14, fontWeight: 600, cursor: canNext1 ? "pointer" : "default", fontFamily: "'DM Sans', sans-serif", transition: "all 0.15s" }}>
                   Continue →
                 </button>
               </div>
@@ -403,11 +411,11 @@ export default function AIBriefGenerator() {
             {/* Step 2 */}
             {step === 2 && (
               <div style={{ animation: "fadeIn 0.3s ease" }}>
-                <h2 style={{ fontFamily: "'DM Serif Display', serif", fontSize: 28, fontWeight: 400, color: "#0F172A", margin: "0 0 6px" }}>What's your context?</h2>
-                <p style={{ fontSize: 14, color: DS.bodyDark, margin: "0 0 32px", lineHeight: 1.6 }}>A few quick details so Claude knows exactly where you are and what you're working with.</p>
+                <h2 style={{ fontFamily: "'DM Serif Display', serif", fontSize: 28, fontWeight: 400, color: T.text, margin: "0 0 6px" }}>What's your context?</h2>
+                <p style={{ fontSize: 14, color: T.dim, margin: "0 0 32px", lineHeight: 1.6 }}>A few quick details so Claude knows exactly where you are and what you're working with.</p>
 
                 <div style={{ marginBottom: 24 }}>
-                  <div style={{ fontSize: 12, fontWeight: 600, color: "#0F172A", marginBottom: 12 }}>What do you have so far?</div>
+                  <div style={{ fontSize: 12, fontWeight: 600, color: T.text, marginBottom: 12 }}>What do you have so far?</div>
                   <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
                     {[
                       { id: "nothing",          label: "Nothing yet" },
@@ -421,7 +429,7 @@ export default function AIBriefGenerator() {
                 </div>
 
                 <div style={{ marginBottom: 24 }}>
-                  <div style={{ fontSize: 12, fontWeight: 600, color: "#0F172A", marginBottom: 12 }}>Team setup</div>
+                  <div style={{ fontSize: 12, fontWeight: 600, color: T.text, marginBottom: 12 }}>Team setup</div>
                   <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
                     {[
                       { id: "solo",   label: "Solo",          desc: "Just me" },
@@ -430,14 +438,14 @@ export default function AIBriefGenerator() {
                       { id: "client", label: "With a client", desc: "External stakeholders" },
                     ].map(t => (
                       <Chip key={t.id} selected={form.team === t.id} onClick={() => set("team", t.id)} color="#F59E0B">
-                        {t.label}<span style={{ fontSize: 11, color: DS.bodyDark, fontWeight: 400 }}> — {t.desc}</span>
+                        {t.label}<span style={{ fontSize: 11, color: T.dim, fontWeight: 400 }}> — {t.desc}</span>
                       </Chip>
                     ))}
                   </div>
                 </div>
 
                 <div style={{ marginBottom: 32 }}>
-                  <div style={{ fontSize: 12, fontWeight: 600, color: "#0F172A", marginBottom: 12 }}>Timeline</div>
+                  <div style={{ fontSize: 12, fontWeight: 600, color: T.text, marginBottom: 12 }}>Timeline</div>
                   <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
                     {[
                       { id: "sprint",  label: "Sprint",  desc: "1–2 weeks" },
@@ -446,16 +454,16 @@ export default function AIBriefGenerator() {
                       { id: "ongoing", label: "Ongoing", desc: "No fixed end" },
                     ].map(t => (
                       <Chip key={t.id} selected={form.timeline === t.id} onClick={() => set("timeline", t.id)} color="#EF4444">
-                        {t.label}<span style={{ fontSize: 11, color: DS.bodyDark, fontWeight: 400 }}> — {t.desc}</span>
+                        {t.label}<span style={{ fontSize: 11, color: T.dim, fontWeight: 400 }}> — {t.desc}</span>
                       </Chip>
                     ))}
                   </div>
                 </div>
 
                 <div style={{ display: "flex", gap: 10 }}>
-                  <button onClick={() => setStep(1)} style={{ background: DS.white, border: `1px solid ${DS.lightBorder}`, borderRadius: 10, padding: "13px 22px", fontSize: 14, fontWeight: 500, color: DS.bodyDark, cursor: "pointer", fontFamily: "'DM Sans', sans-serif" }}>← Back</button>
+                  <button onClick={() => setStep(1)} style={{ background: T.text, border: `1px solid ${T.surfaceBorder}`, borderRadius: 10, padding: "13px 22px", fontSize: 14, fontWeight: 500, color: T.dim, cursor: "pointer", fontFamily: "'DM Sans', sans-serif" }}>← Back</button>
                   <button onClick={() => setStep(3)} disabled={!canNext2}
-                    style={{ background: canNext2 ? "#0F172A" : DS.lightBorder, color: canNext2 ? DS.white : DS.bodyDark, border: "none", borderRadius: 10, padding: "13px 28px", fontSize: 14, fontWeight: 600, cursor: canNext2 ? "pointer" : "default", fontFamily: "'DM Sans', sans-serif", transition: "all 0.15s" }}>
+                    style={{ background: canNext2 ? T.proto : T.card, color: canNext2 ? T.text : T.dim, border: "none", borderRadius: 10, padding: "13px 28px", fontSize: 14, fontWeight: 600, cursor: canNext2 ? "pointer" : "default", fontFamily: "'DM Sans', sans-serif", transition: "all 0.15s" }}>
                     Continue →
                   </button>
                 </div>
@@ -465,8 +473,8 @@ export default function AIBriefGenerator() {
             {/* Step 3 */}
             {step === 3 && (
               <div style={{ animation: "fadeIn 0.3s ease" }}>
-                <h2 style={{ fontFamily: "'DM Serif Display', serif", fontSize: 28, fontWeight: 400, color: "#0F172A", margin: "0 0 6px" }}>Goals & details</h2>
-                <p style={{ fontSize: 14, color: DS.bodyDark, margin: "0 0 28px", lineHeight: 1.6 }}>The more specific you are here, the sharper Claude's first response will be.</p>
+                <h2 style={{ fontFamily: "'DM Serif Display', serif", fontSize: 28, fontWeight: 400, color: T.text, margin: "0 0 6px" }}>Goals & details</h2>
+                <p style={{ fontSize: 14, color: T.dim, margin: "0 0 28px", lineHeight: 1.6 }}>The more specific you are here, the sharper Claude's first response will be.</p>
 
                 <Field label="Project name *" placeholder="e.g. Healthtrack Mobile Redesign" value={form.projectName} onChange={v => set("projectName", v)} />
                 <Field label="What are you designing? Who is it for?" hint="Describe the product or feature and the people who will use it." placeholder="e.g. A mobile app for nurses to track patient vitals during shift handoff" value={form.productDescription} onChange={v => set("productDescription", v)} multiline />
@@ -474,9 +482,9 @@ export default function AIBriefGenerator() {
                 <Field label="Known constraints" hint="Technical limitations, timeline pressure, stakeholder requirements." placeholder="e.g. Must work on hospital-issued iPads, integrate with Epic EHR, ship by Q3" value={form.constraints} onChange={v => set("constraints", v)} multiline />
 
                 <div style={{ display: "flex", gap: 10, marginTop: 8 }}>
-                  <button onClick={() => setStep(2)} style={{ background: DS.white, border: `1px solid ${DS.lightBorder}`, borderRadius: 10, padding: "13px 22px", fontSize: 14, fontWeight: 500, color: DS.bodyDark, cursor: "pointer", fontFamily: "'DM Sans', sans-serif" }}>← Back</button>
+                  <button onClick={() => setStep(2)} style={{ background: T.text, border: `1px solid ${T.surfaceBorder}`, borderRadius: 10, padding: "13px 22px", fontSize: 14, fontWeight: 500, color: T.dim, cursor: "pointer", fontFamily: "'DM Sans', sans-serif" }}>← Back</button>
                   <button onClick={generate} disabled={!canSubmit}
-                    style={{ background: canSubmit ? "#3B82F6" : DS.lightBorder, color: canSubmit ? DS.white : DS.bodyDark, border: "none", borderRadius: 10, padding: "13px 28px", fontSize: 14, fontWeight: 600, cursor: canSubmit ? "pointer" : "default", fontFamily: "'DM Sans', sans-serif", transition: "all 0.15s" }}>
+                    style={{ background: canSubmit ? "#3B82F6" : T.surfaceBorder, color: canSubmit ? T.text : T.dim, border: "none", borderRadius: 10, padding: "13px 28px", fontSize: 14, fontWeight: 600, cursor: canSubmit ? "pointer" : "default", fontFamily: "'DM Sans', sans-serif", transition: "all 0.15s" }}>
                     Build prompt ✦
                   </button>
                 </div>
