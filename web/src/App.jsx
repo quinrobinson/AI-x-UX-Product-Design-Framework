@@ -12,6 +12,8 @@ import ProblemFramingTool from "./ProblemFramingTool";
 import JourneyMappingTool from "./JourneyMappingTool";
 import ConceptGenerator from "./ConceptGenerator";
 import IdeaClusteringTool from "./IdeaClusteringTool";
+import UXCopyWriter from "./UXCopyWriter";
+import UserFlowMapper from "./UserFlowMapper";
 
 // ── Tokens ──────────────────────────────────────────────────────────────────
 const T = {
@@ -52,6 +54,8 @@ const TOOLS = [
   { id: "journey-mapping",      number: "09", phase: "02", name: "Journey Mapping",             subtitle: "Generate research-grounded journey maps across six lanes with critical moments",  component: JourneyMappingTool },
   { id: "concept-generator",    number: "10", phase: "03", name: "Concept Generator",          subtitle: "Generate concepts across 5 angles including outside-the-box thinking from unrelated domains", component: ConceptGenerator },
   { id: "idea-clustering",      number: "11", phase: "03", name: "Idea Clustering",             subtitle: "Transform raw concepts into a strategic landscape — clusters, tensions, and recommendations", component: IdeaClusteringTool },
+  { id: "ux-copy-writer",       number: "12", phase: "04", name: "UX Copy Writer",              subtitle: "Generate complete interface copy — voice brief, flow copy, error states, and empty states",      component: UXCopyWriter },
+  { id: "user-flow-mapper",     number: "13", phase: "04", name: "User Flow Mapper",            subtitle: "Map happy paths, branches, and error states — producing a screen inventory and prototype brief", component: UserFlowMapper },
 ];
 
 // ── Skill registry ───────────────────────────────────────────────────────────
@@ -561,6 +565,8 @@ const DELIVERABLES = [
   { name: "Journey Map",             type: "tool",   ref: "journey-mapping",        label: "Journey Mapping"               },
   { name: "Concept Set",             type: "tool",   ref: "concept-generator",      label: "Concept Generator"             },
   { name: "Cluster Map",             type: "tool",   ref: "idea-clustering",        label: "Idea Clustering"               },
+  { name: "UX Copy",                 type: "tool",   ref: "ux-copy-writer",         label: "UX Copy Writer"                },
+  { name: "User Flow",               type: "tool",   ref: "user-flow-mapper",       label: "User Flow Mapper"              },
 ];
 
 // ── Phase data ────────────────────────────────────────────────────────────────
@@ -568,7 +574,7 @@ const PHASES = [
   { id: "01", label: "Discover", desc: "Understand users, map the landscape, frame the problem",   skills: 5, tools: 2, prompts: 5 },
   { id: "02", label: "Define",   desc: "Synthesize findings into a focused problem statement",      skills: 1, tools: 1, prompts: 0 },
   { id: "03", label: "Ideate",   desc: "Generate concepts, explore visual directions",              skills: 2, tools: 1, prompts: 5 },
-  { id: "04", label: "Prototype",desc: "Build working prototypes and run accessibility audits",     skills: 2, tools: 0, prompts: 0 },
+  { id: "04", label: "Prototype",desc: "Build working prototypes and run accessibility audits",     skills: 2, tools: 2, prompts: 0 },
   { id: "05", label: "Validate", desc: "Test with users, synthesize findings, iterate",             skills: 1, tools: 0, prompts: 0 },
   { id: "06", label: "Deliver",  desc: "Hand off specs, documentation, and design decisions",       skills: 2, tools: 0, prompts: 0 },
 ];
