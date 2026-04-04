@@ -547,6 +547,216 @@ After all scenes:
 3. Forced design decisions — choices the storyboard requires but doesn't make
 4. Three questions for the prototype to answer`,
   },
+  {
+    id: "write-ux-copy",
+    name: "Write UX Copy",
+    phase: "04",
+    skill: "ux-copy-writing.md",
+    when: "When a prototype or feature needs real copy before testing — or when placeholder text is blocking meaningful stakeholder feedback.",
+    text: `Write complete UX copy for this flow.
+
+Product: [description — what it does and for whom]
+Primary persona: [name, role, context, emotional state when using this]
+
+Voice brief:
+[4 adjectives describing the product voice]
+[Example of what it sounds like — one phrase]
+[Example of what it doesn't sound like — one phrase]
+
+Flow to write copy for:
+[List each screen — name + what happens on it]
+
+For each screen, write:
+
+**Screen: [Name]**
+Headline: [primary message — user benefit, ≤7 words, present tense, active voice]
+Body: [supporting context — 1–2 sentences max, only if headline needs it]
+Primary CTA: [verb + noun — specific, not "Continue" or "Next"]
+Secondary actions: [back, skip, or alternative path text]
+Form labels: [every field — sentence case, noun phrase, no colons]
+Helper text: [what user needs to know — what it does for them]
+Placeholder text: [example data, not re-stated label]
+
+Quality rules to apply:
+— Every CTA must be verb + noun (never standalone "Submit")
+— Headlines lead with user benefit, not system action
+— No passive voice, no hedging words (may, might, possibly)
+— Plain language — readable by a non-expert in this domain
+— Challenge every word — if it doesn't change behavior, cut it`,
+  },
+  {
+    id: "write-error-states",
+    name: "Write Error + Empty States",
+    phase: "04",
+    skill: "ux-copy-writing.md",
+    when: "When a prototype needs a complete failure mode library — before usability testing, before dev handoff, or when error copy has been deferred and needs to be written quickly.",
+    text: `Write complete error state and empty state copy for this product.
+
+Product: [description]
+Voice brief: [adjectives + tone in error states — e.g. "Direct but never alarming. We explain what happened and what to do. We never blame the user."]
+Flow context: [which screens / features this covers]
+
+Apply the error message formula: [What happened] + [Why, if actionable] + [What to do]
+
+## Error States
+For each error — headline + body + primary action + secondary action:
+
+1. Network / connection failure
+2. Form validation — field level (inline, next to the field)
+3. Form validation — form level (summary at top of form)
+4. Permission denied (user doesn't have access)
+5. Not found (the thing they're looking for doesn't exist)
+6. Timeout (async operation took too long)
+7. [Infer 2 product-specific errors from the flow context]
+
+Rules:
+— Never say just "Error" — say what happened
+— Never blame the user ("You entered…" → "That doesn't look right…")
+— Always give a next step — retry, contact support, or when it resolves
+
+## Empty States
+For each state — headline + body + primary CTA:
+
+1. First use (most important — nothing has been created yet)
+2. Search returned no results
+3. Filtered list is empty
+4. User cleared / deleted everything
+
+## Confirmation Dialogs (destructive actions)
+For each irreversible action in the flow:
+— Headline (what's about to happen — never "Are you sure?")
+— Body (consequence in plain language)
+— Confirm CTA (the action — not "Yes")
+— Cancel (always "Cancel" or "Keep [thing]")`,
+  },
+  {
+    id: "map-user-flow",
+    name: "Map a User Flow",
+    phase: "04",
+    skill: "user-flow-mapping.md",
+    when: "Before wireframing a new feature — to define what screens need to exist, including error states and edge cases, before building any of them.",
+    text: `Map this user flow completely — happy path, branches, errors, and screen inventory.
+
+Entry point: [where this flow starts — specific trigger]
+User's goal: [what they're trying to accomplish]
+Persona: [who — context and what they already know]
+Constraints: [technical, permission, or system limits]
+
+Using the user-flow-mapping skill:
+
+STEP 1 — Happy path
+List every step as: [Step N]: [User or System] — [Action or Response]
+Flag every decision point with → Decision
+Flag every variable system response with → Variable
+
+STEP 2 — Decision points + branches
+For each decision point, map all branches:
+Branch A: [condition] → [steps] → [outcome]
+Branch B: [condition] → [steps] → [outcome]
+
+STEP 3 — Error states
+For each async operation or user input:
+- What can go wrong
+- What triggers it
+- What the user sees
+- What they can do (retry / back / support)
+- Whether their progress is preserved
+
+Cover: network failure, validation, permission denied, not found, timeout
+
+STEP 4 — Screen inventory
+For every unique state:
+| Screen name | Type | Triggered by | Primary action | Leads to |
+
+Group by: Happy path / Alternative paths / Error states / Empty states
+
+At the end:
+- Total screen count
+- Recommended v1 prototype scope (which to build first and why)`,
+  },
+  {
+    id: "heuristic-review",
+    name: "Run a Heuristic Review",
+    phase: "04",
+    skill: "heuristic-review.md",
+    when: "Before a usability test — to fix obvious problems so testing surfaces deeper insights. Also useful before a stakeholder review or dev handoff.",
+    text: `Run a heuristic evaluation of this prototype against Nielsen's 10 usability heuristics.
+
+User context: [persona — what they know, what they expect, their goals]
+Task: [what the user is trying to accomplish in this flow]
+
+Describe each screen (for each one):
+[Screen name]: [What it contains, what actions are available, what the user is trying to do here]
+
+For each of the 10 heuristics, evaluate:
+1. Visibility of system status — does the user always know what's happening?
+2. Match between system and real world — does it speak the user's language?
+3. User control and freedom — can they undo, go back, or escape?
+4. Consistency and standards — is the same thing always called the same thing?
+5. Error prevention — does the design prevent errors before they happen?
+6. Recognition over recall — do users see options rather than remember them?
+7. Flexibility and efficiency — can experienced users find shortcuts?
+8. Aesthetic and minimalist design — does every element earn its place?
+9. Error recovery — do error messages explain what happened and what to do?
+10. Help and documentation — is help available when needed?
+
+For each heuristic:
+- Rating: Pass / Partial / Fail
+- Evidence: specific screen and element
+- Severity: Critical (blocks task) / Major (significant friction) / Minor
+- Fix: specific, actionable change
+
+At the end, produce a prioritized fix list:
+Fix before testing (Critical) → Fix before stakeholder review (Major) → Fix before handoff (Minor)`,
+  },
+  {
+    id: "draft-test-script",
+    name: "Draft a Test Script",
+    phase: "04",
+    skill: "test-script-drafting.md",
+    when: "At the end of Prototype — before usability testing begins. Write the script before the prototype is done so testing starts the moment it's ready.",
+    text: `Write a complete usability test script for this prototype.
+
+Prototype: [what it tests — feature + concept name]
+Persona: [who to recruit — role, context, experience level]
+Session length: [N minutes — typically 45–60]
+Prototype questions (from scoping):
+1. [Question this prototype must answer]
+2. [Question]
+3. [Question]
+
+Using the test-script-drafting skill, write:
+
+INTRODUCTION (read aloud to every participant)
+Include: what we're testing (the prototype, not them), think-aloud instructions,
+"we didn't build this" framing, no wrong answers, recording consent, time commitment
+
+WARM-UP QUESTIONS (3–5, before showing prototype)
+About past behavior in this domain — not opinions about what they're about to see
+Format: "Walk me through how you currently..."
+
+TASKS (one per prototype question)
+Each task needs:
+- Scenario: realistic context that explains WHY they'd do this
+- Task statement: in the user's language, not the product's
+- Starting screen
+- Success criteria (observable behavior — not "when they say done")
+- 2–3 probing prompts for when they're silent or stuck
+
+Rules for tasks:
+— Never name what you want them to find
+— Give them a realistic motivation
+— One task per prototype question
+
+PROBING QUESTIONS (after tasks, not during)
+8–10 questions about reasoning, violated expectations, and copy comprehension
+
+DEBRIEF (5 minutes)
+Overall impression, comparison to current behavior, top 3 things that worked/didn't
+
+OBSERVATION GUIDE (for note-takers)
+What to watch for at each critical moment, note-taking codes, timing column`,
+  },
 ];
 
 // ── Deliverables map ─────────────────────────────────────────────────────────
@@ -574,7 +784,7 @@ const PHASES = [
   { id: "01", label: "Discover", desc: "Understand users, map the landscape, frame the problem",   skills: 5, tools: 2, prompts: 5 },
   { id: "02", label: "Define",   desc: "Synthesize findings into a focused problem statement",      skills: 1, tools: 1, prompts: 0 },
   { id: "03", label: "Ideate",   desc: "Generate concepts, explore visual directions",              skills: 2, tools: 1, prompts: 5 },
-  { id: "04", label: "Prototype",desc: "Build working prototypes and run accessibility audits",     skills: 2, tools: 2, prompts: 0 },
+  { id: "04", label: "Prototype",desc: "Build working prototypes and run accessibility audits",     skills: 2, tools: 2, prompts: 5 },
   { id: "05", label: "Validate", desc: "Test with users, synthesize findings, iterate",             skills: 1, tools: 0, prompts: 0 },
   { id: "06", label: "Deliver",  desc: "Hand off specs, documentation, and design decisions",       skills: 2, tools: 0, prompts: 0 },
 ];
