@@ -2868,9 +2868,6 @@ function SkillsLibraryOverlay({ onBack }) {
         {/* What is a Skill */}
         <div style={{ background: "rgba(59,130,246,0.06)", border: "1px solid rgba(59,130,246,0.2)", borderRadius: 10, padding: "20px 24px", marginBottom: 28 }}>
           <div style={{ display: "flex", alignItems: "flex-start", gap: 14 }}>
-            <div style={{ width: 32, height: 32, borderRadius: 6, background: "rgba(59,130,246,0.15)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-              <span style={{ fontSize: 14 }}>📎</span>
-            </div>
             <div>
               <div style={{ fontSize: 13, fontWeight: 600, color: T.text, marginBottom: 6 }}>What is a Skill file?</div>
               <p style={{ fontSize: 12, color: T.muted, lineHeight: 1.65, marginBottom: 8 }}>
