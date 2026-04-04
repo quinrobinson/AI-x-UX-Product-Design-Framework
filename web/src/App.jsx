@@ -766,6 +766,245 @@ Overall impression, comparison to current behavior, top 3 things that worked/did
 OBSERVATION GUIDE (for note-takers)
 What to watch for at each critical moment, note-taking codes, timing column`,
   },
+  {
+    id: "synthesize-findings",
+    name: "Synthesize Usability Findings",
+    phase: "05",
+    skill: "usability-findings-synthesis.md",
+    when: "After completing usability test sessions — to identify patterns, severity, and answers to prototype questions across participants. Use when not running the interactive Findings Synthesizer tool.",
+    text: `Synthesize these usability test session notes into structured findings.
+
+Sessions: [N participants]
+Tasks tested:
+1. [Task name]
+2. [Task name]
+
+Prototype questions:
+1. [Question this test must answer]
+2. [Question]
+3. [Question]
+
+Session notes (paste one per participant — use P1, P2 codes):
+
+P1: [Raw or structured notes]
+P2: [Raw or structured notes]
+P3: [Raw or structured notes]
+
+Using the usability-findings-synthesis skill:
+
+Step 1 — For each prototype question:
+- What did users do? (observable behaviors — cite participant codes)
+- Success rate: [N of N completed]
+- Where they struggled: (specific moments with P codes)
+- Key quotes: (verbatim, with P codes)
+- Answer: Yes / No / Partial + confidence (High/Medium/Low)
+
+Step 2 — Issue list
+For every distinct usability issue observed:
+| Issue | Task | Participants affected | Representative quote |
+
+Step 3 — Severity rating
+Rate each issue:
+- Critical: prevents task completion
+- Major: significant friction, user recovers
+- Minor: noticeable, low impact
+- Cosmetic: preference only
+
+Produce a prioritized fix list:
+Fix before next test (Critical) → Fix in next iteration (Major) → Defer (Minor/Cosmetic)
+
+Step 4 — What worked
+List elements that tested well — these must not change in the next iteration.
+
+Step 5 — Go / No-Go
+Based on the findings, recommend: Proceed / Iterate / Return to ideation
+State which finding drives the recommendation.`,
+  },
+  {
+    id: "write-findings-report",
+    name: "Write a Findings Report",
+    phase: "05",
+    skill: "insight-report.md",
+    when: "After synthesizing usability findings — to produce a shareable document that drives design decisions and stakeholder alignment.",
+    text: `Generate a complete usability test findings report.
+
+Prototype: [name + fidelity]
+Participants: [N]
+Tasks: [list]
+Prototype questions: [list]
+Decision: [Proceed / Iterate / Return to ideation]
+
+Findings synthesis:
+[PASTE findings from synthesis — issue list, prototype question answers, severity ratings, what worked]
+
+Using the insight-report skill, write:
+
+EXECUTIVE SUMMARY (3–5 sentences)
+What was tested, with whom, the single most important finding, and the decision.
+
+PROTOTYPE QUESTION ANSWERS
+For each question:
+- Answer: Yes / No / Partial
+- Evidence: [N of N participants + key observation]
+- Confidence: High / Medium / Low
+- Representative quote: "[verbatim]" — P[N]
+
+CRITICAL FINDINGS (one section per finding)
+Format per finding:
+### Finding [N]: [Title — 5–8 words]
+Observation: [What users did — specific, observable]
+"[Direct quote]" — P[N]
+Frequency: [N] of [N] participants
+Severity: Critical
+Why it matters: [effect on task completion]
+Recommendation: [Specific change — not "improve X" but "change X to Y because Z"]
+
+MAJOR FINDINGS (same format, briefer)
+
+WHAT WORKED (equal importance to failures)
+For each success: element + N/N success rate + why it matters to preserve
+
+DECISION + NEXT STEPS
+[Rationale + 3 ordered next steps]
+
+Rules:
+— Every Critical and Major finding needs a participant count and a direct quote
+— Separate findings (what happened) from recommendations (what to do)
+— Recommendations must be specific enough to wireframe from`,
+  },
+  {
+    id: "write-screener",
+    name: "Write a Recruitment Screener",
+    phase: "05",
+    skill: "recruitment-screener.md",
+    when: "Before scheduling usability test sessions — to define who qualifies and write screening questions that find the right participants without revealing what qualifies.",
+    text: `Write a participant recruitment screener for this usability test.
+
+Product: [description]
+Primary persona: [paste from persona-creation.md — behavioral segment, context, goals, current tools]
+Test focus: [which tasks or scenarios will be tested]
+Target participants: [N — typically 5 for qualitative usability testing]
+Session format: [moderated remote / in-person / unmoderated]
+Session length: [N minutes]
+Compensation: [amount/format]
+
+Using the recruitment-screener skill:
+
+Step 1 — Inclusion and exclusion criteria
+Define criteria in plain language before translating to questions:
+Must be true (all): [behavioral and contextual — not demographic unless directly relevant]
+Must not be true (any disqualifies): [competitor employees, researchers, internal team]
+
+Step 2 — Screener questions
+Write 5–8 questions that don't reveal which answer qualifies.
+Rules:
+— Use multiple choice — never open-ended for screening at scale
+— Never reveal which answer qualifies
+— Disguise disqualifying answers among plausible options
+— Ask about behavior frequency with ranges, not absolutes
+— Never ask "Are you a [persona label]?" — ask about what they do
+
+Format each question:
+Q[N]: [Question text]
+Options: [A / B / C / D]
+Qualifies if: [options] — INTERNAL NOTE
+Disqualifies if: [options] — INTERNAL NOTE
+
+Step 3 — Complete screener
+Include: intro paragraph (vague enough not to prime participants),
+all questions, qualified close, disqualified close`,
+  },
+  {
+    id: "present-findings",
+    name: "Present Findings to Stakeholders",
+    phase: "05",
+    skill: "stakeholder-presentation.md",
+    when: "After writing the findings report — to reframe findings for audiences who weren't in the sessions and need different emphasis, depth, and decision framing.",
+    text: `Reframe these usability test findings for [audience: Executive / Product Manager / Engineering / Design Team].
+
+Findings report:
+[PASTE complete findings report]
+
+Decision: [Proceed / Iterate / Return to ideation]
+
+Using the stakeholder-presentation skill, generate the [audience] version:
+
+FOR EXECUTIVE (1 page max):
+- The test: [one sentence]
+- Key finding: [one sentence — the most important thing learned]
+- Business implication: [one sentence — risk or opportunity]
+- Decision: [one word + one sentence rationale]
+- What we need: [the specific approval or input required]
+No methodology, no minor findings, no design specifics.
+
+FOR PRODUCT MANAGER:
+- What we tested and what we were validating
+- Which assumptions were confirmed vs. invalidated (each with evidence)
+- Roadmap implications: scope impact of required changes
+- Recommendation + minimum changes before shipping
+- Timeline impact
+
+FOR ENGINEERING LEAD:
+Structured list only — no narrative.
+Critical changes: component + current behavior + required behavior + user impact
+Major changes: same format
+What doesn't need to change (tested well)
+Questions with architectural implications
+
+FOR DESIGN TEAM:
+Mental model findings: vocabulary users used, expectations brought, analogies made
+Critical failures with behavioral root cause (not just symptoms)
+What worked and why — specific design decisions that succeeded
+Surprising observations
+Open questions for the next round`,
+  },
+  {
+    id: "write-iteration-brief",
+    name: "Write an Iteration Brief",
+    phase: "05",
+    skill: "iteration-brief.md",
+    when: "When the go/no-go decision is 'iterate' — to define exactly what changes to make, what to preserve, and what questions the next prototype must answer before starting any design work.",
+    text: `Write an iteration brief from these usability test findings.
+
+Prototype: [name]
+Participants: [N]
+Decision: Iterate
+
+Findings:
+[PASTE Critical and Major findings with recommendations]
+
+What worked (must preserve):
+[PASTE from findings report — what tested well]
+
+Using the iteration-brief skill:
+
+PRESERVE — Do not change (tested well)
+For each element that worked:
+| Element | Evidence (N/N succeeded) | Why it matters to keep |
+
+CHANGE — Required fixes
+
+Tier 1 (fix before next test — affects prototype questions):
+| # | Element | Change required | Evidence | Effort |
+Rules for Tier 1:
+— Specific enough to wireframe without interpretation
+— Too vague: "improve navigation" | Right level: "rename 'Account' to 'Files' — 4/5 users looked there for export"
+— Links directly to a prototype question or Critical finding
+
+Tier 2 (fix in this iteration, don't re-test):
+Major findings that don't affect the core prototype questions
+Copy and label changes
+
+Tier 3 (defer):
+Minor findings + cosmetic issues + changes requiring architectural rework
+
+NEXT PROTOTYPE QUESTIONS
+1. Does the Tier 1 fix work? — [what the next test will observe]
+2. [Any question this round didn't fully answer]
+
+WHAT'S STABLE (doesn't need re-testing)
+[Elements validated in this round — treat as fixed in next iteration]`,
+  },
 ];
 
 // ── Deliverables map ─────────────────────────────────────────────────────────
@@ -796,7 +1035,7 @@ const PHASES = [
   { id: "02", label: "Define",   desc: "Synthesize findings into a focused problem statement",      skills: 1, tools: 1, prompts: 0 },
   { id: "03", label: "Ideate",   desc: "Generate concepts, explore visual directions",              skills: 2, tools: 1, prompts: 5 },
   { id: "04", label: "Prototype",desc: "Build working prototypes and run accessibility audits",     skills: 2, tools: 2, prompts: 5 },
-  { id: "05", label: "Validate", desc: "Test with users, synthesize findings, iterate",             skills: 1, tools: 2, prompts: 0 },
+  { id: "05", label: "Validate", desc: "Test with users, synthesize findings, iterate",             skills: 1, tools: 2, prompts: 5 },
   { id: "06", label: "Deliver",  desc: "Hand off specs, documentation, and design decisions",       skills: 2, tools: 0, prompts: 0 },
 ];
 
