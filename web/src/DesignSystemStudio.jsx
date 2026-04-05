@@ -873,7 +873,7 @@ export default function DesignSystemStudio() {
 
       {/* Section Nav */}
       <div style={{ background: T.dark, borderBottom: `1px solid ${section === "overview" ? "#222222" : C.border}`, padding: "0 24px" }}>
-        <div style={{ maxWidth: 1200, margin: "0 auto", display: "flex", gap: 0 }}>
+        <div style={{ maxWidth: 1200, margin: "0 auto", display: "flex", gap: 0, justifyContent: "center" }}>
           {SECTIONS.map(s => (
             <button key={s} onClick={() => setSection(s)} style={{
               padding: "12px 20px", fontSize: 12, fontWeight: section === s ? 500 : 400,
