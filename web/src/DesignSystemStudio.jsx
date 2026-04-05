@@ -906,7 +906,7 @@ export default function DesignSystemStudio() {
                   <div style={{ width: 32, height: 32, borderRadius: 8, background: "#1A1A1A", border: "1px solid #2A2A2A", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, color: "#888" }}>◆</div>
                   <div style={{ fontSize: 16, fontWeight: 600, color: "#F5F5F5" }}>I need a design system</div>
                 </div>
-                <p style={{ fontSize: 14, color: "#888", lineHeight: 1.5, margin: "0 0 16px" }}>Pick a theme, customize your tokens, preview components live, and export CSS or push directly to Figma.</p>
+                <p style={{ fontSize: 14, color: "#888", lineHeight: 1.5, margin: "0 0 16px" }}>Choose a theme, customize tokens, preview 24 components live, and export to CSS or push to Figma.</p>
                 <span style={{ fontSize: 12, fontWeight: 500, color: "#F5F5F5", fontFamily: "'JetBrains Mono', monospace" }}>Start building →</span>
               </div>
               <div onClick={() => setSection("figma")} style={{ background: "#111111", borderRadius: 10, padding: "28px", border: "1px solid #2A2A2A", cursor: "pointer", transition: "all 0.15s" }}>
@@ -914,7 +914,7 @@ export default function DesignSystemStudio() {
                   <div style={{ width: 32, height: 32, borderRadius: 8, background: "#1A1A1A", border: "1px solid #2A2A2A", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, color: "#888" }}>◎</div>
                   <div style={{ fontSize: 16, fontWeight: 600, color: "#F5F5F5" }}>I already have one</div>
                 </div>
-                <p style={{ fontSize: 14, color: "#888", lineHeight: 1.5, margin: "0 0 16px" }}>Connect your Figma file via MCP. Claude reads your variables, styles, and components — then scores them against industry standards.</p>
+                <p style={{ fontSize: 14, color: "#888", lineHeight: 1.5, margin: "0 0 16px" }}>Connect your Figma file via MCP. Claude reads your system and scores it against industry standards.</p>
                 <span style={{ fontSize: 12, fontWeight: 500, color: "#F5F5F5", fontFamily: "'JetBrains Mono', monospace" }}>Run an audit →</span>
               </div>
             </div>
