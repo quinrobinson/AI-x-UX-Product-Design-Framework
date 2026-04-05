@@ -178,7 +178,7 @@ const COMPONENTS = [
   { id: "list", name: "List", cat: "Data Display", tier: 2 },
 ];
 
-const SECTIONS = ["themes", "tokens", "components", "export", "figma"];
+const SECTIONS = ["themes", "tokens", "components", "preview", "export", "figma"];
 
 // ── Token Editor Inputs ──────────────────────────────────────────────────────
 function ColorInput({ label, value, onChange }) {
@@ -811,6 +811,7 @@ export default function DesignSystemStudio() {
   const [darkMode, setDarkMode] = useState(false);
   const [promptCopied, setPromptCopied] = useState(null);
   const [figmaPath, setFigmaPath] = useState("export");
+  const [previewType, setPreviewType] = useState("website");
 
   const applyTheme = useCallback((key) => {
     setActiveTheme(key);
@@ -1088,6 +1089,218 @@ export default function DesignSystemStudio() {
             </div>
           </div>
         )}
+
+        {/* ─── PREVIEW ─── */}
+        {section === "preview" && (() => {
+          const t = tokens;
+          const sp = n => t.spaceUnit * n;
+          const Picker = () => (
+            <div style={{ display: "flex", gap: 6, marginBottom: 20 }}>
+              {[{ id: "website", label: "Website" }, { id: "dashboard", label: "Dashboard" }, { id: "mobile", label: "Mobile app" }].map(opt => (
+                <button key={opt.id} onClick={() => setPreviewType(opt.id)} style={{
+                  padding: "6px 16px", borderRadius: 99, fontSize: 12, cursor: "pointer",
+                  fontFamily: "'JetBrains Mono', monospace",
+                  border: `1px solid ${previewType === opt.id ? C.text : C.border}`,
+                  background: previewType === opt.id ? C.text : "transparent",
+                  color: previewType === opt.id ? C.bg : C.sub,
+                  transition: "all 0.15s",
+                }}>{opt.label}</button>
+              ))}
+            </div>
+          );
+
+          const Btn = ({ label, filled, small }) => (
+            <button style={{
+              padding: small ? `${sp(1.5)}px ${sp(3)}px` : `${sp(2)}px ${sp(5)}px`,
+              borderRadius: t.radiusMd, fontSize: small ? t.baseSize - 2 : t.baseSize - 1,
+              fontWeight: 500, fontFamily: t.fontBody, cursor: "pointer",
+              background: filled ? t.primary : "transparent",
+              color: filled ? contrastOn(t.primary) : t.primary,
+              border: filled ? "none" : `1.5px solid ${t.primary}`,
+            }}>{label}</button>
+          );
+
+          return (
+            <div>
+              <p style={{ fontSize: 14, color: C.sub, marginBottom: 16, lineHeight: 1.5 }}>
+                See how your design system looks in context. All elements use your active tokens.
+              </p>
+              <Picker />
+
+              {/* ── Website Preview ── */}
+              {previewType === "website" && (
+                <div style={{ border: `1px solid ${C.border}`, borderRadius: 10, overflow: "hidden" }}>
+                  {/* Nav */}
+                  <div style={{ background: t.surface, borderBottom: `1px solid ${t.border}`, padding: `${sp(3)}px ${sp(6)}px`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <div style={{ fontFamily: t.fontHeading, fontWeight: t.headingWeight, fontSize: t.baseSize + 1, color: t.textPrimary }}>Acme Co</div>
+                    <div style={{ display: "flex", gap: sp(5), alignItems: "center" }}>
+                      {["Features", "Pricing", "About"].map(l => (
+                        <span key={l} style={{ fontSize: t.baseSize - 1, color: t.textSecondary, fontFamily: t.fontBody, cursor: "pointer" }}>{l}</span>
+                      ))}
+                      <Btn label="Get started" filled small />
+                    </div>
+                  </div>
+                  {/* Hero */}
+                  <div style={{ background: t.surface, padding: `${sp(16)}px ${sp(6)}px`, textAlign: "center" }}>
+                    <div style={{ display: "inline-block", padding: `${sp(1)}px ${sp(3)}px`, borderRadius: t.radiusFull, background: alpha(t.primary, 0.08), color: t.primary, fontSize: t.baseSize - 2, fontWeight: 500, fontFamily: t.fontBody, marginBottom: sp(4) }}>Now available</div>
+                    <h2 style={{ fontFamily: t.fontHeading, fontWeight: t.headingWeight, fontSize: typeScale(t.baseSize, t.scaleRatio, 4), color: t.textPrimary, margin: `0 0 ${sp(3)}px`, lineHeight: 1.2 }}>Build products people actually want</h2>
+                    <p style={{ fontFamily: t.fontBody, fontSize: t.baseSize, color: t.textSecondary, maxWidth: 480, margin: `0 auto ${sp(6)}px`, lineHeight: 1.6 }}>A design system that scales with your team. Ship consistent, accessible interfaces without the overhead.</p>
+                    <div style={{ display: "flex", gap: sp(3), justifyContent: "center" }}>
+                      <Btn label="Start free trial" filled />
+                      <Btn label="View demo" />
+                    </div>
+                  </div>
+                  {/* Feature Cards */}
+                  <div style={{ background: t.surfaceSecondary, padding: `${sp(10)}px ${sp(6)}px` }}>
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: sp(4) }}>
+                      {[
+                        { title: "Design tokens", desc: "Semantic color, spacing, and typography tokens that adapt across themes." },
+                        { title: "24 components", desc: "Production-ready components with full state coverage and accessibility built in." },
+                        { title: "Figma sync", desc: "Export directly to Figma as variable collections via Claude Code and MCP." },
+                      ].map((f, i) => (
+                        <div key={i} style={{ background: t.surface, borderRadius: t.radiusLg, padding: sp(5), border: `1px solid ${t.border}` }}>
+                          <div style={{ width: 32, height: 32, borderRadius: t.radiusMd, background: alpha(t.primary, 0.1), display: "flex", alignItems: "center", justifyContent: "center", marginBottom: sp(3), color: t.primary, fontSize: 14, fontWeight: 600 }}>{["◆", "▦", "⬡"][i]}</div>
+                          <div style={{ fontFamily: t.fontHeading, fontWeight: t.headingWeight, fontSize: t.baseSize, color: t.textPrimary, marginBottom: sp(2) }}>{f.title}</div>
+                          <div style={{ fontFamily: t.fontBody, fontSize: t.baseSize - 1, color: t.textSecondary, lineHeight: 1.5 }}>{f.desc}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* ── Dashboard Preview ── */}
+              {previewType === "dashboard" && (
+                <div style={{ border: `1px solid ${C.border}`, borderRadius: 10, overflow: "hidden" }}>
+                  {/* Top bar */}
+                  <div style={{ background: t.surface, borderBottom: `1px solid ${t.border}`, padding: `${sp(3)}px ${sp(5)}px`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: sp(4) }}>
+                      <div style={{ fontFamily: t.fontHeading, fontWeight: t.headingWeight, fontSize: t.baseSize, color: t.textPrimary }}>Dashboard</div>
+                      {["Overview", "Analytics", "Settings"].map((tab, i) => (
+                        <span key={tab} style={{ fontSize: t.baseSize - 2, color: i === 0 ? t.primary : t.textTertiary, fontFamily: t.fontBody, fontWeight: i === 0 ? 600 : 400, cursor: "pointer", borderBottom: i === 0 ? `2px solid ${t.primary}` : "none", paddingBottom: 2 }}>{tab}</span>
+                      ))}
+                    </div>
+                    <div style={{ width: 28, height: 28, borderRadius: "50%", background: alpha(t.primary, 0.1), display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 600, color: t.primary, fontFamily: t.fontBody }}>QR</div>
+                  </div>
+                  {/* Content */}
+                  <div style={{ background: t.surfaceSecondary, padding: sp(5) }}>
+                    {/* Alert */}
+                    <div style={{ background: alpha(t.info, 0.08), border: `1px solid ${alpha(t.info, 0.2)}`, borderRadius: t.radiusMd, padding: `${sp(2.5)}px ${sp(4)}px`, marginBottom: sp(4), display: "flex", alignItems: "center", gap: sp(2), fontSize: t.baseSize - 2, fontFamily: t.fontBody, color: t.textPrimary }}>
+                      <span style={{ color: t.info, fontWeight: 600 }}>ℹ</span> New analytics features are available. <span style={{ color: t.primary, fontWeight: 500, cursor: "pointer" }}>Learn more</span>
+                    </div>
+                    {/* Metric cards */}
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: sp(3), marginBottom: sp(4) }}>
+                      {[
+                        { label: "Total users", value: "12,847", change: "+12%", up: true },
+                        { label: "Revenue", value: "$48.2k", change: "+8%", up: true },
+                        { label: "Conversion", value: "3.24%", change: "-0.4%", up: false },
+                        { label: "Bounce rate", value: "42.1%", change: "-2.1%", up: true },
+                      ].map((m, i) => (
+                        <div key={i} style={{ background: t.surface, borderRadius: t.radiusMd, padding: sp(4), border: `1px solid ${t.border}` }}>
+                          <div style={{ fontSize: t.baseSize - 2, color: t.textSecondary, fontFamily: t.fontBody, marginBottom: sp(1) }}>{m.label}</div>
+                          <div style={{ fontSize: typeScale(t.baseSize, t.scaleRatio, 2), fontWeight: t.headingWeight, color: t.textPrimary, fontFamily: t.fontHeading }}>{m.value}</div>
+                          <div style={{ fontSize: t.baseSize - 3, fontFamily: t.fontMono, color: m.up ? t.success : t.error, marginTop: sp(1) }}>{m.change}</div>
+                        </div>
+                      ))}
+                    </div>
+                    {/* Table */}
+                    <div style={{ background: t.surface, borderRadius: t.radiusMd, border: `1px solid ${t.border}`, overflow: "hidden" }}>
+                      <div style={{ padding: `${sp(3)}px ${sp(4)}px`, borderBottom: `1px solid ${t.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                        <div style={{ fontFamily: t.fontHeading, fontWeight: t.headingWeight, fontSize: t.baseSize, color: t.textPrimary }}>Recent activity</div>
+                        <Btn label="View all" small />
+                      </div>
+                      <table style={{ width: "100%", borderCollapse: "collapse", fontFamily: t.fontBody, fontSize: t.baseSize - 2 }}>
+                        <thead><tr style={{ background: t.surfaceSecondary }}>
+                          {["User", "Action", "Date", "Status"].map(h => (
+                            <th key={h} style={{ textAlign: "left", padding: `${sp(2)}px ${sp(4)}px`, fontWeight: 600, color: t.textSecondary, fontSize: t.baseSize - 3 }}>{h}</th>
+                          ))}
+                        </tr></thead>
+                        <tbody>
+                          {[
+                            ["Alex Chen", "Created project", "Today", "success"],
+                            ["Jordan Lee", "Updated tokens", "Yesterday", "success"],
+                            ["Sam Patel", "Exported system", "2 days ago", "warning"],
+                          ].map((row, i) => (
+                            <tr key={i} style={{ borderTop: `1px solid ${t.border}` }}>
+                              <td style={{ padding: `${sp(2.5)}px ${sp(4)}px`, color: t.textPrimary, fontWeight: 500 }}>{row[0]}</td>
+                              <td style={{ padding: `${sp(2.5)}px ${sp(4)}px`, color: t.textSecondary }}>{row[1]}</td>
+                              <td style={{ padding: `${sp(2.5)}px ${sp(4)}px`, color: t.textTertiary }}>{row[2]}</td>
+                              <td style={{ padding: `${sp(2.5)}px ${sp(4)}px` }}>
+                                <span style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: t.baseSize - 3, color: row[3] === "success" ? t.success : t.warning }}>
+                                  <span style={{ width: 5, height: 5, borderRadius: "50%", background: row[3] === "success" ? t.success : t.warning }} />
+                                  {row[3] === "success" ? "Complete" : "Pending"}
+                                </span>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* ── Mobile Preview ── */}
+              {previewType === "mobile" && (
+                <div style={{ display: "flex", justifyContent: "center", padding: `${sp(4)}px 0` }}>
+                  <div style={{ width: 320, borderRadius: 32, border: `1px solid ${C.border}`, overflow: "hidden", boxShadow: "0 8px 32px rgba(0,0,0,0.08)" }}>
+                    {/* Status bar */}
+                    <div style={{ background: t.surface, padding: `${sp(2)}px ${sp(5)}px`, display: "flex", justifyContent: "space-between", fontSize: 10, fontWeight: 600, color: t.textPrimary, fontFamily: t.fontMono }}>
+                      <span>9:41</span>
+                      <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
+                        <span>●●●●</span><span>▮</span>
+                      </div>
+                    </div>
+                    {/* Header */}
+                    <div style={{ background: t.surface, padding: `${sp(3)}px ${sp(5)}px ${sp(4)}px`, borderBottom: `1px solid ${t.border}` }}>
+                      <div style={{ fontSize: t.baseSize - 2, color: t.textTertiary, fontFamily: t.fontBody, marginBottom: sp(1) }}>Good morning</div>
+                      <div style={{ fontFamily: t.fontHeading, fontWeight: t.headingWeight, fontSize: typeScale(t.baseSize, t.scaleRatio, 2), color: t.textPrimary }}>My projects</div>
+                    </div>
+                    {/* Search */}
+                    <div style={{ background: t.surface, padding: `0 ${sp(5)}px ${sp(3)}px` }}>
+                      <div style={{ background: t.surfaceSecondary, borderRadius: t.radiusMd, padding: `${sp(2)}px ${sp(3)}px`, fontSize: t.baseSize - 2, color: t.textTertiary, fontFamily: t.fontBody }}>Search projects...</div>
+                    </div>
+                    {/* List items */}
+                    <div style={{ background: t.surface }}>
+                      {[
+                        { name: "Brand redesign", tag: "In progress", tagColor: t.primary, initials: "BR", time: "Updated 2h ago" },
+                        { name: "Mobile app v2", tag: "Review", tagColor: t.warning, initials: "MA", time: "Updated yesterday" },
+                        { name: "Design system", tag: "Complete", tagColor: t.success, initials: "DS", time: "Updated 3 days ago" },
+                        { name: "User research", tag: "Planning", tagColor: t.info, initials: "UR", time: "Updated 1 week ago" },
+                      ].map((item, i) => (
+                        <div key={i} style={{ display: "flex", alignItems: "center", gap: sp(3), padding: `${sp(3)}px ${sp(5)}px`, borderBottom: `1px solid ${t.border}`, cursor: "pointer" }}>
+                          <div style={{ width: 36, height: 36, borderRadius: t.radiusMd, background: alpha(item.tagColor, 0.1), display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 600, color: item.tagColor, fontFamily: t.fontBody, flexShrink: 0 }}>{item.initials}</div>
+                          <div style={{ flex: 1 }}>
+                            <div style={{ fontSize: t.baseSize - 1, fontWeight: 500, color: t.textPrimary, fontFamily: t.fontBody }}>{item.name}</div>
+                            <div style={{ fontSize: t.baseSize - 3, color: t.textTertiary, fontFamily: t.fontBody, marginTop: 1 }}>{item.time}</div>
+                          </div>
+                          <span style={{ fontSize: t.baseSize - 3, padding: `${sp(0.5)}px ${sp(2)}px`, borderRadius: t.radiusFull, background: alpha(item.tagColor, 0.08), color: item.tagColor, fontWeight: 500, fontFamily: t.fontBody }}>{item.tag}</span>
+                        </div>
+                      ))}
+                    </div>
+                    {/* FAB */}
+                    <div style={{ background: t.surface, padding: `${sp(3)}px ${sp(5)}px`, position: "relative", height: 60 }}>
+                      <div style={{ position: "absolute", right: sp(5), bottom: sp(3), width: 48, height: 48, borderRadius: t.radiusLg > 16 ? t.radiusLg : 16, background: t.primary, display: "flex", alignItems: "center", justifyContent: "center", color: contrastOn(t.primary), fontSize: 22, fontWeight: 300, boxShadow: t.shadowMd, cursor: "pointer" }}>+</div>
+                    </div>
+                    {/* Bottom nav */}
+                    <div style={{ background: t.surface, borderTop: `1px solid ${t.border}`, padding: `${sp(2)}px 0 ${sp(3)}px`, display: "flex", justifyContent: "space-around" }}>
+                      {[{ icon: "◆", label: "Home", active: true }, { icon: "◎", label: "Explore" }, { icon: "▤", label: "Library" }, { icon: "●", label: "Profile" }].map((nav, i) => (
+                        <div key={i} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 2, cursor: "pointer" }}>
+                          <span style={{ fontSize: 16, color: nav.active ? t.primary : t.textTertiary }}>{nav.icon}</span>
+                          <span style={{ fontSize: 9, fontFamily: t.fontBody, fontWeight: nav.active ? 600 : 400, color: nav.active ? t.primary : t.textTertiary }}>{nav.label}</span>
+                        </div>
+                      ))}
+                    </div>
+                    {/* Home indicator */}
+                    <div style={{ background: t.surface, padding: `${sp(2)}px 0`, display: "flex", justifyContent: "center" }}>
+                      <div style={{ width: 100, height: 4, borderRadius: 2, background: t.textTertiary, opacity: 0.3 }} />
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+        })()}
 
         {/* ─── EXPORT ─── */}
         {section === "export" && (
