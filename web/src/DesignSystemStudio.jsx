@@ -839,8 +839,8 @@ export default function DesignSystemStudio() {
 
   // T = dark header/tabs, C = light content area
   const T = {
-    dark: "#000000", card: "#111111", border: "#222222",
-    text: "#F5F5F5", dim: "#888888", dimmer: "#666666",
+    dark: "#2A2A2A", card: "#333333", border: "#404040",
+    text: "#F5F5F5", dim: "#999999", dimmer: "#777777",
   };
   const C = {
     bg: "#FFFFFF", bgSub: "#FAFAFA", card: "#FFFFFF",
@@ -851,7 +851,7 @@ export default function DesignSystemStudio() {
   const fontsUrl = `https://fonts.googleapis.com/css2?family=${tokens.fonts}&display=swap`;
 
   return (
-    <div style={{ fontFamily: "'DM Sans', sans-serif", background: section === "overview" ? "#0F172A" : C.bg, minHeight: "100vh", color: C.text }}>
+    <div style={{ fontFamily: "'DM Sans', sans-serif", background: section === "overview" ? "#2A2A2A" : C.bg, minHeight: "100vh", color: C.text }}>
       <link href={fontsUrl} rel="stylesheet" />
       <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=DM+Serif+Display&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
 
@@ -872,7 +872,7 @@ export default function DesignSystemStudio() {
       </div>
 
       {/* Section Nav */}
-      <div style={{ background: T.dark, borderBottom: `1px solid ${section === "overview" ? "#334155" : C.border}`, padding: "0 24px" }}>
+      <div style={{ background: T.dark, borderBottom: `1px solid ${section === "overview" ? "#404040" : C.border}`, padding: "0 24px" }}>
         <div style={{ maxWidth: 1200, margin: "0 auto", display: "flex", gap: 0, justifyContent: "center" }}>
           {SECTIONS.map(s => (
             <button key={s} onClick={() => setSection(s)} style={{
@@ -891,83 +891,83 @@ export default function DesignSystemStudio() {
 
         {/* ─── OVERVIEW ─── */}
         {section === "overview" && (
-          <div style={{ margin: "-24px -24px -48px", background: "#0F172A", padding: "48px 48px 56px", minHeight: "calc(100vh - 120px)" }}>
+          <div style={{ margin: "-24px -24px -48px", background: "#2A2A2A", padding: "48px 48px 56px", minHeight: "calc(100vh - 120px)" }}>
             {/* Block 1 — Hero with illustration */}
             <div style={{ textAlign: "center", marginBottom: 40 }}>
               {/* Design System illustration */}
               <div style={{ margin: "0 auto 24px", width: 280, height: 120, position: "relative" }}>
                 <svg width="280" height="120" viewBox="0 0 280 120" fill="none" xmlns="http://www.w3.org/2000/svg">
                   {/* Token dots — reference layer */}
-                  <circle cx="40" cy="30" r="10" fill="#334155" stroke="#475569" strokeWidth="1"/>
-                  <circle cx="65" cy="30" r="10" fill="#334155" stroke="#475569" strokeWidth="1"/>
-                  <circle cx="90" cy="30" r="10" fill="#334155" stroke="#475569" strokeWidth="1"/>
-                  <circle cx="115" cy="30" r="10" fill="#475569" stroke="#64748B" strokeWidth="1"/>
-                  <circle cx="140" cy="30" r="10" fill="#475569" stroke="#64748B" strokeWidth="1"/>
+                  <circle cx="40" cy="30" r="10" fill="#404040" stroke="#555555" strokeWidth="1"/>
+                  <circle cx="65" cy="30" r="10" fill="#404040" stroke="#555555" strokeWidth="1"/>
+                  <circle cx="90" cy="30" r="10" fill="#404040" stroke="#555555" strokeWidth="1"/>
+                  <circle cx="115" cy="30" r="10" fill="#555555" stroke="#666666" strokeWidth="1"/>
+                  <circle cx="140" cy="30" r="10" fill="#555555" stroke="#666666" strokeWidth="1"/>
 
                   {/* Connecting lines */}
-                  <line x1="65" y1="42" x2="65" y2="55" stroke="#334155" strokeWidth="1" strokeDasharray="2 2"/>
-                  <line x1="115" y1="42" x2="115" y2="55" stroke="#334155" strokeWidth="1" strokeDasharray="2 2"/>
+                  <line x1="65" y1="42" x2="65" y2="55" stroke="#444444" strokeWidth="1" strokeDasharray="2 2"/>
+                  <line x1="115" y1="42" x2="115" y2="55" stroke="#444444" strokeWidth="1" strokeDasharray="2 2"/>
 
                   {/* Component shapes — system layer */}
-                  <rect x="30" y="58" rx="4" ry="4" width="70" height="24" fill="none" stroke="#475569" strokeWidth="1.5"/>
-                  <text x="65" y="74" textAnchor="middle" fill="#94A3B8" fontSize="9" fontFamily="JetBrains Mono, monospace">Button</text>
+                  <rect x="30" y="58" rx="4" ry="4" width="70" height="24" fill="none" stroke="#555555" strokeWidth="1.5"/>
+                  <text x="65" y="74" textAnchor="middle" fill="#999999" fontSize="9" fontFamily="JetBrains Mono, monospace">Button</text>
 
-                  <rect x="110" y="58" rx="8" ry="8" width="60" height="24" fill="none" stroke="#475569" strokeWidth="1"/>
-                  <text x="140" y="74" textAnchor="middle" fill="#94A3B8" fontSize="9" fontFamily="JetBrains Mono, monospace">Input</text>
+                  <rect x="110" y="58" rx="8" ry="8" width="60" height="24" fill="none" stroke="#555555" strokeWidth="1"/>
+                  <text x="140" y="74" textAnchor="middle" fill="#999999" fontSize="9" fontFamily="JetBrains Mono, monospace">Input</text>
 
                   {/* Card shape */}
-                  <rect x="182" y="20" rx="6" ry="6" width="68" height="62" fill="#1E293B" stroke="#334155" strokeWidth="1"/>
-                  <rect x="190" y="28" rx="3" ry="3" width="52" height="6" fill="#334155"/>
-                  <rect x="190" y="40" rx="2" ry="2" width="44" height="4" fill="#293548"/>
-                  <rect x="190" y="48" rx="2" ry="2" width="36" height="4" fill="#293548"/>
-                  <rect x="190" y="60" rx="3" ry="3" width="28" height="14" fill="#334155" stroke="#475569" strokeWidth="1"/>
-                  <text x="204" y="70" textAnchor="middle" fill="#94A3B8" fontSize="7" fontFamily="JetBrains Mono, monospace">CTA</text>
+                  <rect x="182" y="20" rx="6" ry="6" width="68" height="62" fill="#333333" stroke="#444444" strokeWidth="1"/>
+                  <rect x="190" y="28" rx="3" ry="3" width="52" height="6" fill="#404040"/>
+                  <rect x="190" y="40" rx="2" ry="2" width="44" height="4" fill="#3A3A3A"/>
+                  <rect x="190" y="48" rx="2" ry="2" width="36" height="4" fill="#3A3A3A"/>
+                  <rect x="190" y="60" rx="3" ry="3" width="28" height="14" fill="#404040" stroke="#555555" strokeWidth="1"/>
+                  <text x="204" y="70" textAnchor="middle" fill="#999999" fontSize="7" fontFamily="JetBrains Mono, monospace">CTA</text>
 
                   {/* Type scale lines */}
-                  <rect x="30" y="96" rx="2" ry="2" width="80" height="5" fill="#334155"/>
-                  <rect x="30" y="105" rx="2" ry="2" width="60" height="3" fill="#293548"/>
-                  <rect x="30" y="112" rx="1" ry="1" width="45" height="3" fill="#293548"/>
+                  <rect x="30" y="96" rx="2" ry="2" width="80" height="5" fill="#404040"/>
+                  <rect x="30" y="105" rx="2" ry="2" width="60" height="3" fill="#3A3A3A"/>
+                  <rect x="30" y="112" rx="1" ry="1" width="45" height="3" fill="#3A3A3A"/>
 
                   {/* Spacing grid dots */}
-                  <circle cx="140" cy="98" r="2" fill="#334155"/>
-                  <circle cx="152" cy="98" r="2" fill="#334155"/>
-                  <circle cx="164" cy="98" r="2" fill="#334155"/>
-                  <circle cx="140" cy="110" r="2" fill="#334155"/>
-                  <circle cx="152" cy="110" r="2" fill="#334155"/>
-                  <circle cx="164" cy="110" r="2" fill="#334155"/>
+                  <circle cx="140" cy="98" r="2" fill="#404040"/>
+                  <circle cx="152" cy="98" r="2" fill="#404040"/>
+                  <circle cx="164" cy="98" r="2" fill="#404040"/>
+                  <circle cx="140" cy="110" r="2" fill="#404040"/>
+                  <circle cx="152" cy="110" r="2" fill="#404040"/>
+                  <circle cx="164" cy="110" r="2" fill="#404040"/>
 
                   {/* Arrow connecting layers */}
-                  <path d="M200 86 L200 96 L220 96" stroke="#475569" strokeWidth="1" fill="none" strokeDasharray="2 2"/>
-                  <rect x="222" y="90" rx="3" ry="3" width="48" height="16" fill="#1E293B" stroke="#334155" strokeWidth="1"/>
-                  <text x="246" y="101" textAnchor="middle" fill="#64748B" fontSize="7" fontFamily="JetBrains Mono, monospace">--apdf-*</text>
+                  <path d="M200 86 L200 96 L220 96" stroke="#555555" strokeWidth="1" fill="none" strokeDasharray="2 2"/>
+                  <rect x="222" y="90" rx="3" ry="3" width="48" height="16" fill="#333333" stroke="#444444" strokeWidth="1"/>
+                  <text x="246" y="101" textAnchor="middle" fill="#777777" fontSize="7" fontFamily="JetBrains Mono, monospace">--apdf-*</text>
                 </svg>
               </div>
-              <p style={{ fontSize: 16, color: "#94A3B8", maxWidth: 520, margin: "0 auto", lineHeight: 1.6 }}>Build a complete design system or audit an existing one. Choose a theme, customize tokens, preview components, and export to Figma.</p>
+              <p style={{ fontSize: 16, color: "#999999", maxWidth: 520, margin: "0 auto", lineHeight: 1.6 }}>Build a complete design system or audit an existing one. Choose a theme, customize tokens, preview components, and export to Figma.</p>
             </div>
 
             {/* Block 2 — Two path cards */}
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 40, maxWidth: 900, margin: "0 auto 40px" }}>
-              <div onClick={() => setSection("themes")} style={{ background: "#1E293B", borderRadius: 10, padding: "28px", border: "1px solid #334155", cursor: "pointer", transition: "all 0.15s" }}>
+              <div onClick={() => setSection("themes")} style={{ background: "#333333", borderRadius: 10, padding: "28px", border: "1px solid #444444", cursor: "pointer", transition: "all 0.15s" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
-                  <div style={{ width: 32, height: 32, borderRadius: 8, background: "#0F172A", border: "1px solid #334155", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, color: "#94A3B8" }}>◆</div>
+                  <div style={{ width: 32, height: 32, borderRadius: 8, background: "#2A2A2A", border: "1px solid #444444", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, color: "#999999" }}>◆</div>
                   <div style={{ fontSize: 16, fontWeight: 600, color: "#F5F5F5" }}>I need a design system</div>
                 </div>
-                <p style={{ fontSize: 14, color: "#94A3B8", lineHeight: 1.5, margin: "0 0 16px" }}>Choose a theme, customize tokens, preview 24 components live, and export to CSS or push to Figma.</p>
+                <p style={{ fontSize: 14, color: "#999999", lineHeight: 1.5, margin: "0 0 16px" }}>Choose a theme, customize tokens, preview 24 components live, and export to CSS or push to Figma.</p>
                 <span style={{ fontSize: 12, fontWeight: 500, color: "#F5F5F5", fontFamily: "'JetBrains Mono', monospace" }}>Start building →</span>
               </div>
-              <div onClick={() => setSection("figma")} style={{ background: "#1E293B", borderRadius: 10, padding: "28px", border: "1px solid #334155", cursor: "pointer", transition: "all 0.15s" }}>
+              <div onClick={() => setSection("figma")} style={{ background: "#333333", borderRadius: 10, padding: "28px", border: "1px solid #444444", cursor: "pointer", transition: "all 0.15s" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
-                  <div style={{ width: 32, height: 32, borderRadius: 8, background: "#0F172A", border: "1px solid #334155", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, color: "#94A3B8" }}>◎</div>
+                  <div style={{ width: 32, height: 32, borderRadius: 8, background: "#2A2A2A", border: "1px solid #444444", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, color: "#999999" }}>◎</div>
                   <div style={{ fontSize: 16, fontWeight: 600, color: "#F5F5F5" }}>I already have one</div>
                 </div>
-                <p style={{ fontSize: 14, color: "#94A3B8", lineHeight: 1.5, margin: "0 0 16px" }}>Connect your Figma file via MCP. Claude reads your system and scores it against industry standards.</p>
+                <p style={{ fontSize: 14, color: "#999999", lineHeight: 1.5, margin: "0 0 16px" }}>Connect your Figma file via MCP. Claude reads your system and scores it against industry standards.</p>
                 <span style={{ fontSize: 12, fontWeight: 500, color: "#F5F5F5", fontFamily: "'JetBrains Mono', monospace" }}>Run an audit →</span>
               </div>
             </div>
 
             {/* Block 3 — How it works */}
             <div style={{ marginBottom: 40, maxWidth: 900, margin: "0 auto 40px" }}>
-              <div style={{ fontSize: 10, fontFamily: "'JetBrains Mono', monospace", color: "#64748B", marginBottom: 14, textTransform: "uppercase", letterSpacing: 2 }}>How it works</div>
+              <div style={{ fontSize: 10, fontFamily: "'JetBrains Mono', monospace", color: "#777777", marginBottom: 14, textTransform: "uppercase", letterSpacing: 2 }}>How it works</div>
               <div style={{ display: "flex", gap: 6, alignItems: "stretch" }}>
                 {[
                   { tab: "themes", step: "01", label: "Themes", desc: "Choose a visual foundation" },
@@ -977,11 +977,11 @@ export default function DesignSystemStudio() {
                   { tab: "export", step: "05", label: "Export", desc: "Copy CSS properties" },
                   { tab: "figma", step: "06", label: "Figma", desc: "Push via MCP" },
                 ].map((s, i) => (
-                  <div key={s.tab} onClick={() => setSection(s.tab)} style={{ flex: 1, background: "#1E293B", borderRadius: 8, padding: "16px 12px", border: "1px solid #334155", cursor: "pointer", textAlign: "center", transition: "all 0.15s", position: "relative" }}>
-                    <div style={{ fontSize: 9, fontWeight: 600, color: "#64748B", fontFamily: "'JetBrains Mono', monospace", marginBottom: 8 }}>{s.step}</div>
+                  <div key={s.tab} onClick={() => setSection(s.tab)} style={{ flex: 1, background: "#333333", borderRadius: 8, padding: "16px 12px", border: "1px solid #444444", cursor: "pointer", textAlign: "center", transition: "all 0.15s", position: "relative" }}>
+                    <div style={{ fontSize: 9, fontWeight: 600, color: "#777777", fontFamily: "'JetBrains Mono', monospace", marginBottom: 8 }}>{s.step}</div>
                     <div style={{ fontSize: 13, fontWeight: 600, color: "#F5F5F5", marginBottom: 4 }}>{s.label}</div>
-                    <div style={{ fontSize: 11, color: "#94A3B8", lineHeight: 1.3 }}>{s.desc}</div>
-                    {i < 5 && <div style={{ position: "absolute", right: -6, top: "50%", transform: "translateY(-50%)", fontSize: 10, color: "#475569" }}>›</div>}
+                    <div style={{ fontSize: 11, color: "#999999", lineHeight: 1.3 }}>{s.desc}</div>
+                    {i < 5 && <div style={{ position: "absolute", right: -6, top: "50%", transform: "translateY(-50%)", fontSize: 10, color: "#555555" }}>›</div>}
                   </div>
                 ))}
               </div>
@@ -989,7 +989,7 @@ export default function DesignSystemStudio() {
 
             {/* Block 4 — What's included */}
             <div style={{ maxWidth: 900, margin: "0 auto" }}>
-              <div style={{ fontSize: 10, fontFamily: "'JetBrains Mono', monospace", color: "#64748B", marginBottom: 14, textTransform: "uppercase", letterSpacing: 2 }}>What's included</div>
+              <div style={{ fontSize: 10, fontFamily: "'JetBrains Mono', monospace", color: "#777777", marginBottom: 14, textTransform: "uppercase", letterSpacing: 2 }}>What's included</div>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 10 }}>
                 {[
                   { value: "6", label: "Themes", desc: "Precision, Enterprise, Warmth, Bold, Clinical, Soft" },
@@ -997,10 +997,10 @@ export default function DesignSystemStudio() {
                   { value: "apdf-*", label: "Tokens", desc: "Three-layer architecture — ref, sys, comp" },
                   { value: "MCP", label: "Figma", desc: "Variables, text styles, and component scaffolds" },
                 ].map((item, i) => (
-                  <div key={i} style={{ background: "#1E293B", borderRadius: 8, padding: "18px 16px", border: "1px solid #334155" }}>
+                  <div key={i} style={{ background: "#333333", borderRadius: 8, padding: "18px 16px", border: "1px solid #444444" }}>
                     <div style={{ fontSize: 22, fontWeight: 600, color: "#F5F5F5", fontFamily: "'JetBrains Mono', monospace", marginBottom: 6 }}>{item.value}</div>
                     <div style={{ fontSize: 13, fontWeight: 600, color: "#F5F5F5", marginBottom: 6 }}>{item.label}</div>
-                    <div style={{ fontSize: 12, color: "#94A3B8", lineHeight: 1.4 }}>{item.desc}</div>
+                    <div style={{ fontSize: 12, color: "#999999", lineHeight: 1.4 }}>{item.desc}</div>
                   </div>
                 ))}
               </div>
