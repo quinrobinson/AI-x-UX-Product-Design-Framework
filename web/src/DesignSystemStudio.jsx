@@ -1104,27 +1104,55 @@ export default function DesignSystemStudio() {
                   fontFamily: "'JetBrains Mono', monospace",
                   border: `1px solid ${previewType === opt.id ? C.text : C.border}`,
                   background: previewType === opt.id ? C.text : "transparent",
-                  color: previewType === opt.id ? C.bg : C.sub,
-                  transition: "all 0.15s",
+                  color: previewType === opt.id ? C.bg : C.sub, transition: "all 0.15s",
                 }}>{opt.label}</button>
               ))}
             </div>
           );
 
-          const Btn = ({ label, filled, small, ghost, danger }) => (
+          const Btn = ({ label, filled, small, ghost, invert }) => (
             <button style={{
               padding: small ? `${sp(1.5)}px ${sp(3)}px` : `${sp(2.5)}px ${sp(5)}px`,
               borderRadius: t.radiusMd, fontSize: small ? t.baseSize - 2 : t.baseSize - 1,
               fontWeight: 500, fontFamily: t.fontBody, cursor: "pointer", transition: `all ${t.motionFast}`,
-              background: danger ? t.error : filled ? t.primary : "transparent",
-              color: danger ? contrastOn(t.error) : filled ? contrastOn(t.primary) : ghost ? t.textSecondary : t.primary,
-              border: filled || danger ? "none" : ghost ? "1.5px solid transparent" : `1.5px solid ${t.primary}`,
+              background: invert ? contrastOn(t.primary) : filled ? t.primary : "transparent",
+              color: invert ? t.primary : filled ? contrastOn(t.primary) : ghost ? t.textSecondary : t.primary,
+              border: filled || invert ? "none" : ghost ? "1.5px solid transparent" : `1.5px solid ${t.primary}`,
             }}>{label}</button>
           );
 
-          const Avatar = ({ initials, size = 32, color }) => (
+          const Av = ({ initials, size = 32, color }) => (
             <div style={{ width: size, height: size, borderRadius: "50%", background: alpha(color || t.primary, 0.12), display: "flex", alignItems: "center", justifyContent: "center", fontSize: size * 0.38, fontWeight: 600, color: color || t.primary, fontFamily: t.fontBody, flexShrink: 0 }}>{initials}</div>
           );
+
+          /* Simple SVG sparkline */
+          const Spark = ({ data, color, w = 80, h = 28 }) => {
+            const max = Math.max(...data), min = Math.min(...data);
+            const pts = data.map((v, i) => `${(i / (data.length - 1)) * w},${h - ((v - min) / (max - min || 1)) * h}`).join(" ");
+            return (<svg width={w} height={h} viewBox={`0 0 ${w} ${h}`}><polyline points={pts} fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /><polyline points={`${pts} ${w},${h} 0,${h}`} fill={alpha(color, 0.08)} stroke="none" /></svg>);
+          };
+
+          /* Image placeholder */
+          const ImgPlaceholder = ({ w, h, radius, label }) => (
+            <div style={{ width: w || "100%", height: h || 120, borderRadius: radius || t.radiusMd, background: `linear-gradient(135deg, ${alpha(t.primary, 0.08)}, ${alpha(t.accent, 0.12)})`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+              {label && <span style={{ fontSize: t.baseSize - 2, color: t.textTertiary, fontFamily: t.fontBody }}>{label}</span>}
+            </div>
+          );
+
+          /* Mini bar chart */
+          const BarChart = ({ data, color, h = 120 }) => {
+            const max = Math.max(...data.map(d => d.v));
+            return (
+              <div style={{ display: "flex", alignItems: "flex-end", gap: 6, height: h, padding: `0 ${sp(1)}px` }}>
+                {data.map((d, i) => (
+                  <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
+                    <div style={{ width: "100%", height: `${(d.v / max) * (h - 20)}px`, borderRadius: `${t.radiusSm}px ${t.radiusSm}px 0 0`, background: d.highlight ? color : alpha(color, 0.2), transition: `height ${t.motionNormal}` }} />
+                    <span style={{ fontSize: 9, color: t.textTertiary, fontFamily: t.fontMono }}>{d.l}</span>
+                  </div>
+                ))}
+              </div>
+            );
+          };
 
           return (
             <div>
@@ -1137,92 +1165,234 @@ export default function DesignSystemStudio() {
               {previewType === "website" && (
                 <div style={{ border: `1px solid ${C.border}`, borderRadius: 12, overflow: "hidden" }}>
                   {/* Nav */}
-                  <div style={{ background: t.surface, borderBottom: `1px solid ${t.border}`, padding: `${sp(4)}px ${sp(8)}px`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <div style={{ background: t.surface, borderBottom: `1px solid ${t.border}`, padding: `${sp(3.5)}px ${sp(8)}px`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                     <div style={{ display: "flex", alignItems: "center", gap: sp(2) }}>
                       <div style={{ width: 28, height: 28, borderRadius: t.radiusMd, background: t.primary, display: "flex", alignItems: "center", justifyContent: "center", color: contrastOn(t.primary), fontSize: 12, fontWeight: 700 }}>A</div>
                       <span style={{ fontFamily: t.fontHeading, fontWeight: t.headingWeight, fontSize: t.baseSize + 1, color: t.textPrimary }}>Acme</span>
                     </div>
                     <div style={{ display: "flex", gap: sp(6), alignItems: "center" }}>
-                      {["Product", "Solutions", "Pricing", "Company"].map(l => (
+                      {["Product", "Solutions", "Pricing", "Docs"].map(l => (
                         <span key={l} style={{ fontSize: t.baseSize - 1, color: t.textSecondary, fontFamily: t.fontBody, cursor: "pointer" }}>{l}</span>
                       ))}
                       <Btn label="Sign in" ghost small />
-                      <Btn label="Get started" filled small />
+                      <Btn label="Start free" filled small />
                     </div>
                   </div>
 
                   {/* Hero */}
-                  <div style={{ background: t.surface, padding: `${sp(20)}px ${sp(8)}px ${sp(16)}px`, textAlign: "center" }}>
-                    <div style={{ display: "inline-flex", alignItems: "center", gap: sp(2), padding: `${sp(1.5)}px ${sp(4)}px`, borderRadius: t.radiusFull, background: alpha(t.primary, 0.06), border: `1px solid ${alpha(t.primary, 0.12)}`, marginBottom: sp(5) }}>
-                      <span style={{ width: 6, height: 6, borderRadius: "50%", background: t.success }} />
-                      <span style={{ fontSize: t.baseSize - 2, color: t.primary, fontWeight: 500, fontFamily: t.fontBody }}>Now in public beta — join 2,400 teams</span>
-                    </div>
-                    <h1 style={{ fontFamily: t.fontHeading, fontWeight: t.headingWeight, fontSize: ts(5), color: t.textPrimary, margin: `0 auto ${sp(4)}px`, lineHeight: 1.15, maxWidth: 640 }}>The better way to build digital products</h1>
-                    <p style={{ fontFamily: t.fontBody, fontSize: t.baseSize + 1, color: t.textSecondary, maxWidth: 520, margin: `0 auto ${sp(8)}px`, lineHeight: 1.6 }}>Design, prototype, and ship consistent interfaces with a system that scales. From tokens to components to handoff — everything connected.</p>
-                    <div style={{ display: "flex", gap: sp(3), justifyContent: "center", marginBottom: sp(10) }}>
-                      <Btn label="Start building — it's free" filled />
-                      <Btn label="Watch the demo" />
-                    </div>
-                    {/* Social proof */}
-                    <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: sp(8), opacity: 0.4 }}>
-                      {["Stripe", "Linear", "Vercel", "Notion", "Figma"].map(brand => (
-                        <span key={brand} style={{ fontSize: t.baseSize, fontWeight: 600, fontFamily: t.fontHeading, color: t.textPrimary, letterSpacing: 1 }}>{brand}</span>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Features */}
-                  <div style={{ background: t.surfaceSecondary, padding: `${sp(14)}px ${sp(8)}px` }}>
-                    <div style={{ textAlign: "center", marginBottom: sp(10) }}>
-                      <div style={{ fontSize: t.baseSize - 2, fontWeight: 600, color: t.primary, fontFamily: t.fontBody, textTransform: "uppercase", letterSpacing: 1, marginBottom: sp(2) }}>Features</div>
-                      <h2 style={{ fontFamily: t.fontHeading, fontWeight: t.headingWeight, fontSize: ts(3), color: t.textPrimary, margin: 0 }}>Everything you need, nothing you don't</h2>
-                    </div>
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: sp(4) }}>
-                      {[
-                        { icon: "◆", title: "Design tokens", desc: "Semantic color, spacing, and typography tokens with light and dark mode built in. Change one value, update everywhere." },
-                        { icon: "▦", title: "24 components", desc: "Production-ready components with full state coverage — hover, focus, disabled, error, loading. Accessibility checked." },
-                        { icon: "⬡", title: "Figma sync", desc: "Export directly to Figma as variable collections. Three layers — reference, system, component — all linked by aliases." },
-                        { icon: "◎", title: "Theme presets", desc: "Six curated themes for different product archetypes. Start with a foundation, then customize every detail." },
-                        { icon: "▲", title: "Contrast checker", desc: "Built-in WCAG AA/AAA validation. Every color pair tested in real time as you adjust tokens." },
-                        { icon: "●", title: "CSS export", desc: "One-click export to custom properties with the --apdf-* convention. Drop into any project immediately." },
-                      ].map((f, i) => (
-                        <div key={i} style={{ background: t.surface, borderRadius: t.radiusLg, padding: `${sp(6)}px`, border: `1px solid ${t.border}` }}>
-                          <div style={{ width: 40, height: 40, borderRadius: t.radiusMd, background: alpha(t.primary, 0.08), display: "flex", alignItems: "center", justifyContent: "center", marginBottom: sp(4), color: t.primary, fontSize: 18 }}>{f.icon}</div>
-                          <div style={{ fontFamily: t.fontHeading, fontWeight: t.headingWeight, fontSize: t.baseSize + 1, color: t.textPrimary, marginBottom: sp(2) }}>{f.title}</div>
-                          <div style={{ fontFamily: t.fontBody, fontSize: t.baseSize - 1, color: t.textSecondary, lineHeight: 1.6 }}>{f.desc}</div>
+                  <div style={{ background: t.surface, padding: `${sp(16)}px ${sp(8)}px ${sp(10)}px` }}>
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: sp(10), alignItems: "center" }}>
+                      <div>
+                        <div style={{ display: "inline-flex", alignItems: "center", gap: sp(2), padding: `${sp(1)}px ${sp(3)}px`, borderRadius: t.radiusFull, background: alpha(t.success, 0.08), border: `1px solid ${alpha(t.success, 0.15)}`, marginBottom: sp(5) }}>
+                          <span style={{ width: 6, height: 6, borderRadius: "50%", background: t.success }} />
+                          <span style={{ fontSize: t.baseSize - 3, color: t.success, fontWeight: 500, fontFamily: t.fontBody }}>2,400+ teams building with Acme</span>
                         </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Testimonial */}
-                  <div style={{ background: t.surface, padding: `${sp(12)}px ${sp(8)}px`, textAlign: "center" }}>
-                    <div style={{ maxWidth: 560, margin: "0 auto" }}>
-                      <p style={{ fontFamily: t.fontHeading, fontSize: ts(2), fontWeight: 400, fontStyle: "italic", color: t.textPrimary, lineHeight: 1.5, marginBottom: sp(5) }}>"This replaced three separate tools and saved our team two weeks on every new project."</p>
-                      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: sp(3) }}>
-                        <Avatar initials="SJ" size={40} />
-                        <div style={{ textAlign: "left" }}>
-                          <div style={{ fontSize: t.baseSize - 1, fontWeight: 600, color: t.textPrimary, fontFamily: t.fontBody }}>Sarah Jensen</div>
-                          <div style={{ fontSize: t.baseSize - 2, color: t.textTertiary, fontFamily: t.fontBody }}>Design Lead, Meridian</div>
+                        <h1 style={{ fontFamily: t.fontHeading, fontWeight: t.headingWeight, fontSize: ts(5), color: t.textPrimary, margin: `0 0 ${sp(4)}px`, lineHeight: 1.1 }}>Ship products faster, together</h1>
+                        <p style={{ fontFamily: t.fontBody, fontSize: t.baseSize + 1, color: t.textSecondary, margin: `0 0 ${sp(6)}px`, lineHeight: 1.6 }}>The all-in-one platform for design, prototyping, and handoff. Built for teams who care about craft.</p>
+                        <div style={{ display: "flex", gap: sp(3), marginBottom: sp(5) }}>
+                          <Btn label="Start building — free" filled />
+                          <Btn label="Book a demo" />
+                        </div>
+                        <div style={{ display: "flex", alignItems: "center", gap: sp(2) }}>
+                          <div style={{ display: "flex" }}>
+                            {["SJ", "AC", "MK", "JL"].map((a, i) => (
+                              <div key={i} style={{ width: 24, height: 24, borderRadius: "50%", background: alpha(t.primary, 0.12), display: "flex", alignItems: "center", justifyContent: "center", fontSize: 8, fontWeight: 600, color: t.primary, fontFamily: t.fontBody, border: `2px solid ${t.surface}`, marginLeft: i > 0 ? -6 : 0 }}>{a}</div>
+                            ))}
+                          </div>
+                          <span style={{ fontSize: t.baseSize - 2, color: t.textTertiary, fontFamily: t.fontBody }}>Join 12,000+ designers</span>
+                        </div>
+                      </div>
+                      {/* Product screenshot placeholder */}
+                      <div style={{ background: t.surfaceSecondary, borderRadius: t.radiusLg, border: `1px solid ${t.border}`, overflow: "hidden", boxShadow: t.shadowLg }}>
+                        {/* Mini app bar */}
+                        <div style={{ padding: `${sp(2)}px ${sp(3)}px`, borderBottom: `1px solid ${t.border}`, display: "flex", gap: 4, alignItems: "center" }}>
+                          <div style={{ width: 8, height: 8, borderRadius: "50%", background: t.error, opacity: 0.7 }} />
+                          <div style={{ width: 8, height: 8, borderRadius: "50%", background: t.warning, opacity: 0.7 }} />
+                          <div style={{ width: 8, height: 8, borderRadius: "50%", background: t.success, opacity: 0.7 }} />
+                          <div style={{ flex: 1, height: 16, borderRadius: t.radiusSm, background: t.surface, marginLeft: 8 }} />
+                        </div>
+                        {/* Mini dashboard content */}
+                        <div style={{ padding: sp(3) }}>
+                          <div style={{ display: "flex", gap: sp(2), marginBottom: sp(3) }}>
+                            {[65, 42, 88, 71].map((v, i) => (
+                              <div key={i} style={{ flex: 1, background: t.surface, borderRadius: t.radiusSm, padding: sp(2) }}>
+                                <div style={{ width: "50%", height: 6, borderRadius: 3, background: alpha(t.textTertiary, 0.15), marginBottom: 6 }} />
+                                <div style={{ fontSize: 14, fontWeight: t.headingWeight, color: t.textPrimary, fontFamily: t.fontHeading }}>{v}%</div>
+                              </div>
+                            ))}
+                          </div>
+                          <div style={{ background: t.surface, borderRadius: t.radiusSm, padding: sp(2), marginBottom: sp(2) }}>
+                            <BarChart data={[{l:"M",v:35},{l:"T",v:52},{l:"W",v:41},{l:"T",v:68,highlight:true},{l:"F",v:55},{l:"S",v:30},{l:"S",v:22}]} color={t.primary} h={60} />
+                          </div>
+                          <div style={{ display: "flex", gap: sp(2) }}>
+                            <div style={{ flex: 2, background: t.surface, borderRadius: t.radiusSm, padding: sp(2) }}>
+                              {[1,2,3].map(i => <div key={i} style={{ height: 8, borderRadius: 4, background: alpha(t.textTertiary, 0.08), marginBottom: 6, width: `${90 - i * 15}%` }} />)}
+                            </div>
+                            <div style={{ flex: 1, background: t.surface, borderRadius: t.radiusSm, padding: sp(2), display: "flex", alignItems: "center", justifyContent: "center" }}>
+                              <div style={{ width: 40, height: 40, borderRadius: "50%", border: `3px solid ${t.primary}`, borderRightColor: alpha(t.primary, 0.15) }} />
+                            </div>
+                          </div>
                         </div>
                       </div>
                     </div>
                   </div>
 
+                  {/* Stats bar */}
+                  <div style={{ background: t.surface, borderTop: `1px solid ${t.border}`, borderBottom: `1px solid ${t.border}`, padding: `${sp(6)}px ${sp(8)}px`, display: "flex", justifyContent: "space-around" }}>
+                    {[
+                      { num: "12,000+", label: "Active designers" },
+                      { num: "4.9/5", label: "Average rating" },
+                      { num: "99.9%", label: "Uptime SLA" },
+                      { num: "< 2min", label: "Setup time" },
+                    ].map((s, i) => (
+                      <div key={i} style={{ textAlign: "center" }}>
+                        <div style={{ fontSize: ts(2), fontWeight: t.headingWeight, fontFamily: t.fontHeading, color: t.textPrimary }}>{s.num}</div>
+                        <div style={{ fontSize: t.baseSize - 2, color: t.textTertiary, fontFamily: t.fontBody, marginTop: sp(1) }}>{s.label}</div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* How it works */}
+                  <div style={{ background: t.surfaceSecondary, padding: `${sp(14)}px ${sp(8)}px` }}>
+                    <div style={{ textAlign: "center", marginBottom: sp(10) }}>
+                      <div style={{ fontSize: t.baseSize - 2, fontWeight: 600, color: t.primary, fontFamily: t.fontBody, textTransform: "uppercase", letterSpacing: 1, marginBottom: sp(2) }}>How it works</div>
+                      <h2 style={{ fontFamily: t.fontHeading, fontWeight: t.headingWeight, fontSize: ts(3), color: t.textPrimary, margin: 0 }}>Three steps to a better workflow</h2>
+                    </div>
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: sp(6) }}>
+                      {[
+                        { step: "01", title: "Choose your foundation", desc: "Pick a theme that matches your product's personality. Six curated starting points cover SaaS, enterprise, consumer, creative, data, and friendly archetypes.", img: true },
+                        { step: "02", title: "Customize every detail", desc: "Adjust colors, typography, spacing, and shape. Preview 24 components reacting in real time. Built-in contrast checker keeps you accessible.", img: true },
+                        { step: "03", title: "Export and build", desc: "One-click CSS export or push directly to Figma as variable collections. Three token layers — reference, system, component — all connected.", img: true },
+                      ].map((s, i) => (
+                        <div key={i}>
+                          <ImgPlaceholder h={140} radius={t.radiusLg} />
+                          <div style={{ padding: `${sp(4)}px 0` }}>
+                            <div style={{ fontSize: t.baseSize - 2, fontWeight: 600, color: t.primary, fontFamily: t.fontMono, marginBottom: sp(2) }}>{s.step}</div>
+                            <div style={{ fontFamily: t.fontHeading, fontWeight: t.headingWeight, fontSize: t.baseSize + 2, color: t.textPrimary, marginBottom: sp(2) }}>{s.title}</div>
+                            <div style={{ fontFamily: t.fontBody, fontSize: t.baseSize - 1, color: t.textSecondary, lineHeight: 1.6 }}>{s.desc}</div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Features */}
+                  <div style={{ background: t.surface, padding: `${sp(14)}px ${sp(8)}px` }}>
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: sp(8), alignItems: "center" }}>
+                      <div>
+                        <div style={{ fontSize: t.baseSize - 2, fontWeight: 600, color: t.primary, fontFamily: t.fontBody, textTransform: "uppercase", letterSpacing: 1, marginBottom: sp(2) }}>Built for scale</div>
+                        <h2 style={{ fontFamily: t.fontHeading, fontWeight: t.headingWeight, fontSize: ts(3), color: t.textPrimary, margin: `0 0 ${sp(4)}px` }}>Everything you need, nothing you don't</h2>
+                        <p style={{ fontFamily: t.fontBody, fontSize: t.baseSize, color: t.textSecondary, lineHeight: 1.6, marginBottom: sp(6) }}>A complete design system toolkit that grows with your team. Start with one project, scale to your entire organization.</p>
+                        {[
+                          { icon: "◆", title: "Semantic tokens", desc: "Three-layer architecture — reference, system, component" },
+                          { icon: "▦", title: "24 components", desc: "Full state coverage with accessibility built in" },
+                          { icon: "◎", title: "Dark mode ready", desc: "Every token pair tested for WCAG AA contrast" },
+                          { icon: "⬡", title: "Figma native", desc: "Export as variable collections, not just colors" },
+                        ].map((f, i) => (
+                          <div key={i} style={{ display: "flex", gap: sp(3), marginBottom: sp(4) }}>
+                            <div style={{ width: 36, height: 36, borderRadius: t.radiusMd, background: alpha(t.primary, 0.06), display: "flex", alignItems: "center", justifyContent: "center", color: t.primary, fontSize: 14, flexShrink: 0 }}>{f.icon}</div>
+                            <div>
+                              <div style={{ fontFamily: t.fontBody, fontWeight: 600, fontSize: t.baseSize, color: t.textPrimary, marginBottom: 2 }}>{f.title}</div>
+                              <div style={{ fontFamily: t.fontBody, fontSize: t.baseSize - 1, color: t.textTertiary }}>{f.desc}</div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                      <div style={{ background: t.surfaceSecondary, borderRadius: t.radiusLg, padding: sp(5), border: `1px solid ${t.border}` }}>
+                        {/* Component showcase grid */}
+                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: sp(3) }}>
+                          {/* Button pair */}
+                          <div style={{ background: t.surface, borderRadius: t.radiusMd, padding: sp(3), display: "flex", flexDirection: "column", gap: sp(2) }}>
+                            <div style={{ width: "100%", padding: `${sp(2)}px`, borderRadius: t.radiusMd, background: t.primary, color: contrastOn(t.primary), fontSize: t.baseSize - 2, fontFamily: t.fontBody, fontWeight: 500, textAlign: "center" }}>Primary</div>
+                            <div style={{ width: "100%", padding: `${sp(2)}px`, borderRadius: t.radiusMd, border: `1.5px solid ${t.primary}`, color: t.primary, fontSize: t.baseSize - 2, fontFamily: t.fontBody, fontWeight: 500, textAlign: "center" }}>Secondary</div>
+                          </div>
+                          {/* Input */}
+                          <div style={{ background: t.surface, borderRadius: t.radiusMd, padding: sp(3) }}>
+                            <div style={{ fontSize: 10, color: t.textSecondary, fontFamily: t.fontBody, marginBottom: 4 }}>Email</div>
+                            <div style={{ border: `1.5px solid ${t.primary}`, borderRadius: t.radiusSm, padding: `${sp(1.5)}px ${sp(2)}px`, fontSize: t.baseSize - 2, color: t.textPrimary, fontFamily: t.fontBody, boxShadow: `0 0 0 2px ${alpha(t.primary, 0.1)}` }}>hello@acme.co</div>
+                          </div>
+                          {/* Toggle + badge */}
+                          <div style={{ background: t.surface, borderRadius: t.radiusMd, padding: sp(3), display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                            <span style={{ fontSize: t.baseSize - 2, fontFamily: t.fontBody, color: t.textPrimary }}>Active</span>
+                            <div style={{ width: 36, height: 20, borderRadius: 10, background: t.primary, position: "relative" }}>
+                              <div style={{ width: 16, height: 16, borderRadius: "50%", background: "#fff", position: "absolute", top: 2, right: 2, boxShadow: "0 1px 2px rgba(0,0,0,0.15)" }} />
+                            </div>
+                          </div>
+                          {/* Tag group */}
+                          <div style={{ background: t.surface, borderRadius: t.radiusMd, padding: sp(3), display: "flex", flexWrap: "wrap", gap: 4, alignItems: "center" }}>
+                            {["Design", "Tokens", "Figma"].map(tag => (
+                              <span key={tag} style={{ padding: `${sp(0.5)}px ${sp(2)}px`, borderRadius: t.radiusFull, background: alpha(t.primary, 0.06), color: t.primary, fontSize: t.baseSize - 3, fontWeight: 500, fontFamily: t.fontBody }}>{tag}</span>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Testimonials */}
+                  <div style={{ background: t.surfaceSecondary, padding: `${sp(12)}px ${sp(8)}px` }}>
+                    <div style={{ textAlign: "center", marginBottom: sp(8) }}>
+                      <h2 style={{ fontFamily: t.fontHeading, fontWeight: t.headingWeight, fontSize: ts(3), color: t.textPrimary, margin: 0 }}>Loved by design teams</h2>
+                    </div>
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: sp(4) }}>
+                      {[
+                        { quote: "Replaced three tools and saved us two weeks on every project. The token architecture is exactly right.", name: "Sarah Jensen", role: "Design Lead, Meridian", initials: "SJ" },
+                        { quote: "The Figma export alone justified switching. Variables, modes, aliases — all set up in under a minute.", name: "Alex Chen", role: "Staff Designer, Lattice", initials: "AC" },
+                        { quote: "Finally, a design system tool that understands the difference between reference and semantic tokens.", name: "Jordan Lee", role: "Design Systems, Stripe", initials: "JL" },
+                      ].map((t2, i) => (
+                        <div key={i} style={{ background: t.surface, borderRadius: t.radiusLg, padding: sp(5), border: `1px solid ${t.border}` }}>
+                          <div style={{ display: "flex", gap: 2, marginBottom: sp(3) }}>
+                            {[1,2,3,4,5].map(s => <span key={s} style={{ color: t.warning, fontSize: 12 }}>★</span>)}
+                          </div>
+                          <p style={{ fontFamily: t.fontBody, fontSize: t.baseSize - 1, color: t.textSecondary, lineHeight: 1.6, margin: `0 0 ${sp(4)}px` }}>"{t2.quote}"</p>
+                          <div style={{ display: "flex", alignItems: "center", gap: sp(2.5) }}>
+                            <Av initials={t2.initials} size={36} />
+                            <div>
+                              <div style={{ fontSize: t.baseSize - 1, fontWeight: 600, color: t.textPrimary, fontFamily: t.fontBody }}>{t2.name}</div>
+                              <div style={{ fontSize: t.baseSize - 2, color: t.textTertiary, fontFamily: t.fontBody }}>{t2.role}</div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
                   {/* CTA */}
-                  <div style={{ background: t.primary, padding: `${sp(12)}px ${sp(8)}px`, textAlign: "center" }}>
-                    <h3 style={{ fontFamily: t.fontHeading, fontWeight: t.headingWeight, fontSize: ts(3), color: contrastOn(t.primary), margin: `0 0 ${sp(3)}px` }}>Start building today</h3>
-                    <p style={{ fontSize: t.baseSize, color: alpha(contrastOn(t.primary), 0.7), fontFamily: t.fontBody, marginBottom: sp(6) }}>Free for individuals. Team plans start at $12/month.</p>
-                    <button style={{ padding: `${sp(3)}px ${sp(6)}px`, borderRadius: t.radiusMd, border: "none", background: contrastOn(t.primary), color: t.primary, fontSize: t.baseSize, fontWeight: 600, fontFamily: t.fontBody, cursor: "pointer" }}>Get started free</button>
+                  <div style={{ background: t.primary, padding: `${sp(14)}px ${sp(8)}px`, textAlign: "center" }}>
+                    <h3 style={{ fontFamily: t.fontHeading, fontWeight: t.headingWeight, fontSize: ts(4), color: contrastOn(t.primary), margin: `0 0 ${sp(3)}px` }}>Ready to build?</h3>
+                    <p style={{ fontSize: t.baseSize + 1, color: alpha(contrastOn(t.primary), 0.7), fontFamily: t.fontBody, marginBottom: sp(6), maxWidth: 440, marginLeft: "auto", marginRight: "auto" }}>Free for individuals. Team plans from $12/month. No credit card required.</p>
+                    <div style={{ display: "flex", gap: sp(3), justifyContent: "center" }}>
+                      <Btn label="Start free trial" invert />
+                      <button style={{ padding: `${sp(2.5)}px ${sp(5)}px`, borderRadius: t.radiusMd, border: `1.5px solid ${alpha(contrastOn(t.primary), 0.3)}`, background: "transparent", color: contrastOn(t.primary), fontSize: t.baseSize - 1, fontWeight: 500, fontFamily: t.fontBody, cursor: "pointer" }}>Talk to sales</button>
+                    </div>
                   </div>
 
                   {/* Footer */}
-                  <div style={{ background: t.surfaceSecondary, padding: `${sp(8)}px ${sp(8)}px`, display: "flex", justifyContent: "space-between", borderTop: `1px solid ${t.border}` }}>
-                    <div style={{ fontSize: t.baseSize - 2, color: t.textTertiary, fontFamily: t.fontBody }}>© 2026 Acme Inc. All rights reserved.</div>
-                    <div style={{ display: "flex", gap: sp(5) }}>
-                      {["Privacy", "Terms", "Contact"].map(l => (
-                        <span key={l} style={{ fontSize: t.baseSize - 2, color: t.textSecondary, fontFamily: t.fontBody, cursor: "pointer" }}>{l}</span>
+                  <div style={{ background: t.surface, padding: `${sp(10)}px ${sp(8)}px ${sp(6)}px`, borderTop: `1px solid ${t.border}` }}>
+                    <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr", gap: sp(8), marginBottom: sp(8) }}>
+                      <div>
+                        <div style={{ display: "flex", alignItems: "center", gap: sp(2), marginBottom: sp(3) }}>
+                          <div style={{ width: 24, height: 24, borderRadius: t.radiusSm, background: t.primary, display: "flex", alignItems: "center", justifyContent: "center", color: contrastOn(t.primary), fontSize: 10, fontWeight: 700 }}>A</div>
+                          <span style={{ fontFamily: t.fontHeading, fontWeight: t.headingWeight, fontSize: t.baseSize, color: t.textPrimary }}>Acme</span>
+                        </div>
+                        <p style={{ fontSize: t.baseSize - 1, color: t.textTertiary, fontFamily: t.fontBody, lineHeight: 1.5, maxWidth: 240 }}>The design system platform built for teams who ship.</p>
+                      </div>
+                      {[
+                        { title: "Product", links: ["Features", "Pricing", "Changelog", "Roadmap"] },
+                        { title: "Resources", links: ["Documentation", "Templates", "Community", "Blog"] },
+                        { title: "Company", links: ["About", "Careers", "Contact", "Legal"] },
+                      ].map((col, i) => (
+                        <div key={i}>
+                          <div style={{ fontSize: t.baseSize - 2, fontWeight: 600, color: t.textPrimary, fontFamily: t.fontBody, marginBottom: sp(3) }}>{col.title}</div>
+                          {col.links.map(l => <div key={l} style={{ fontSize: t.baseSize - 1, color: t.textTertiary, fontFamily: t.fontBody, marginBottom: sp(2), cursor: "pointer" }}>{l}</div>)}
+                        </div>
                       ))}
+                    </div>
+                    <div style={{ borderTop: `1px solid ${t.border}`, paddingTop: sp(4), display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      <span style={{ fontSize: t.baseSize - 2, color: t.textTertiary, fontFamily: t.fontBody }}>© 2026 Acme Inc. All rights reserved.</span>
+                      <div style={{ display: "flex", gap: sp(4) }}>
+                        {["Privacy", "Terms", "Cookies"].map(l => <span key={l} style={{ fontSize: t.baseSize - 2, color: t.textSecondary, fontFamily: t.fontBody, cursor: "pointer" }}>{l}</span>)}
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -1230,65 +1400,83 @@ export default function DesignSystemStudio() {
 
               {/* ── Dashboard Preview ── */}
               {previewType === "dashboard" && (
-                <div style={{ border: `1px solid ${C.border}`, borderRadius: 12, overflow: "hidden", display: "grid", gridTemplateColumns: "200px 1fr" }}>
+                <div style={{ border: `1px solid ${C.border}`, borderRadius: 12, overflow: "hidden", display: "grid", gridTemplateColumns: "210px 1fr", minHeight: 640 }}>
                   {/* Sidebar */}
                   <div style={{ background: t.surface, borderRight: `1px solid ${t.border}`, padding: `${sp(5)}px 0`, display: "flex", flexDirection: "column" }}>
-                    <div style={{ padding: `0 ${sp(4)}px ${sp(5)}px`, display: "flex", alignItems: "center", gap: sp(2), borderBottom: `1px solid ${t.border}`, marginBottom: sp(3) }}>
-                      <div style={{ width: 24, height: 24, borderRadius: t.radiusSm, background: t.primary, display: "flex", alignItems: "center", justifyContent: "center", color: contrastOn(t.primary), fontSize: 10, fontWeight: 700 }}>A</div>
-                      <span style={{ fontFamily: t.fontHeading, fontWeight: t.headingWeight, fontSize: t.baseSize - 1, color: t.textPrimary }}>Workspace</span>
+                    <div style={{ padding: `0 ${sp(4)}px ${sp(5)}px`, display: "flex", alignItems: "center", gap: sp(2), borderBottom: `1px solid ${t.border}`, marginBottom: sp(2) }}>
+                      <div style={{ width: 26, height: 26, borderRadius: t.radiusSm, background: t.primary, display: "flex", alignItems: "center", justifyContent: "center", color: contrastOn(t.primary), fontSize: 10, fontWeight: 700 }}>A</div>
+                      <div>
+                        <div style={{ fontFamily: t.fontHeading, fontWeight: t.headingWeight, fontSize: t.baseSize - 1, color: t.textPrimary }}>Acme Workspace</div>
+                        <div style={{ fontSize: t.baseSize - 3, color: t.textTertiary, fontFamily: t.fontBody }}>Pro plan</div>
+                      </div>
                     </div>
+                    <div style={{ padding: `0 ${sp(2)}px`, marginBottom: sp(2) }}>
+                      <div style={{ padding: `${sp(1.5)}px ${sp(2.5)}px`, borderRadius: t.radiusMd, background: t.surfaceSecondary, fontSize: t.baseSize - 2, color: t.textTertiary, fontFamily: t.fontBody, display: "flex", alignItems: "center", gap: sp(2) }}>
+                        <span style={{ fontSize: 11 }}>◎</span> Search...
+                      </div>
+                    </div>
+                    <div style={{ fontSize: 9, fontWeight: 600, color: t.textTertiary, fontFamily: t.fontBody, padding: `${sp(2)}px ${sp(4)}px ${sp(1)}px`, textTransform: "uppercase", letterSpacing: 1 }}>Main</div>
                     {[
                       { icon: "◆", label: "Overview", active: true },
-                      { icon: "◎", label: "Analytics" },
-                      { icon: "▤", label: "Projects" },
-                      { icon: "●", label: "Team" },
+                      { icon: "◎", label: "Analytics", badge: null },
+                      { icon: "▤", label: "Projects", badge: "6" },
                       { icon: "▦", label: "Components" },
                       { icon: "⬡", label: "Tokens" },
                     ].map((item, i) => (
                       <div key={i} style={{
-                        display: "flex", alignItems: "center", gap: sp(2.5), padding: `${sp(2)}px ${sp(4)}px`, cursor: "pointer",
+                        display: "flex", alignItems: "center", gap: sp(2.5), padding: `${sp(2)}px ${sp(4)}px`, cursor: "pointer", margin: `0 ${sp(2)}px`, borderRadius: t.radiusMd,
                         background: item.active ? alpha(t.primary, 0.06) : "transparent",
-                        borderRight: item.active ? `2px solid ${t.primary}` : "2px solid transparent",
                       }}>
-                        <span style={{ fontSize: 12, color: item.active ? t.primary : t.textTertiary }}>{item.icon}</span>
-                        <span style={{ fontSize: t.baseSize - 2, fontFamily: t.fontBody, fontWeight: item.active ? 600 : 400, color: item.active ? t.primary : t.textSecondary }}>{item.label}</span>
+                        <span style={{ fontSize: 12, color: item.active ? t.primary : t.textTertiary, width: 16, textAlign: "center" }}>{item.icon}</span>
+                        <span style={{ fontSize: t.baseSize - 2, fontFamily: t.fontBody, fontWeight: item.active ? 600 : 400, color: item.active ? t.primary : t.textSecondary, flex: 1 }}>{item.label}</span>
+                        {item.badge && <span style={{ fontSize: 9, fontWeight: 600, padding: "1px 6px", borderRadius: 99, background: alpha(t.primary, 0.08), color: t.primary }}>{item.badge}</span>}
+                      </div>
+                    ))}
+                    <div style={{ fontSize: 9, fontWeight: 600, color: t.textTertiary, fontFamily: t.fontBody, padding: `${sp(4)}px ${sp(4)}px ${sp(1)}px`, textTransform: "uppercase", letterSpacing: 1 }}>Team</div>
+                    {[
+                      { icon: "●", label: "Members", badge: "8" },
+                      { icon: "▲", label: "Settings" },
+                    ].map((item, i) => (
+                      <div key={i} style={{ display: "flex", alignItems: "center", gap: sp(2.5), padding: `${sp(2)}px ${sp(4)}px`, cursor: "pointer", margin: `0 ${sp(2)}px`, borderRadius: t.radiusMd }}>
+                        <span style={{ fontSize: 12, color: t.textTertiary, width: 16, textAlign: "center" }}>{item.icon}</span>
+                        <span style={{ fontSize: t.baseSize - 2, fontFamily: t.fontBody, color: t.textSecondary, flex: 1 }}>{item.label}</span>
+                        {item.badge && <span style={{ fontSize: 9, fontWeight: 600, padding: "1px 6px", borderRadius: 99, background: alpha(t.primary, 0.08), color: t.primary }}>{item.badge}</span>}
                       </div>
                     ))}
                     <div style={{ flex: 1 }} />
-                    <div style={{ borderTop: `1px solid ${t.border}`, padding: `${sp(3)}px ${sp(4)}px 0`, marginTop: sp(3) }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: sp(2) }}>
-                        <Avatar initials="QR" size={28} />
-                        <div>
-                          <div style={{ fontSize: t.baseSize - 2, fontWeight: 500, color: t.textPrimary, fontFamily: t.fontBody }}>Quin R.</div>
-                          <div style={{ fontSize: t.baseSize - 4, color: t.textTertiary, fontFamily: t.fontBody }}>Pro plan</div>
+                    <div style={{ borderTop: `1px solid ${t.border}`, padding: `${sp(3)}px ${sp(4)}px 0`, margin: `${sp(3)}px ${sp(2)}px 0` }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: sp(2.5), padding: `${sp(2)}px`, borderRadius: t.radiusMd, cursor: "pointer" }}>
+                        <Av initials="QR" size={30} />
+                        <div style={{ flex: 1 }}>
+                          <div style={{ fontSize: t.baseSize - 2, fontWeight: 500, color: t.textPrimary, fontFamily: t.fontBody }}>Quin Robinson</div>
+                          <div style={{ fontSize: t.baseSize - 4, color: t.textTertiary, fontFamily: t.fontBody }}>quin@acme.co</div>
                         </div>
                       </div>
                     </div>
                   </div>
 
                   {/* Main */}
-                  <div style={{ background: t.surfaceSecondary }}>
+                  <div style={{ background: t.surfaceSecondary, display: "flex", flexDirection: "column" }}>
                     {/* Top bar */}
                     <div style={{ background: t.surface, borderBottom: `1px solid ${t.border}`, padding: `${sp(3)}px ${sp(5)}px`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                       <div>
                         <div style={{ fontSize: ts(1), fontWeight: t.headingWeight, fontFamily: t.fontHeading, color: t.textPrimary }}>Overview</div>
-                        <div style={{ fontSize: t.baseSize - 2, color: t.textTertiary, fontFamily: t.fontBody }}>Last 30 days</div>
+                        <div style={{ fontSize: t.baseSize - 2, color: t.textTertiary, fontFamily: t.fontBody }}>Monday, April 4, 2026</div>
                       </div>
                       <div style={{ display: "flex", gap: sp(2), alignItems: "center" }}>
-                        <div style={{ padding: `${sp(1.5)}px ${sp(3)}px`, borderRadius: t.radiusMd, border: `1px solid ${t.border}`, background: t.surface, fontSize: t.baseSize - 2, color: t.textTertiary, fontFamily: t.fontBody, display: "flex", alignItems: "center", gap: sp(2), minWidth: 160 }}>Search...</div>
-                        <div style={{ width: 32, height: 32, borderRadius: t.radiusMd, border: `1px solid ${t.border}`, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", position: "relative", fontSize: 14, color: t.textSecondary }}>
+                        <div style={{ position: "relative", width: 32, height: 32, borderRadius: t.radiusMd, border: `1px solid ${t.border}`, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", fontSize: 14, color: t.textSecondary }}>
                           ▲
-                          <div style={{ position: "absolute", top: -2, right: -2, width: 8, height: 8, borderRadius: "50%", background: t.error }} />
+                          <div style={{ position: "absolute", top: -3, right: -3, width: 10, height: 10, borderRadius: "50%", background: t.error, border: `2px solid ${t.surface}`, fontSize: 7, color: "#fff", display: "flex", alignItems: "center", justifyContent: "center" }}>3</div>
                         </div>
                         <Btn label="New project" filled small />
                       </div>
                     </div>
 
-                    <div style={{ padding: sp(5) }}>
+                    <div style={{ padding: sp(5), flex: 1 }}>
                       {/* Alert */}
-                      <div style={{ background: alpha(t.success, 0.06), border: `1px solid ${alpha(t.success, 0.15)}`, borderRadius: t.radiusMd, padding: `${sp(3)}px ${sp(4)}px`, marginBottom: sp(4), display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                      <div style={{ background: alpha(t.success, 0.06), border: `1px solid ${alpha(t.success, 0.15)}`, borderRadius: t.radiusMd, padding: `${sp(2.5)}px ${sp(4)}px`, marginBottom: sp(4), display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                         <div style={{ display: "flex", alignItems: "center", gap: sp(2), fontSize: t.baseSize - 1, fontFamily: t.fontBody, color: t.textPrimary }}>
-                          <span style={{ color: t.success, fontWeight: 600 }}>✓</span> Design system exported successfully — 48 variables, 11 text styles
+                          <span style={{ color: t.success, fontWeight: 600 }}>✓</span> Design system exported — 94 variables, 11 text styles created
                         </div>
                         <span style={{ color: t.textTertiary, cursor: "pointer", fontSize: 12 }}>✕</span>
                       </div>
@@ -1296,82 +1484,112 @@ export default function DesignSystemStudio() {
                       {/* Metrics */}
                       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: sp(3), marginBottom: sp(5) }}>
                         {[
-                          { label: "Active projects", value: "24", sub: "3 this week", icon: "◆" },
-                          { label: "Components", value: "186", sub: "+12 this month", icon: "▦" },
-                          { label: "Team members", value: "8", sub: "2 pending invites", icon: "●" },
-                          { label: "Design tokens", value: "94", sub: "Last synced 2h ago", icon: "⬡" },
+                          { label: "Active projects", value: "24", spark: [12,15,14,18,22,19,24], color: t.primary },
+                          { label: "Components", value: "186", spark: [120,135,142,155,168,178,186], color: t.success },
+                          { label: "Team members", value: "8", spark: [4,4,5,6,6,7,8], color: t.info },
+                          { label: "Design tokens", value: "94", spark: [20,35,42,58,72,85,94], color: t.warning },
                         ].map((m, i) => (
-                          <div key={i} style={{ background: t.surface, borderRadius: t.radiusMd, padding: `${sp(4)}px ${sp(4)}px`, border: `1px solid ${t.border}` }}>
-                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: sp(3) }}>
+                          <div key={i} style={{ background: t.surface, borderRadius: t.radiusMd, padding: `${sp(4)}px`, border: `1px solid ${t.border}` }}>
+                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: sp(2) }}>
                               <span style={{ fontSize: t.baseSize - 2, color: t.textSecondary, fontFamily: t.fontBody }}>{m.label}</span>
-                              <div style={{ width: 28, height: 28, borderRadius: t.radiusSm, background: alpha(t.primary, 0.06), display: "flex", alignItems: "center", justifyContent: "center", color: t.primary, fontSize: 12 }}>{m.icon}</div>
+                              <Spark data={m.spark} color={m.color} w={56} h={20} />
                             </div>
-                            <div style={{ fontSize: ts(2), fontWeight: t.headingWeight, fontFamily: t.fontHeading, color: t.textPrimary, marginBottom: sp(1) }}>{m.value}</div>
-                            <div style={{ fontSize: t.baseSize - 3, color: t.textTertiary, fontFamily: t.fontBody }}>{m.sub}</div>
+                            <div style={{ fontSize: ts(2), fontWeight: t.headingWeight, fontFamily: t.fontHeading, color: t.textPrimary }}>{m.value}</div>
                           </div>
                         ))}
                       </div>
 
-                      {/* Two-column: Table + Activity */}
-                      <div style={{ display: "grid", gridTemplateColumns: "1fr 280px", gap: sp(4) }}>
-                        {/* Table */}
-                        <div style={{ background: t.surface, borderRadius: t.radiusMd, border: `1px solid ${t.border}`, overflow: "hidden" }}>
-                          <div style={{ padding: `${sp(3.5)}px ${sp(4)}px`, borderBottom: `1px solid ${t.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                            <span style={{ fontFamily: t.fontHeading, fontWeight: t.headingWeight, fontSize: t.baseSize, color: t.textPrimary }}>Recent projects</span>
-                            <Btn label="View all" ghost small />
+                      {/* Chart + Activity */}
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr 300px", gap: sp(4), marginBottom: sp(4) }}>
+                        {/* Chart */}
+                        <div style={{ background: t.surface, borderRadius: t.radiusMd, border: `1px solid ${t.border}`, padding: sp(4) }}>
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: sp(4) }}>
+                            <span style={{ fontFamily: t.fontHeading, fontWeight: t.headingWeight, fontSize: t.baseSize, color: t.textPrimary }}>Weekly activity</span>
+                            <div style={{ display: "flex", gap: sp(2) }}>
+                              {["Components", "Tokens"].map((l, i) => (
+                                <div key={l} style={{ display: "flex", alignItems: "center", gap: 4, fontSize: t.baseSize - 3, color: t.textTertiary, fontFamily: t.fontBody }}>
+                                  <div style={{ width: 8, height: 8, borderRadius: 2, background: i === 0 ? t.primary : alpha(t.primary, 0.2) }} />{l}
+                                </div>
+                              ))}
+                            </div>
                           </div>
-                          <table style={{ width: "100%", borderCollapse: "collapse", fontFamily: t.fontBody, fontSize: t.baseSize - 2 }}>
-                            <thead><tr style={{ background: t.surfaceSecondary }}>
-                              {["Project", "Owner", "Updated", "Status"].map(h => (
-                                <th key={h} style={{ textAlign: "left", padding: `${sp(2.5)}px ${sp(4)}px`, fontWeight: 600, color: t.textSecondary, fontSize: t.baseSize - 3, borderBottom: `1px solid ${t.border}` }}>{h}</th>
-                              ))}
-                            </tr></thead>
-                            <tbody>
-                              {[
-                                { name: "Brand redesign", owner: "AC", color: "#7C3AED", updated: "2 hours ago", status: "Active", sc: t.success },
-                                { name: "Mobile app v3", owner: "JL", color: "#2563EB", updated: "Yesterday", status: "Review", sc: t.warning },
-                                { name: "Marketing site", owner: "SP", color: "#B45309", updated: "3 days ago", status: "Active", sc: t.success },
-                                { name: "Dashboard MVP", owner: "MK", color: "#059669", updated: "1 week ago", status: "Draft", sc: t.textTertiary },
-                              ].map((row, i) => (
-                                <tr key={i} style={{ borderBottom: i < 3 ? `1px solid ${t.border}` : "none" }}>
-                                  <td style={{ padding: `${sp(3)}px ${sp(4)}px` }}>
-                                    <div style={{ display: "flex", alignItems: "center", gap: sp(2) }}>
-                                      <div style={{ width: 8, height: 8, borderRadius: 2, background: row.color, flexShrink: 0 }} />
-                                      <span style={{ fontWeight: 500, color: t.textPrimary }}>{row.name}</span>
-                                    </div>
-                                  </td>
-                                  <td style={{ padding: `${sp(3)}px ${sp(4)}px` }}><Avatar initials={row.owner} size={24} color={row.color} /></td>
-                                  <td style={{ padding: `${sp(3)}px ${sp(4)}px`, color: t.textTertiary }}>{row.updated}</td>
-                                  <td style={{ padding: `${sp(3)}px ${sp(4)}px` }}>
-                                    <span style={{ fontSize: t.baseSize - 3, padding: `${sp(0.5)}px ${sp(2)}px`, borderRadius: t.radiusFull, background: alpha(row.sc, 0.08), color: row.sc, fontWeight: 500 }}>{row.status}</span>
-                                  </td>
-                                </tr>
-                              ))}
-                            </tbody>
-                          </table>
+                          <BarChart data={[{l:"Mon",v:8},{l:"Tue",v:14,highlight:true},{l:"Wed",v:11},{l:"Thu",v:18,highlight:true},{l:"Fri",v:15,highlight:true},{l:"Sat",v:6},{l:"Sun",v:3}]} color={t.primary} h={140} />
                         </div>
 
                         {/* Activity */}
                         <div style={{ background: t.surface, borderRadius: t.radiusMd, border: `1px solid ${t.border}`, overflow: "hidden" }}>
-                          <div style={{ padding: `${sp(3.5)}px ${sp(4)}px`, borderBottom: `1px solid ${t.border}` }}>
+                          <div style={{ padding: `${sp(3.5)}px ${sp(4)}px`, borderBottom: `1px solid ${t.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                             <span style={{ fontFamily: t.fontHeading, fontWeight: t.headingWeight, fontSize: t.baseSize, color: t.textPrimary }}>Activity</span>
+                            <span style={{ fontSize: t.baseSize - 3, color: t.primary, fontFamily: t.fontBody, cursor: "pointer", fontWeight: 500 }}>View all</span>
                           </div>
                           {[
-                            { user: "AC", action: "exported tokens to Figma", time: "2m ago" },
-                            { user: "JL", action: "added 3 components", time: "1h ago" },
-                            { user: "SP", action: "updated color palette", time: "3h ago" },
-                            { user: "QR", action: "created new project", time: "5h ago" },
-                            { user: "MK", action: "ran design audit", time: "1d ago" },
+                            { user: "AC", action: "exported tokens to Figma", time: "2m", color: "#7C3AED" },
+                            { user: "JL", action: "added Button variants", time: "18m", color: "#2563EB" },
+                            { user: "SP", action: "updated color palette", time: "1h", color: "#B45309" },
+                            { user: "QR", action: "created project brief", time: "3h", color: "#059669" },
+                            { user: "MK", action: "ran accessibility audit", time: "5h", color: "#DC2626" },
                           ].map((a, i) => (
-                            <div key={i} style={{ padding: `${sp(3)}px ${sp(4)}px`, borderBottom: i < 4 ? `1px solid ${t.border}` : "none", display: "flex", gap: sp(2.5), alignItems: "flex-start" }}>
-                              <Avatar initials={a.user} size={24} />
-                              <div>
-                                <div style={{ fontSize: t.baseSize - 2, color: t.textPrimary, fontFamily: t.fontBody, lineHeight: 1.4 }}><span style={{ fontWeight: 600 }}>{a.user}</span> {a.action}</div>
-                                <div style={{ fontSize: t.baseSize - 3, color: t.textTertiary, fontFamily: t.fontBody }}>{a.time}</div>
+                            <div key={i} style={{ padding: `${sp(2.5)}px ${sp(4)}px`, borderBottom: i < 4 ? `1px solid ${t.border}` : "none", display: "flex", gap: sp(2.5), alignItems: "center" }}>
+                              <Av initials={a.user} size={26} color={a.color} />
+                              <div style={{ flex: 1, minWidth: 0 }}>
+                                <div style={{ fontSize: t.baseSize - 2, color: t.textPrimary, fontFamily: t.fontBody, lineHeight: 1.3, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}><span style={{ fontWeight: 600 }}>{a.user}</span> {a.action}</div>
                               </div>
+                              <span style={{ fontSize: t.baseSize - 3, color: t.textTertiary, fontFamily: t.fontMono, flexShrink: 0 }}>{a.time}</span>
                             </div>
                           ))}
                         </div>
+                      </div>
+
+                      {/* Table */}
+                      <div style={{ background: t.surface, borderRadius: t.radiusMd, border: `1px solid ${t.border}`, overflow: "hidden" }}>
+                        <div style={{ padding: `${sp(3.5)}px ${sp(4)}px`, borderBottom: `1px solid ${t.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                          <span style={{ fontFamily: t.fontHeading, fontWeight: t.headingWeight, fontSize: t.baseSize, color: t.textPrimary }}>Projects</span>
+                          <div style={{ display: "flex", gap: sp(2), alignItems: "center" }}>
+                            <div style={{ padding: `${sp(1)}px ${sp(2.5)}px`, borderRadius: t.radiusMd, border: `1px solid ${t.border}`, fontSize: t.baseSize - 2, color: t.textTertiary, fontFamily: t.fontBody }}>Filter</div>
+                            <Btn label="View all" ghost small />
+                          </div>
+                        </div>
+                        <table style={{ width: "100%", borderCollapse: "collapse", fontFamily: t.fontBody, fontSize: t.baseSize - 2 }}>
+                          <thead><tr style={{ background: t.surfaceSecondary }}>
+                            {["Project", "Team", "Progress", "Updated", "Status"].map(h => (
+                              <th key={h} style={{ textAlign: "left", padding: `${sp(2.5)}px ${sp(4)}px`, fontWeight: 600, color: t.textSecondary, fontSize: t.baseSize - 3, borderBottom: `1px solid ${t.border}` }}>{h}</th>
+                            ))}
+                          </tr></thead>
+                          <tbody>
+                            {[
+                              { name: "Brand redesign", color: "#7C3AED", team: ["AC","JL"], progress: 68, updated: "2h ago", status: "Active", sc: t.success },
+                              { name: "Mobile app v3", color: "#2563EB", team: ["SP","MK","QR"], progress: 92, updated: "Yesterday", status: "Review", sc: t.warning },
+                              { name: "Marketing site", color: "#B45309", team: ["AC","SP"], progress: 35, updated: "3d ago", status: "Active", sc: t.success },
+                              { name: "Dashboard MVP", color: "#059669", team: ["QR"], progress: 12, updated: "1w ago", status: "Draft", sc: t.textTertiary },
+                            ].map((row, i) => (
+                              <tr key={i} style={{ borderBottom: i < 3 ? `1px solid ${t.border}` : "none" }}>
+                                <td style={{ padding: `${sp(3)}px ${sp(4)}px` }}>
+                                  <div style={{ display: "flex", alignItems: "center", gap: sp(2.5) }}>
+                                    <div style={{ width: 8, height: 8, borderRadius: 2, background: row.color, flexShrink: 0 }} />
+                                    <span style={{ fontWeight: 500, color: t.textPrimary }}>{row.name}</span>
+                                  </div>
+                                </td>
+                                <td style={{ padding: `${sp(3)}px ${sp(4)}px` }}>
+                                  <div style={{ display: "flex" }}>
+                                    {row.team.map((m, j) => <div key={j} style={{ width: 22, height: 22, borderRadius: "50%", background: alpha(row.color, 0.12), display: "flex", alignItems: "center", justifyContent: "center", fontSize: 7, fontWeight: 600, color: row.color, border: `2px solid ${t.surface}`, marginLeft: j > 0 ? -4 : 0 }}>{m}</div>)}
+                                  </div>
+                                </td>
+                                <td style={{ padding: `${sp(3)}px ${sp(4)}px` }}>
+                                  <div style={{ display: "flex", alignItems: "center", gap: sp(2) }}>
+                                    <div style={{ flex: 1, height: 4, borderRadius: 2, background: alpha(t.primary, 0.1), maxWidth: 80 }}>
+                                      <div style={{ height: 4, borderRadius: 2, background: row.sc, width: `${row.progress}%` }} />
+                                    </div>
+                                    <span style={{ fontSize: t.baseSize - 3, color: t.textTertiary, fontFamily: t.fontMono }}>{row.progress}%</span>
+                                  </div>
+                                </td>
+                                <td style={{ padding: `${sp(3)}px ${sp(4)}px`, color: t.textTertiary }}>{row.updated}</td>
+                                <td style={{ padding: `${sp(3)}px ${sp(4)}px` }}>
+                                  <span style={{ fontSize: t.baseSize - 3, padding: `${sp(0.5)}px ${sp(2)}px`, borderRadius: t.radiusFull, background: alpha(row.sc, 0.08), color: row.sc, fontWeight: 500 }}>{row.status}</span>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
                       </div>
                     </div>
                   </div>
@@ -1381,117 +1599,126 @@ export default function DesignSystemStudio() {
               {/* ── Mobile Preview ── */}
               {previewType === "mobile" && (
                 <div style={{ display: "flex", justifyContent: "center", padding: `${sp(2)}px 0` }}>
-                  <div style={{ width: 375, borderRadius: 40, border: `3px solid ${C.border}`, overflow: "hidden", boxShadow: "0 12px 48px rgba(0,0,0,0.1)" }}>
-                    {/* Status bar */}
-                    <div style={{ background: t.surface, padding: `${sp(2.5)}px ${sp(6)}px`, display: "flex", justifyContent: "space-between", fontSize: 12, fontWeight: 600, color: t.textPrimary, fontFamily: t.fontMono }}>
-                      <span>9:41</span>
-                      <div style={{ display: "flex", gap: 5, alignItems: "center", fontSize: 11 }}>
-                        <span>●●●●</span><span style={{ fontSize: 14 }}>▮</span>
-                      </div>
-                    </div>
-
-                    {/* Header */}
-                    <div style={{ background: t.surface, padding: `${sp(2)}px ${sp(5)}px ${sp(4)}px` }}>
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: sp(4) }}>
-                        <div>
-                          <div style={{ fontSize: t.baseSize - 1, color: t.textTertiary, fontFamily: t.fontBody }}>Good morning, Quin</div>
-                          <div style={{ fontFamily: t.fontHeading, fontWeight: t.headingWeight, fontSize: ts(2), color: t.textPrimary }}>My projects</div>
-                        </div>
-                        <div style={{ position: "relative" }}>
-                          <Avatar initials="QR" size={40} />
-                          <div style={{ position: "absolute", top: -2, right: -2, width: 12, height: 12, borderRadius: "50%", background: t.error, border: `2px solid ${t.surface}` }} />
+                  <div style={{ width: 390, borderRadius: 44, border: `3px solid #1A1A1A`, overflow: "hidden", boxShadow: "0 16px 64px rgba(0,0,0,0.12), 0 4px 16px rgba(0,0,0,0.06)", background: "#1A1A1A", padding: "8px" }}>
+                    <div style={{ borderRadius: 36, overflow: "hidden" }}>
+                      {/* Status bar */}
+                      <div style={{ background: t.surface, padding: `${sp(1.5)}px ${sp(6)}px ${sp(1)}px`, display: "flex", justifyContent: "space-between", fontSize: 13, fontWeight: 600, color: t.textPrimary, fontFamily: t.fontMono }}>
+                        <span>9:41</span>
+                        <div style={{ position: "absolute", left: "50%", transform: "translateX(-50%)", width: 80, height: 24, borderRadius: 12, background: "#1A1A1A", marginTop: -2 }} />
+                        <div style={{ display: "flex", gap: 5, alignItems: "center", fontSize: 12 }}>
+                          <span>●●●●</span><span style={{ fontSize: 15 }}>▮</span>
                         </div>
                       </div>
-                      {/* Search */}
-                      <div style={{ background: t.surfaceSecondary, borderRadius: t.radiusMd, padding: `${sp(2.5)}px ${sp(3.5)}px`, display: "flex", alignItems: "center", gap: sp(2) }}>
-                        <span style={{ fontSize: 14, color: t.textTertiary }}>◎</span>
-                        <span style={{ fontSize: t.baseSize - 1, color: t.textTertiary, fontFamily: t.fontBody }}>Search projects, components...</span>
-                      </div>
-                    </div>
 
-                    {/* Quick stats */}
-                    <div style={{ background: t.surface, padding: `0 ${sp(5)}px ${sp(4)}px`, display: "flex", gap: sp(2) }}>
-                      {[
-                        { label: "Active", count: "6", color: t.primary },
-                        { label: "Review", count: "2", color: t.warning },
-                        { label: "Done", count: "12", color: t.success },
-                      ].map((s, i) => (
-                        <div key={i} style={{ flex: 1, padding: `${sp(2.5)}px ${sp(3)}px`, borderRadius: t.radiusMd, background: alpha(s.color, 0.06), textAlign: "center" }}>
-                          <div style={{ fontSize: ts(1), fontWeight: t.headingWeight, color: s.color, fontFamily: t.fontHeading }}>{s.count}</div>
-                          <div style={{ fontSize: t.baseSize - 3, color: t.textSecondary, fontFamily: t.fontBody }}>{s.label}</div>
+                      {/* Header */}
+                      <div style={{ background: t.surface, padding: `${sp(2)}px ${sp(5)}px ${sp(4)}px` }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: sp(4) }}>
+                          <div>
+                            <div style={{ fontSize: t.baseSize - 1, color: t.textTertiary, fontFamily: t.fontBody }}>Good morning, Quin</div>
+                            <div style={{ fontFamily: t.fontHeading, fontWeight: t.headingWeight, fontSize: ts(3), color: t.textPrimary }}>Projects</div>
+                          </div>
+                          <div style={{ position: "relative" }}>
+                            <Av initials="QR" size={44} />
+                            <div style={{ position: "absolute", top: -1, right: -1, width: 14, height: 14, borderRadius: "50%", background: t.error, border: `2.5px solid ${t.surface}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 8, fontWeight: 700, color: "#fff" }}>3</div>
+                          </div>
                         </div>
-                      ))}
-                    </div>
+                        {/* Search */}
+                        <div style={{ background: t.surfaceSecondary, borderRadius: t.radiusMd, padding: `${sp(2.5)}px ${sp(3.5)}px`, display: "flex", alignItems: "center", gap: sp(2.5) }}>
+                          <span style={{ fontSize: 15, color: t.textTertiary }}>◎</span>
+                          <span style={{ fontSize: t.baseSize - 1, color: t.textTertiary, fontFamily: t.fontBody }}>Search projects, people...</span>
+                        </div>
+                      </div>
 
-                    {/* Section label */}
-                    <div style={{ background: t.surfaceSecondary, padding: `${sp(3)}px ${sp(5)}px ${sp(2)}px` }}>
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                        <span style={{ fontSize: t.baseSize - 2, fontWeight: 600, color: t.textSecondary, fontFamily: t.fontBody }}>Recent</span>
+                      {/* Quick stats */}
+                      <div style={{ background: t.surface, padding: `${sp(1)}px ${sp(5)}px ${sp(4)}px`, display: "flex", gap: sp(2.5) }}>
+                        {[
+                          { label: "Active", count: "6", color: t.primary },
+                          { label: "Review", count: "2", color: t.warning },
+                          { label: "Complete", count: "12", color: t.success },
+                        ].map((s, i) => (
+                          <div key={i} style={{ flex: 1, padding: `${sp(3)}px ${sp(3)}px`, borderRadius: t.radiusMd, background: alpha(s.color, 0.06), border: `1px solid ${alpha(s.color, 0.1)}` }}>
+                            <div style={{ fontSize: ts(1), fontWeight: t.headingWeight, color: s.color, fontFamily: t.fontHeading, marginBottom: 2 }}>{s.count}</div>
+                            <div style={{ fontSize: t.baseSize - 2, color: t.textSecondary, fontFamily: t.fontBody }}>{s.label}</div>
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Section header */}
+                      <div style={{ background: t.surfaceSecondary, padding: `${sp(3.5)}px ${sp(5)}px ${sp(2)}px`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                        <span style={{ fontSize: t.baseSize - 1, fontWeight: 600, color: t.textPrimary, fontFamily: t.fontBody }}>Recent projects</span>
                         <span style={{ fontSize: t.baseSize - 2, color: t.primary, fontWeight: 500, fontFamily: t.fontBody }}>See all</span>
                       </div>
-                    </div>
 
-                    {/* Project cards */}
-                    <div style={{ background: t.surfaceSecondary, padding: `0 ${sp(5)}px` }}>
-                      {[
-                        { name: "Brand redesign", desc: "Visual identity refresh for Q3 launch", tag: "Active", tagColor: t.primary, initials: "BR", progress: 68, members: ["AC", "JL"] },
-                        { name: "Mobile app v3", desc: "New onboarding flow + dark mode", tag: "Review", tagColor: t.warning, initials: "MA", progress: 92, members: ["SP", "MK", "QR"] },
-                        { name: "Design system", desc: "Token architecture + component library", tag: "Active", tagColor: t.primary, initials: "DS", progress: 45, members: ["QR"] },
-                      ].map((item, i) => (
-                        <div key={i} style={{ background: t.surface, borderRadius: t.radiusLg, padding: sp(4), marginBottom: sp(3), border: `1px solid ${t.border}` }}>
-                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: sp(2) }}>
-                            <div style={{ display: "flex", gap: sp(3), alignItems: "center" }}>
-                              <div style={{ width: 40, height: 40, borderRadius: t.radiusMd, background: alpha(item.tagColor, 0.1), display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 700, color: item.tagColor, fontFamily: t.fontBody }}>{item.initials}</div>
-                              <div>
-                                <div style={{ fontSize: t.baseSize, fontWeight: 600, color: t.textPrimary, fontFamily: t.fontBody }}>{item.name}</div>
-                                <div style={{ fontSize: t.baseSize - 2, color: t.textSecondary, fontFamily: t.fontBody }}>{item.desc}</div>
+                      {/* Project cards */}
+                      <div style={{ background: t.surfaceSecondary, padding: `0 ${sp(5)}px` }}>
+                        {[
+                          { name: "Brand redesign", desc: "Visual identity refresh for Q3 launch with updated typography and color palette", tag: "Active", tagColor: t.primary, progress: 68, members: ["AC", "JL", "SP"], updated: "2h ago", cover: true },
+                          { name: "Mobile app v3", desc: "New onboarding flow, dark mode support, and performance improvements", tag: "Review", tagColor: t.warning, progress: 92, members: ["SP", "MK", "QR", "AC"], updated: "Yesterday", cover: true },
+                          { name: "Design system", desc: "Token architecture and component library — 24 components across 7 categories", tag: "Active", tagColor: t.primary, progress: 45, members: ["QR", "JL"], updated: "3 days ago", cover: false },
+                        ].map((item, i) => (
+                          <div key={i} style={{ background: t.surface, borderRadius: t.radiusLg, marginBottom: sp(3), border: `1px solid ${t.border}`, overflow: "hidden" }}>
+                            {/* Cover image */}
+                            {item.cover && (
+                              <div style={{ height: 100, background: `linear-gradient(135deg, ${alpha(item.tagColor, 0.15)}, ${alpha(t.accent, 0.1)})`, position: "relative" }}>
+                                {/* Decorative elements */}
+                                <div style={{ position: "absolute", top: 16, left: 16, width: 48, height: 48, borderRadius: t.radiusMd, background: alpha(item.tagColor, 0.2), border: `1px solid ${alpha(item.tagColor, 0.15)}` }} />
+                                <div style={{ position: "absolute", top: 24, left: 48, width: 32, height: 32, borderRadius: "50%", background: alpha(item.tagColor, 0.15) }} />
+                                <div style={{ position: "absolute", bottom: 12, right: 16, display: "flex", gap: 4 }}>
+                                  {[40, 60, 30].map((w, j) => <div key={j} style={{ width: w, height: 6, borderRadius: 3, background: alpha(item.tagColor, 0.2) }} />)}
+                                </div>
+                              </div>
+                            )}
+                            <div style={{ padding: sp(4) }}>
+                              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: sp(1.5) }}>
+                                <div style={{ fontSize: t.baseSize + 1, fontWeight: 600, color: t.textPrimary, fontFamily: t.fontBody }}>{item.name}</div>
+                                <span style={{ fontSize: t.baseSize - 3, padding: `${sp(0.5)}px ${sp(2)}px`, borderRadius: t.radiusFull, background: alpha(item.tagColor, 0.08), color: item.tagColor, fontWeight: 500, fontFamily: t.fontBody, flexShrink: 0, marginLeft: sp(2) }}>{item.tag}</span>
+                              </div>
+                              <div style={{ fontSize: t.baseSize - 2, color: t.textSecondary, fontFamily: t.fontBody, lineHeight: 1.5, marginBottom: sp(3) }}>{item.desc}</div>
+                              {/* Progress */}
+                              <div style={{ display: "flex", alignItems: "center", gap: sp(3), marginBottom: sp(3) }}>
+                                <div style={{ flex: 1, height: 5, borderRadius: 3, background: alpha(t.primary, 0.08) }}>
+                                  <div style={{ height: 5, borderRadius: 3, background: item.tagColor, width: `${item.progress}%` }} />
+                                </div>
+                                <span style={{ fontSize: t.baseSize - 3, color: t.textTertiary, fontFamily: t.fontMono, fontWeight: 500 }}>{item.progress}%</span>
+                              </div>
+                              {/* Footer */}
+                              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                                <div style={{ display: "flex" }}>
+                                  {item.members.map((m, j) => (
+                                    <div key={j} style={{ width: 26, height: 26, borderRadius: "50%", background: alpha(t.primary, 0.12), display: "flex", alignItems: "center", justifyContent: "center", fontSize: 9, fontWeight: 600, color: t.primary, fontFamily: t.fontBody, border: `2px solid ${t.surface}`, marginLeft: j > 0 ? -6 : 0 }}>{m}</div>
+                                  ))}
+                                </div>
+                                <span style={{ fontSize: t.baseSize - 3, color: t.textTertiary, fontFamily: t.fontBody }}>{item.updated}</span>
                               </div>
                             </div>
-                            <span style={{ fontSize: t.baseSize - 3, padding: `${sp(0.5)}px ${sp(2)}px`, borderRadius: t.radiusFull, background: alpha(item.tagColor, 0.08), color: item.tagColor, fontWeight: 500, fontFamily: t.fontBody, flexShrink: 0 }}>{item.tag}</span>
                           </div>
-                          {/* Progress bar */}
-                          <div style={{ marginTop: sp(3), display: "flex", alignItems: "center", gap: sp(3) }}>
-                            <div style={{ flex: 1, height: 4, borderRadius: 2, background: alpha(t.primary, 0.1) }}>
-                              <div style={{ height: 4, borderRadius: 2, background: item.tagColor, width: `${item.progress}%` }} />
-                            </div>
-                            <span style={{ fontSize: t.baseSize - 3, color: t.textTertiary, fontFamily: t.fontMono }}>{item.progress}%</span>
+                        ))}
+                      </div>
+
+                      {/* FAB */}
+                      <div style={{ background: t.surfaceSecondary, padding: `0 ${sp(5)}px ${sp(3)}px`, display: "flex", justifyContent: "flex-end" }}>
+                        <div style={{ width: 56, height: 56, borderRadius: t.radiusLg > 16 ? t.radiusLg : 16, background: t.primary, display: "flex", alignItems: "center", justifyContent: "center", color: contrastOn(t.primary), fontSize: 26, fontWeight: 300, boxShadow: t.shadowLg, cursor: "pointer" }}>+</div>
+                      </div>
+
+                      {/* Bottom nav */}
+                      <div style={{ background: t.surface, borderTop: `1px solid ${t.border}`, padding: `${sp(2.5)}px 0 ${sp(1.5)}px`, display: "flex", justifyContent: "space-around" }}>
+                        {[
+                          { icon: "◆", label: "Home", active: true },
+                          { icon: "◎", label: "Explore" },
+                          { icon: "▤", label: "Library" },
+                          { icon: "●", label: "Profile" },
+                        ].map((nav, i) => (
+                          <div key={i} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 3, cursor: "pointer", padding: `0 ${sp(3)}px` }}>
+                            <span style={{ fontSize: 20, color: nav.active ? t.primary : t.textTertiary }}>{nav.icon}</span>
+                            <span style={{ fontSize: 10, fontFamily: t.fontBody, fontWeight: nav.active ? 600 : 400, color: nav.active ? t.primary : t.textTertiary }}>{nav.label}</span>
                           </div>
-                          {/* Members */}
-                          <div style={{ marginTop: sp(3), display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                            <div style={{ display: "flex" }}>
-                              {item.members.map((m, j) => (
-                                <div key={j} style={{ width: 24, height: 24, borderRadius: "50%", background: alpha(t.primary, 0.12), display: "flex", alignItems: "center", justifyContent: "center", fontSize: 8, fontWeight: 600, color: t.primary, fontFamily: t.fontBody, border: `2px solid ${t.surface}`, marginLeft: j > 0 ? -6 : 0 }}>{m}</div>
-                              ))}
-                            </div>
-                            <span style={{ fontSize: t.baseSize - 3, color: t.textTertiary, fontFamily: t.fontBody }}>Updated 2h ago</span>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
+                        ))}
+                      </div>
 
-                    {/* FAB */}
-                    <div style={{ background: t.surfaceSecondary, padding: `0 ${sp(5)}px ${sp(3)}px`, display: "flex", justifyContent: "flex-end" }}>
-                      <div style={{ width: 52, height: 52, borderRadius: t.radiusLg > 16 ? t.radiusLg : 16, background: t.primary, display: "flex", alignItems: "center", justifyContent: "center", color: contrastOn(t.primary), fontSize: 24, fontWeight: 300, boxShadow: t.shadowLg, cursor: "pointer" }}>+</div>
-                    </div>
-
-                    {/* Bottom nav */}
-                    <div style={{ background: t.surface, borderTop: `1px solid ${t.border}`, padding: `${sp(2.5)}px 0 ${sp(1)}px`, display: "flex", justifyContent: "space-around" }}>
-                      {[
-                        { icon: "◆", label: "Home", active: true },
-                        { icon: "◎", label: "Explore" },
-                        { icon: "▤", label: "Library" },
-                        { icon: "●", label: "Profile" },
-                      ].map((nav, i) => (
-                        <div key={i} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 3, cursor: "pointer", padding: `0 ${sp(3)}px` }}>
-                          <span style={{ fontSize: 18, color: nav.active ? t.primary : t.textTertiary }}>{nav.icon}</span>
-                          <span style={{ fontSize: 10, fontFamily: t.fontBody, fontWeight: nav.active ? 600 : 400, color: nav.active ? t.primary : t.textTertiary }}>{nav.label}</span>
-                        </div>
-                      ))}
-                    </div>
-
-                    {/* Home indicator */}
-                    <div style={{ background: t.surface, padding: `${sp(2)}px 0 ${sp(2.5)}px`, display: "flex", justifyContent: "center" }}>
-                      <div style={{ width: 120, height: 4, borderRadius: 2, background: t.textPrimary, opacity: 0.15 }} />
+                      {/* Home indicator */}
+                      <div style={{ background: t.surface, padding: `${sp(1.5)}px 0 ${sp(2.5)}px`, display: "flex", justifyContent: "center" }}>
+                        <div style={{ width: 130, height: 4, borderRadius: 2, background: t.textPrimary, opacity: 0.15 }} />
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -1500,7 +1727,7 @@ export default function DesignSystemStudio() {
           );
         })()}
 
-                {/* ─── EXPORT ─── */}
+                        {/* ─── EXPORT ─── */}
         {section === "export" && (
           <div>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
