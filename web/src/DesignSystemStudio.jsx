@@ -892,56 +892,8 @@ export default function DesignSystemStudio() {
         {/* ─── OVERVIEW ─── */}
         {section === "overview" && (
           <div style={{ margin: "-24px -24px -48px", background: "#0F0F0F", padding: "48px 48px 56px", minHeight: "calc(100vh - 120px)" }}>
-            {/* Block 1 — Hero with illustration */}
+            {/* Block 1 — Hero */}
             <div style={{ textAlign: "center", marginBottom: 40 }}>
-              {/* Design System illustration */}
-              <div style={{ margin: "0 auto 24px", width: 280, height: 120, position: "relative" }}>
-                <svg width="280" height="120" viewBox="0 0 280 120" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  {/* Token dots — reference layer */}
-                  <circle cx="40" cy="30" r="10" fill="#404040" stroke="#555555" strokeWidth="1"/>
-                  <circle cx="65" cy="30" r="10" fill="#404040" stroke="#555555" strokeWidth="1"/>
-                  <circle cx="90" cy="30" r="10" fill="#404040" stroke="#555555" strokeWidth="1"/>
-                  <circle cx="115" cy="30" r="10" fill="#555555" stroke="#666666" strokeWidth="1"/>
-                  <circle cx="140" cy="30" r="10" fill="#555555" stroke="#666666" strokeWidth="1"/>
-
-                  {/* Connecting lines */}
-                  <line x1="65" y1="42" x2="65" y2="55" stroke="#444444" strokeWidth="1" strokeDasharray="2 2"/>
-                  <line x1="115" y1="42" x2="115" y2="55" stroke="#444444" strokeWidth="1" strokeDasharray="2 2"/>
-
-                  {/* Component shapes — system layer */}
-                  <rect x="30" y="58" rx="4" ry="4" width="70" height="24" fill="none" stroke="#555555" strokeWidth="1.5"/>
-                  <text x="65" y="74" textAnchor="middle" fill="#999999" fontSize="9" fontFamily="JetBrains Mono, monospace">Button</text>
-
-                  <rect x="110" y="58" rx="8" ry="8" width="60" height="24" fill="none" stroke="#555555" strokeWidth="1"/>
-                  <text x="140" y="74" textAnchor="middle" fill="#999999" fontSize="9" fontFamily="JetBrains Mono, monospace">Input</text>
-
-                  {/* Card shape */}
-                  <rect x="182" y="20" rx="6" ry="6" width="68" height="62" fill="#333333" stroke="#444444" strokeWidth="1"/>
-                  <rect x="190" y="28" rx="3" ry="3" width="52" height="6" fill="#404040"/>
-                  <rect x="190" y="40" rx="2" ry="2" width="44" height="4" fill="#3A3A3A"/>
-                  <rect x="190" y="48" rx="2" ry="2" width="36" height="4" fill="#3A3A3A"/>
-                  <rect x="190" y="60" rx="3" ry="3" width="28" height="14" fill="#404040" stroke="#555555" strokeWidth="1"/>
-                  <text x="204" y="70" textAnchor="middle" fill="#999999" fontSize="7" fontFamily="JetBrains Mono, monospace">CTA</text>
-
-                  {/* Type scale lines */}
-                  <rect x="30" y="96" rx="2" ry="2" width="80" height="5" fill="#404040"/>
-                  <rect x="30" y="105" rx="2" ry="2" width="60" height="3" fill="#3A3A3A"/>
-                  <rect x="30" y="112" rx="1" ry="1" width="45" height="3" fill="#3A3A3A"/>
-
-                  {/* Spacing grid dots */}
-                  <circle cx="140" cy="98" r="2" fill="#404040"/>
-                  <circle cx="152" cy="98" r="2" fill="#404040"/>
-                  <circle cx="164" cy="98" r="2" fill="#404040"/>
-                  <circle cx="140" cy="110" r="2" fill="#404040"/>
-                  <circle cx="152" cy="110" r="2" fill="#404040"/>
-                  <circle cx="164" cy="110" r="2" fill="#404040"/>
-
-                  {/* Arrow connecting layers */}
-                  <path d="M200 86 L200 96 L220 96" stroke="#555555" strokeWidth="1" fill="none" strokeDasharray="2 2"/>
-                  <rect x="222" y="90" rx="3" ry="3" width="48" height="16" fill="#333333" stroke="#444444" strokeWidth="1"/>
-                  <text x="246" y="101" textAnchor="middle" fill="#777777" fontSize="7" fontFamily="JetBrains Mono, monospace">--apdf-*</text>
-                </svg>
-              </div>
               <p style={{ fontSize: 16, color: "#999999", maxWidth: 520, margin: "0 auto", lineHeight: 1.6 }}>Build a complete design system or audit an existing one. Choose a theme, customize tokens, preview components, and export to Figma.</p>
             </div>
 
