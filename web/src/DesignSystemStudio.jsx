@@ -827,9 +827,9 @@ export default function DesignSystemStudio() {
     text: "#F8FAFC", dim: "#94A3B8", dimmer: "#64748B",
   };
   const C = {
-    bg: "#FFFFFF", bgSub: "#F8FAFC", card: "#FFFFFF",
-    border: "#E2E8F0", borderLight: "#F1F5F9",
-    text: "#0F172A", sub: "#475569", dim: "#94A3B8",
+    bg: "#FFFFFF", bgSub: "#FAFAFA", card: "#FFFFFF",
+    border: "#E5E5E5", borderLight: "#F5F5F5",
+    text: "#171717", sub: "#525252", dim: "#A3A3A3",
   };
 
   const fontsUrl = `https://fonts.googleapis.com/css2?family=${tokens.fonts}&display=swap`;
