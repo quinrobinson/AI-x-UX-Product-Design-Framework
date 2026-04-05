@@ -178,7 +178,7 @@ const COMPONENTS = [
   { id: "list", name: "List", cat: "Data Display", tier: 2 },
 ];
 
-const SECTIONS = ["themes", "tokens", "components", "preview", "export", "figma"];
+const SECTIONS = ["overview", "themes", "tokens", "components", "preview", "export", "figma"];
 
 // ── Token Editor Inputs ──────────────────────────────────────────────────────
 function ColorInput({ label, value, onChange }) {
@@ -805,7 +805,7 @@ function generateCSS(t) {
 export default function DesignSystemStudio() {
   const [activeTheme, setActiveTheme] = useState("precision");
   const [tokens, setTokens] = useState({ ...THEMES.precision });
-  const [section, setSection] = useState("themes");
+  const [section, setSection] = useState("overview");
   const [activeComponent, setActiveComponent] = useState("button");
   const [copied, setCopied] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
@@ -887,6 +887,78 @@ export default function DesignSystemStudio() {
 
       {/* Content */}
       <div style={{ maxWidth: 1200, margin: "0 auto", padding: "24px 24px 48px" }}>
+
+        {/* ─── OVERVIEW ─── */}
+        {section === "overview" && (
+          <div>
+            {/* Block 1 — What this is */}
+            <div style={{ textAlign: "center", marginBottom: 32 }}>
+              <h2 style={{ fontFamily: "'DM Serif Display', serif", fontSize: 28, fontWeight: 400, color: C.text, margin: "0 0 10px" }}>Design System Studio</h2>
+              <p style={{ fontSize: 15, color: C.sub, maxWidth: 540, margin: "0 auto", lineHeight: 1.6 }}>Build a complete design system or audit an existing one. Choose a theme, customize tokens, preview 24 components, and export to Figma — all in one tool.</p>
+            </div>
+
+            {/* Block 2 — Two path cards */}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 28 }}>
+              <div onClick={() => setSection("themes")} style={{ background: C.card, borderRadius: 10, padding: "24px", border: `1px solid ${C.border}`, cursor: "pointer", transition: "all 0.15s" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+                  <div style={{ width: 32, height: 32, borderRadius: 8, background: alpha(tokens.primary, 0.08), display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, color: tokens.primary }}>◆</div>
+                  <div style={{ fontSize: 16, fontWeight: 600, color: C.text }}>I need a design system</div>
+                </div>
+                <p style={{ fontSize: 13, color: C.sub, lineHeight: 1.5, margin: "0 0 14px" }}>Pick a theme, customize your tokens, preview components live, and export CSS or push directly to Figma.</p>
+                <span style={{ fontSize: 12, fontWeight: 500, color: tokens.primary, fontFamily: "'JetBrains Mono', monospace" }}>Start building →</span>
+              </div>
+              <div onClick={() => setSection("figma")} style={{ background: C.card, borderRadius: 10, padding: "24px", border: `1px solid ${C.border}`, cursor: "pointer", transition: "all 0.15s" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+                  <div style={{ width: 32, height: 32, borderRadius: 8, background: alpha(tokens.primary, 0.08), display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, color: tokens.primary }}>◎</div>
+                  <div style={{ fontSize: 16, fontWeight: 600, color: C.text }}>I already have one</div>
+                </div>
+                <p style={{ fontSize: 13, color: C.sub, lineHeight: 1.5, margin: "0 0 14px" }}>Connect your Figma file via MCP. Claude reads your variables, styles, and components — then scores them against industry standards.</p>
+                <span style={{ fontSize: 12, fontWeight: 500, color: tokens.primary, fontFamily: "'JetBrains Mono', monospace" }}>Run an audit →</span>
+              </div>
+            </div>
+
+            {/* Block 3 — How it works */}
+            <div style={{ marginBottom: 28 }}>
+              <div style={{ fontSize: 11, fontFamily: "'JetBrains Mono', monospace", color: C.dim, marginBottom: 12, textTransform: "uppercase", letterSpacing: 1.5 }}>How it works</div>
+              <div style={{ display: "flex", gap: 4, alignItems: "stretch" }}>
+                {[
+                  { tab: "themes", step: "1", label: "Themes", desc: "Choose a visual foundation" },
+                  { tab: "tokens", step: "2", label: "Tokens", desc: "Customize every detail" },
+                  { tab: "components", step: "3", label: "Components", desc: "Preview 24 components live" },
+                  { tab: "preview", step: "4", label: "Preview", desc: "See it in a real layout" },
+                  { tab: "export", step: "5", label: "Export", desc: "Copy CSS custom properties" },
+                  { tab: "figma", step: "6", label: "Figma", desc: "Push to Figma via MCP" },
+                ].map((s, i) => (
+                  <div key={s.tab} onClick={() => setSection(s.tab)} style={{ flex: 1, background: C.card, borderRadius: 8, padding: "14px 12px", border: `1px solid ${C.border}`, cursor: "pointer", textAlign: "center", transition: "all 0.15s", position: "relative" }}>
+                    <div style={{ fontSize: 10, fontWeight: 600, color: C.dim, fontFamily: "'JetBrains Mono', monospace", marginBottom: 6 }}>{s.step}</div>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: C.text, marginBottom: 4 }}>{s.label}</div>
+                    <div style={{ fontSize: 11, color: C.dim, lineHeight: 1.3 }}>{s.desc}</div>
+                    {i < 5 && <div style={{ position: "absolute", right: -5, top: "50%", transform: "translateY(-50%)", fontSize: 10, color: C.dim }}>›</div>}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Block 4 — What's included */}
+            <div>
+              <div style={{ fontSize: 11, fontFamily: "'JetBrains Mono', monospace", color: C.dim, marginBottom: 12, textTransform: "uppercase", letterSpacing: 1.5 }}>What's included</div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 10 }}>
+                {[
+                  { value: "6", label: "Themes", desc: "Precision, Enterprise, Warmth, Bold, Clinical, Soft" },
+                  { value: "24", label: "Components", desc: "14 core + 10 extended, all with full state coverage" },
+                  { value: "apdf-*", label: "Tokens", desc: "3-layer architecture: reference, system, component" },
+                  { value: "MCP", label: "Figma export", desc: "Variables, text styles, and component scaffolds" },
+                ].map((item, i) => (
+                  <div key={i} style={{ background: C.bgSub, borderRadius: 8, padding: "16px", border: `1px solid ${C.border}` }}>
+                    <div style={{ fontSize: 20, fontWeight: 600, color: C.text, fontFamily: "'JetBrains Mono', monospace", marginBottom: 4 }}>{item.value}</div>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: C.text, marginBottom: 4 }}>{item.label}</div>
+                    <div style={{ fontSize: 11, color: C.dim, lineHeight: 1.4 }}>{item.desc}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* ─── THEMES ─── */}
         {section === "themes" && (
