@@ -209,8 +209,8 @@ function PreviewButton({ t }) {
       {s("filled", "Filled", { background: t.primary, color: contrastOn(t.primary), border: "none" })}
       {s("outlined", "Outlined", { background: "transparent", color: t.primary, border: `1.5px solid ${t.primary}` })}
       {s("ghost", "Ghost", { background: "transparent", color: t.primary, border: "1.5px solid transparent" })}
-      {s("danger", "Danger", { background: t.error, color: "#fff", border: "none" })}
-      {s("disabled", "Disabled", { background: "#E5E7EB", color: "#9CA3AF", border: "none", cursor: "not-allowed", opacity: 0.7 })}
+      {s("danger", "Danger", { background: t.error, color: contrastOn(t.error), border: "none" })}
+      {s("disabled", "Disabled", { background: t.disabledBg || "#F3F4F6", color: t.disabledText || "#9CA3AF", border: `1px solid ${t.disabledBorder || "#E5E5E5"}`, cursor: "not-allowed", opacity: 0.7 })}
       {s("loading", "Loading…", { background: t.primary, color: contrastOn(t.primary), border: "none", opacity: 0.8 })}
     </div>
   );
@@ -228,11 +228,11 @@ function PreviewTextInput({ t }) {
         <label style={{ display: "block", fontSize: 12, fontWeight: 500, color: t.textSecondary, marginBottom: 4, fontFamily: t.fontBody }}>{label}</label>
         <div style={{
           border: `1.5px solid ${bc}`, borderRadius: t.radiusMd, padding: `${t.spaceUnit * 2}px ${t.spaceUnit * 3}px`,
-          fontSize: t.baseSize, fontFamily: t.fontBody, color: isDisabled ? "#aaa" : t.textPrimary,
-          background: isDisabled ? "#F3F4F6" : t.surface, transition: `border ${t.motionFast}`,
+          fontSize: t.baseSize, fontFamily: t.fontBody, color: isDisabled ? (t.disabledText || "#aaa") : t.textPrimary,
+          background: isDisabled ? (t.disabledBg || "#F3F4F6") : t.surface, transition: `border ${t.motionFast}`,
           boxShadow: isFocus ? `0 0 0 2px ${alpha(t.primary, 0.15)}` : "none",
         }}>
-          <span style={{ color: isDisabled ? "#bbb" : "#999" }}>{isDisabled ? "Disabled" : "Placeholder"}</span>
+          <span style={{ color: isDisabled ? (t.disabledText || "#bbb") : (t.placeholder || "#999") }}>{isDisabled ? "Disabled" : "Placeholder"}</span>
         </div>
         {isError && <div style={{ fontSize: 11, color: t.error, marginTop: 3, fontFamily: t.fontBody }}>This field is required</div>}
         {isSuccess && <div style={{ fontSize: 11, color: t.success, marginTop: 3, fontFamily: t.fontBody }}>Looks good</div>}
@@ -255,7 +255,7 @@ function PreviewSelect({ t }) {
             background: t.surface, display: "flex", justifyContent: "space-between", alignItems: "center",
             boxShadow: state === "Open" ? `0 0 0 2px ${alpha(t.primary, 0.15)}` : "none",
           }}>
-            <span style={{ color: "#999" }}>Select option</span>
+            <span style={{ color: t.placeholder || "#999" }}>Select option</span>
             <span style={{ color: t.textTertiary, fontSize: 10 }}>▼</span>
           </div>
           {state === "Open" && (
@@ -304,8 +304,8 @@ function PreviewRadio({ t }) {
 function PreviewToggle({ t }) {
   const tog = (label, on, disabled) => (
     <label style={{ display: "flex", alignItems: "center", gap: 10, cursor: disabled ? "not-allowed" : "pointer", opacity: disabled ? 0.5 : 1, fontFamily: t.fontBody, fontSize: t.baseSize - 1 }}>
-      <div style={{ width: 44, height: 24, borderRadius: 12, background: on ? t.primary : "#D1D5DB", position: "relative", transition: `background ${t.motionFast}` }}>
-        <div style={{ width: 20, height: 20, borderRadius: "50%", background: "#fff", position: "absolute", top: 2, left: on ? 22 : 2, transition: `left ${t.motionFast}`, boxShadow: "0 1px 3px rgba(0,0,0,0.15)" }} />
+      <div style={{ width: 44, height: 24, borderRadius: 12, background: on ? t.primary : (t.toggleOff || "#D1D5DB"), position: "relative", transition: `background ${t.motionFast}` }}>
+        <div style={{ width: 20, height: 20, borderRadius: "50%", background: t.toggleKnob || "#fff", position: "absolute", top: 2, left: on ? 22 : 2, transition: `left ${t.motionFast}`, boxShadow: "0 1px 3px rgba(0,0,0,0.15)" }} />
       </div>
       <span style={{ color: disabled ? t.textTertiary : t.textPrimary }}>{label}</span>
     </label>
@@ -372,7 +372,7 @@ function PreviewAlert({ t }) {
       <div style={{
         padding: `${t.spaceUnit * 3}px ${t.spaceUnit * 4}px`, borderRadius: t.radiusMd,
         background: alpha(c, 0.08), border: `1px solid ${alpha(c, 0.2)}`,
-        fontFamily: t.fontBody, fontSize: t.baseSize - 1, color: darken(c, 0.3),
+        fontFamily: t.fontBody, fontSize: t.baseSize - 1, color: t.textPrimary,
         display: "flex", alignItems: "flex-start", gap: 8,
       }}>
         <span style={{ fontWeight: 600, fontSize: 14, flexShrink: 0 }}>{severity === "info" ? "ℹ" : severity === "success" ? "✓" : severity === "warning" ? "⚠" : "✕"}</span>
@@ -391,7 +391,7 @@ function PreviewBadge({ t }) {
     <div style={{ display: "flex", flexWrap: "wrap", gap: 20, alignItems: "center", fontFamily: t.fontBody }}>
       {[
         { label: "3", bg: t.primary, color: contrastOn(t.primary) },
-        { label: "99+", bg: t.error, color: "#fff" },
+        { label: "99+", bg: t.error, color: contrastOn(t.error) },
         { label: "", bg: t.success, color: t.success, dot: true },
         { label: "New", bg: alpha(t.primary, 0.1), color: t.primary },
       ].map((b, i) => (
@@ -438,7 +438,7 @@ function PreviewAvatar({ t }) {
     <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
       <div style={{
         width: size, height: size, borderRadius: "50%",
-        background: type === "image" ? `linear-gradient(135deg, ${t.primary}, ${t.accent})` : alpha(t.primary, 0.1),
+        background: type === "image" ? `linear-gradient(135deg, ${t.primary}, ${t.accent})` : alpha(t.primary, 0.15),
         display: "flex", alignItems: "center", justifyContent: "center",
         fontSize: size * 0.4, fontWeight: 600, color: type === "image" ? contrastOn(t.primary) : t.primary,
         fontFamily: t.fontBody,
@@ -483,11 +483,11 @@ function PreviewTextarea({ t }) {
           <div style={{
             border: `1.5px solid ${state === "Focus" ? t.primary : t.border}`, borderRadius: t.radiusMd,
             padding: `${t.spaceUnit * 2}px ${t.spaceUnit * 3}px`, fontSize: t.baseSize, fontFamily: t.fontBody,
-            color: state === "Disabled" ? "#aaa" : t.textPrimary, background: state === "Disabled" ? "#F3F4F6" : t.surface,
+            color: state === "Disabled" ? (t.disabledText || "#aaa") : t.textPrimary, background: state === "Disabled" ? (t.disabledBg || "#F3F4F6") : t.surface,
             minHeight: 80, lineHeight: 1.5,
             boxShadow: state === "Focus" ? `0 0 0 2px ${alpha(t.primary, 0.15)}` : "none",
           }}>
-            <span style={{ color: state === "Disabled" ? "#bbb" : "#999" }}>Write something...</span>
+            <span style={{ color: state === "Disabled" ? (t.disabledText || "#bbb") : (t.placeholder || "#999") }}>Write something...</span>
           </div>
         </div>
       ))}
@@ -577,16 +577,16 @@ function PreviewPagination({ t }) {
   const pages = [1, 2, 3, "...", 12];
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-      <button style={{ padding: `${t.spaceUnit * 1.5}px ${t.spaceUnit * 2.5}px`, borderRadius: t.radiusMd, border: `1px solid ${t.border}`, background: t.surface, color: t.textTertiary, fontSize: t.baseSize - 2, cursor: "pointer", fontFamily: t.fontBody }}>Prev</button>
+      <button style={{ padding: `${t.spaceUnit * 1.5}px ${t.spaceUnit * 2.5}px`, borderRadius: t.radiusMd, border: `1px solid ${t.border}`, background: "transparent", color: t.textSecondary, fontSize: t.baseSize - 2, cursor: "pointer", fontFamily: t.fontBody }}>Prev</button>
       {pages.map((p, i) => (
         <button key={i} style={{
           width: 32, height: 32, borderRadius: t.radiusMd, border: p === 1 ? "none" : `1px solid ${t.border}`,
-          background: p === 1 ? t.primary : t.surface, color: p === 1 ? contrastOn(t.primary) : p === "..." ? t.textTertiary : t.textPrimary,
+          background: p === 1 ? t.primary : "transparent", color: p === 1 ? contrastOn(t.primary) : p === "..." ? t.textTertiary : t.textPrimary,
           fontSize: t.baseSize - 2, fontFamily: t.fontBody, fontWeight: p === 1 ? 600 : 400,
           cursor: p === "..." ? "default" : "pointer", display: "flex", alignItems: "center", justifyContent: "center",
         }}>{p}</button>
       ))}
-      <button style={{ padding: `${t.spaceUnit * 1.5}px ${t.spaceUnit * 2.5}px`, borderRadius: t.radiusMd, border: `1px solid ${t.border}`, background: t.surface, color: t.textPrimary, fontSize: t.baseSize - 2, cursor: "pointer", fontFamily: t.fontBody }}>Next</button>
+      <button style={{ padding: `${t.spaceUnit * 1.5}px ${t.spaceUnit * 2.5}px`, borderRadius: t.radiusMd, border: `1px solid ${t.border}`, background: "transparent", color: t.textSecondary, fontSize: t.baseSize - 2, cursor: "pointer", fontFamily: t.fontBody }}>Next</button>
     </div>
   );
 }
@@ -1049,8 +1049,8 @@ export default function DesignSystemStudio() {
                     {/* Dark mode toggle */}
                     <button onClick={() => setDarkMode(!darkMode)} style={{
                       display: "flex", alignItems: "center", gap: 6, padding: "5px 12px", borderRadius: 99,
-                      border: `1px solid ${C.border}`, background: darkMode ? "#1E293B" : C.bgSub,
-                      color: darkMode ? "#F1F5F9" : C.sub, fontSize: 11, cursor: "pointer",
+                      border: `1px solid ${C.border}`, background: darkMode ? "#111111" : C.bgSub,
+                      color: darkMode ? "#F5F5F5" : C.sub, fontSize: 11, cursor: "pointer",
                       fontFamily: "'JetBrains Mono', monospace", transition: "all 0.15s",
                     }}>
                       <span style={{ fontSize: 12 }}>{darkMode ? "◐" : "○"}</span>
@@ -1062,8 +1062,8 @@ export default function DesignSystemStudio() {
                   </div>
                 </div>
                 {/* Live preview on surface */}
-                <div style={{ background: darkMode ? "#1E293B" : tokens.surface, borderRadius: tokens.radiusLg, padding: 24, border: `1px solid ${darkMode ? "#334155" : tokens.border}`, transition: "all 0.2s" }}>
-                  {PreviewComp && <PreviewComp t={darkMode ? { ...tokens, surface: "#1E293B", surfaceSecondary: "#0F172A", textPrimary: "#F1F5F9", textSecondary: "#94A3B8", textTertiary: "#64748B", border: "#334155" } : tokens} />}
+                <div style={{ background: darkMode ? "#111111" : tokens.surface, borderRadius: tokens.radiusLg, padding: 24, border: `1px solid ${darkMode ? "#2A2A2A" : tokens.border}`, transition: "all 0.2s" }}>
+                  {PreviewComp && <PreviewComp t={darkMode ? { ...tokens, surface: "#111111", surfaceSecondary: "#1A1A1A", textPrimary: "#F5F5F5", textSecondary: "#A3A3A3", textTertiary: "#737373", border: "#2A2A2A", disabledBg: "#1A1A1A", disabledText: "#525252", disabledBorder: "#2A2A2A", placeholder: "#737373", toggleOff: "#404040", toggleKnob: "#E5E5E5" } : { ...tokens, disabledBg: "#F3F4F6", disabledText: "#9CA3AF", disabledBorder: "#E5E5E5", placeholder: "#9CA3AF", toggleOff: "#D1D5DB", toggleKnob: "#FFFFFF" }} />}
                 </div>
               </div>
 
