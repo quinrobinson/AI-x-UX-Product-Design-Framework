@@ -14,6 +14,8 @@ const T = {
   discoverBorder: "rgba(34,197,94,0.25)",
 };
 
+const ACCENT = T.discover;
+
 const STEPS = [
   { id: 1, label: "Setup",       short: "Product + question"     },
   { id: 2, label: "Competitors", short: "Build competitive set"  },
@@ -27,40 +29,6 @@ const TIERS = [
   { id: "2", label: "Tier 2", desc: "Indirect — same problem, different approach"  },
   { id: "3", label: "Tier 3", desc: "Aspirational — different category, relevant patterns" },
 ];
-
-// ─── API ──────────────────────────────────────────────────────────────────────
-async function callClaude(system, user, onChunk) {
-  const res = await fetch("/api/claude", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      model: "claude-haiku-4-5-20251001",
-      max_tokens: 1000,
-      stream: true,
-      tools: [{ type: "web_search_20250305", name: "web_search" }],
-      system,
-      messages: [{ role: "user", content: user }],
-    }),
-  });
-  if (!res.ok) { onChunk("⚠️ Error " + res.status + ". Check your API key and try again."); return ""; }
-  const reader = res.body.getReader();
-  const dec = new TextDecoder();
-  let full = "";
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    for (const line of dec.decode(value).split("\n").filter(l => l.startsWith("data: "))) {
-      try {
-        const j = JSON.parse(line.slice(6));
-        if (j.type === "content_block_delta" && j.delta?.text) {
-          full += j.delta.text;
-          onChunk(full);
-        }
-      } catch {}
-    }
-  }
-  return full;
-}
 
 // ─── Shared UI ────────────────────────────────────────────────────────────────
 function Label({ children, sub }) {
@@ -144,7 +112,7 @@ function CopyBtn({ text, label = "Copy", small = true }) {
   );
 }
 
-function OutputBlock({ content, streaming, maxH = 400 }) {
+function OutputBlock({ content, maxH = 400 }) {
   return (
     <div style={{
       background: T.surface, border: `1px solid ${T.border}`,
@@ -155,11 +123,6 @@ function OutputBlock({ content, streaming, maxH = 400 }) {
       maxHeight: maxH, overflowY: "auto",
     }}>
       {content || <span style={{ color: T.dim, fontStyle: "italic" }}>Output will appear here…</span>}
-      {streaming && <span style={{
-        display: "inline-block", width: 6, height: 14,
-        background: T.discover, marginLeft: 2,
-        animation: "blink 0.8s step-end infinite", verticalAlign: "middle",
-      }} />}
     </div>
   );
 }
@@ -241,22 +204,56 @@ function TierPill({ tier }) {
   );
 }
 
+function PromptPanel({ promptText, pastedResult, setPastedResult }) {
+  const [copied, setCopied] = useState(false);
+  if (!promptText) return null;
+  return (
+    <div style={{ background: T.surface, border: `1px solid ${T.border}`, borderRadius: 8, padding: "16px 18px", marginTop: 16 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+        <span style={{ fontSize: 11, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.08em", textTransform: "uppercase", color: ACCENT }}>
+          Prompt ready — copy and run in Claude
+        </span>
+        <div style={{ display: "flex", gap: 8 }}>
+          <button
+            onClick={() => { navigator.clipboard.writeText(promptText); setCopied(true); setTimeout(() => setCopied(false), 2000); }}
+            style={{ padding: "6px 14px", fontSize: 11, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.06em", textTransform: "uppercase", fontWeight: 600, cursor: "pointer", borderRadius: 6, border: `1.5px solid ${ACCENT}`, background: copied ? ACCENT : "transparent", color: copied ? "#000" : ACCENT, transition: "all 0.15s" }}
+          >{copied ? "✓ Copied" : "Copy Prompt"}</button>
+          <a href="https://claude.ai" target="_blank" rel="noopener noreferrer"
+            style={{ padding: "6px 14px", fontSize: 11, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.06em", textTransform: "uppercase", fontWeight: 600, cursor: "pointer", borderRadius: 6, border: `1.5px solid ${T.border}`, background: "transparent", color: T.muted, textDecoration: "none", transition: "all 0.15s" }}
+          >Open Claude.ai →</a>
+        </div>
+      </div>
+      <pre style={{ whiteSpace: "pre-wrap", fontSize: 12, lineHeight: 1.7, color: T.text, fontFamily: "'JetBrains Mono', monospace", background: T.card, border: `1px solid ${T.border}`, borderRadius: 6, padding: "12px 14px", maxHeight: 260, overflowY: "auto", margin: 0 }}>{promptText}</pre>
+      <div style={{ marginTop: 16 }}>
+        <div style={{ fontSize: 11, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.07em", textTransform: "uppercase", color: T.muted, marginBottom: 8 }}>Paste Claude's response here</div>
+        <textarea
+          value={pastedResult}
+          onChange={e => setPastedResult(e.target.value)}
+          placeholder="Run the prompt in Claude, then paste the result here to continue…"
+          rows={6}
+          style={{ width: "100%", boxSizing: "border-box", background: T.card, border: `1px solid ${T.border}`, borderRadius: 6, padding: "12px 14px", color: T.text, fontSize: 13, lineHeight: 1.6, fontFamily: "'DM Sans', sans-serif", resize: "vertical", outline: "none" }}
+          onFocus={e => e.target.style.borderColor = ACCENT}
+          onBlur={e => e.target.style.borderColor = T.border}
+        />
+      </div>
+    </div>
+  );
+}
+
 // ─── Main ─────────────────────────────────────────────────────────────────────
 export default function CompetitiveSnapshotBuilder() {
   const [step, setStep] = useState(1);
   const [completed, setCompleted] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [stream, setStream] = useState("");
 
   // Step 1 — Setup
   const [product, setProduct] = useState("");
   const [designQuestion, setDesignQuestion] = useState("");
-  const [focusArea, setFocusArea] = useState("all"); // "conventions" | "gaps" | "positioning" | "all"
+  const [focusArea, setFocusArea] = useState("all");
 
   // Step 2 — Competitors
   const [knownCompetitors, setKnownCompetitors] = useState("");
   const [suggestedSet, setSuggestedSet] = useState("");
-  const [competitors, setCompetitors] = useState([]); // [{ name, url, tier, notes }]
+  const [competitors, setCompetitors] = useState([]);
   const [newName, setNewName] = useState("");
   const [newUrl, setNewUrl] = useState("");
   const [newTier, setNewTier] = useState("1");
@@ -264,7 +261,7 @@ export default function CompetitiveSnapshotBuilder() {
 
   // Step 3 — Audit
   const [currentAuditIdx, setCurrentAuditIdx] = useState(0);
-  const [audits, setAudits] = useState({}); // { competitorName: auditText }
+  const [audits, setAudits] = useState({});
   const [currentAuditText, setCurrentAuditText] = useState("");
 
   // Step 4 — Synthesis
@@ -272,6 +269,10 @@ export default function CompetitiveSnapshotBuilder() {
 
   // Step 5 — Handoff
   const [handoff, setHandoff] = useState("");
+
+  // Shared prompt state
+  const [promptText, setPromptText] = useState("");
+  const [pastedResult, setPastedResult] = useState("");
 
   const markComplete = (id) => setCompleted(prev => [...new Set([...prev, id])]);
 
@@ -284,16 +285,14 @@ export default function CompetitiveSnapshotBuilder() {
   }
 
   // ── Step 2: Suggest competitive set ────────────────────────────────────────
-  async function handleSuggestSet() {
+  function handleSuggestSet() {
     if (!product.trim()) return;
-    setLoading(true); setStream("");
-    const result = await callClaude(
-      "You are a senior UX strategist with deep knowledge of product markets. Use web search to find real competitors. Be specific and accurate.",
-      `I'm designing: ${product}
+    const sys = "You are a senior UX strategist with deep knowledge of product markets. Suggest a specific and accurate competitive set based on the product description.";
+    const user = `I'm designing: ${product}
 My known competitors: ${knownCompetitors || "none listed yet"}
 Design focus: ${designQuestion || "UX conventions, feature gaps, and differentiation opportunities"}
 
-Search the web and suggest a competitive set of 6–8 products total across three tiers:
+Suggest a competitive set of 6–8 products total across three tiers:
 
 Tier 1 — Direct (same problem, same audience, similar solution) — suggest 3–4
 Tier 2 — Indirect (same problem, different approach or audience) — suggest 2
@@ -304,11 +303,14 @@ For each suggestion:
 - One sentence: why it belongs in this tier
 - One sentence: what's most useful to study about it
 
-Format as a clean numbered list grouped by tier. Be specific — no generic placeholder names.`,
-      setStream
-    );
-    setSuggestedSet(result);
-    setLoading(false);
+Format as a clean numbered list grouped by tier. Be specific — no generic placeholder names.`;
+    setPromptText(sys + "\n\n" + user);
+    setPastedResult("");
+  }
+
+  function acceptSuggestedSet() {
+    setSuggestedSet(pastedResult);
+    setPromptText(""); setPastedResult("");
   }
 
   function addCompetitor() {
@@ -336,25 +338,23 @@ Format as a clean numbered list grouped by tier. Be specific — no generic plac
   }
 
   // ── Step 3: Audit competitors ───────────────────────────────────────────────
-  async function handleAuditCompetitor() {
+  function handleAuditCompetitor() {
     const c = competitors[currentAuditIdx];
     if (!c) return;
-    setLoading(true); setStream(""); setCurrentAuditText("");
-
-    const result = await callClaude(
-      "You are a senior UX researcher auditing a competitor product. Use web search to pull real user sentiment from G2, app store reviews, Reddit, and product blogs. Be specific — cite actual complaints and praise. Never make up quotes.",
-      `Audit this competitor for a UX competitive analysis.
+    setCurrentAuditText("");
+    const sys = "You are a senior UX researcher auditing a competitor product. Draw on your knowledge of this product's UX, user sentiment, and market positioning. Be specific about real strengths and weaknesses.";
+    const user = `Audit this competitor for a UX competitive analysis.
 
 Product being designed: ${product}
 Design question: ${designQuestion || "UX conventions, feature gaps, positioning"}
 
 Competitor to audit:
 - Name: ${c.name}
-- URL: ${c.url || "search for it"}
+- URL: ${c.url || "not specified"}
 - Tier: ${c.tier} (${TIERS.find(t => t.id === c.tier)?.desc})
 - Notes: ${c.notes || "none"}
 
-Use web search to research this product thoroughly, then generate a structured audit:
+Generate a structured audit:
 
 ## Competitor Audit: ${c.name}
 ### Tier ${c.tier} | Audited: ${new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
@@ -375,26 +375,25 @@ Use web search to research this product thoroughly, then generate a structured a
 - [Second strength]
 
 ### Weaknesses
-- [Specific weakness — what users complain about, cite source]
-- [Second weakness with source]
+- [Specific weakness — what users complain about]
+- [Second weakness]
 
 ### Differentiator
 - [What only they do — what can't be easily copied]
 
 ### User Sentiment
-- Rating: [X/5 — source]
-- Top praise: [most common positive theme from real reviews]
-- Top complaints: [most common negative theme from real reviews]`,
-      setStream
-    );
-    setCurrentAuditText(result);
-    setLoading(false);
+- Rating: [X/5 — source if known]
+- Top praise: [most common positive theme]
+- Top complaints: [most common negative theme]`;
+    setPromptText(sys + "\n\n" + user);
+    setPastedResult("");
   }
 
   function acceptAudit() {
     const c = competitors[currentAuditIdx];
-    setAudits(prev => ({ ...prev, [c.name]: currentAuditText }));
-    setCurrentAuditText(""); setStream("");
+    setAudits(prev => ({ ...prev, [c.name]: pastedResult }));
+    setCurrentAuditText("");
+    setPromptText(""); setPastedResult("");
     if (currentAuditIdx < competitors.length - 1) {
       setCurrentAuditIdx(i => i + 1);
     } else {
@@ -404,9 +403,9 @@ Use web search to research this product thoroughly, then generate a structured a
   }
 
   function skipAudit() {
+    setPromptText(""); setPastedResult(""); setCurrentAuditText("");
     if (currentAuditIdx < competitors.length - 1) {
       setCurrentAuditIdx(i => i + 1);
-      setCurrentAuditText(""); setStream("");
     } else {
       markComplete(3);
       setStep(4);
@@ -414,16 +413,14 @@ Use web search to research this product thoroughly, then generate a structured a
   }
 
   // ── Step 4: Synthesize ──────────────────────────────────────────────────────
-  async function handleSynthesize() {
-    setLoading(true); setStream("");
+  function handleSynthesize() {
     const allAudits = competitors
       .filter(c => audits[c.name])
       .map(c => `### ${c.name} (Tier ${c.tier})\n${audits[c.name]}`)
       .join("\n\n---\n\n");
 
-    const result = await callClaude(
-      "You are a senior UX strategist synthesizing a competitive landscape. Be sharp and specific — no generic observations. Every claim must trace to a specific competitor.",
-      `Synthesize these ${competitors.length} competitor audits into a complete competitive landscape analysis.
+    const sys = "You are a senior UX strategist synthesizing a competitive landscape. Be sharp and specific — no generic observations. Every claim must trace to a specific competitor.";
+    const user = `Synthesize these ${competitors.length} competitor audits into a complete competitive landscape analysis.
 
 Product being designed: ${product}
 Design question: ${designQuestion || "UX conventions, feature gaps, positioning"}
@@ -476,21 +473,22 @@ Generate:
 [One sharp sentence — the clearest gap + the angle to own it]
 
 ## Positioning Signal for Define
-[1–2 sentences translating the competitive landscape into a problem statement direction]`,
-      setStream
-    );
-    setSynthesis(result);
-    setLoading(false);
+[1–2 sentences translating the competitive landscape into a problem statement direction]`;
+    setPromptText(sys + "\n\n" + user);
+    setPastedResult("");
+  }
+
+  function acceptSynthesis() {
+    setSynthesis(pastedResult);
+    setPromptText(""); setPastedResult("");
     markComplete(4);
     setStep(5);
   }
 
   // ── Step 5: Handoff ─────────────────────────────────────────────────────────
-  async function handleGenerateHandoff() {
-    setLoading(true); setStream("");
-    const result = await callClaude(
-      "You are a senior UX designer generating a structured phase handoff block. Extract real content from the analysis — no placeholders.",
-      `Generate a Discover → Define Phase Handoff Block from this competitive analysis.
+  function handleGenerateHandoff() {
+    const sys = "You are a senior UX designer generating a structured phase handoff block. Extract real content from the analysis — no placeholders.";
+    const user = `Generate a Discover → Define Phase Handoff Block from this competitive analysis.
 
 Product: ${product}
 Design question: ${designQuestion}
@@ -511,7 +509,7 @@ Use this exact structure:
 ### What we completed
 - Competitors audited: ${Object.keys(audits).length} of ${competitors.length}
 - Tiers covered: [list which tiers]
-- User sentiment sourced: Yes (web search)
+- User sentiment sourced: Yes
 
 ### What the next phase needs to know
 - Category state: [one sentence on market maturity]
@@ -541,11 +539,14 @@ Use this exact structure:
 - [Assumptions about the market that need validation]
 
 ---
-*Combine with Research Synthesis handoff when opening the Define phase.*`,
-      setStream
-    );
-    setHandoff(result);
-    setLoading(false);
+*Combine with Research Synthesis handoff when opening the Define phase.*`;
+    setPromptText(sys + "\n\n" + user);
+    setPastedResult("");
+  }
+
+  function acceptHandoff() {
+    setHandoff(pastedResult);
+    setPromptText(""); setPastedResult("");
     markComplete(5);
   }
 
@@ -558,7 +559,6 @@ Use this exact structure:
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;600;700&display=swap');
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
         :focus-visible { outline: 2px solid #999999; outline-offset: 2px; border-radius: 4px; }
         button:focus:not(:focus-visible) { outline: none; }
         ::-webkit-scrollbar { width: 4px; }
@@ -647,30 +647,36 @@ Use this exact structure:
                 <div>
                   <Label>Known competitors (optional — Claude will expand from here)</Label>
                   <Textarea value={knownCompetitors} onChange={setKnownCompetitors} rows={3}
-                    placeholder="e.g. Dovetail, Maze, UserZoom, Notion" disabled={loading} />
+                    placeholder="e.g. Dovetail, Maze, UserZoom, Notion" />
                 </div>
                 <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
                   <Btn variant="ghost" onClick={() => { markComplete(2); setStep(3); }}
                     disabled={competitors.length < 2}>
                     Skip suggestions
                   </Btn>
-                  <Btn onClick={handleSuggestSet} disabled={loading || !product.trim()}>
-                    {loading ? "Searching…" : "Suggest Competitive Set"}
+                  <Btn onClick={handleSuggestSet} disabled={!!promptText || !product.trim()}>
+                    Suggest Competitive Set
                   </Btn>
                 </div>
+                <PromptPanel promptText={promptText} pastedResult={pastedResult} setPastedResult={setPastedResult} />
+                {promptText && pastedResult.trim() && (
+                  <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
+                    <Btn variant="ghost" small onClick={() => { setPromptText(""); setPastedResult(""); }}>Cancel</Btn>
+                    <Btn small onClick={acceptSuggestedSet}>Use Suggestions</Btn>
+                  </div>
+                )}
               </div>
             )}
 
-            {(stream || suggestedSet) && !loading && (
+            {suggestedSet && (
               <div style={{ marginBottom: 24 }}>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
                   <Label sub>Suggested set — review and add the ones you want</Label>
                   <Btn small variant="ghost" onClick={() => setSuggestedSet("")}>Re-generate</Btn>
                 </div>
-                <OutputBlock content={suggestedSet} streaming={false} maxH={320} />
+                <OutputBlock content={suggestedSet} maxH={320} />
               </div>
             )}
-            {loading && <OutputBlock content={stream} streaming={true} maxH={320} />}
 
             {/* Tiers legend */}
             <div style={{ display: "flex", gap: 8, marginBottom: 16, flexWrap: "wrap" }}>
@@ -753,7 +759,7 @@ Use this exact structure:
         {step === 3 && currentCompetitor && (
           <div>
             <SectionHeader step={3} title={`Audit — ${currentCompetitor.name}`}
-              desc={`${currentAuditIdx + 1} of ${competitors.length} competitors. Claude uses web search to pull real user sentiment — strengths, weaknesses, and review themes.`} />
+              desc={`${currentAuditIdx + 1} of ${competitors.length} competitors. Generate a prompt to audit each competitor's UX patterns, strengths, and weaknesses.`} />
 
             {/* Progress */}
             <div style={{ display: "flex", gap: 6, marginBottom: 24, flexWrap: "wrap" }}>
@@ -782,27 +788,41 @@ Use this exact structure:
               {currentCompetitor.notes && <span style={{ fontSize: 11, color: T.muted }}>· {currentCompetitor.notes}</span>}
             </div>
 
-            <div style={{ display: "flex", gap: 10, marginBottom: 16, justifyContent: "flex-end" }}>
-              <Btn variant="ghost" small onClick={skipAudit} disabled={loading}>
-                Skip this one
-              </Btn>
-              <Btn onClick={handleAuditCompetitor} disabled={loading}>
-                {loading ? "Researching…" : `Audit ${currentCompetitor.name}`}
-              </Btn>
-            </div>
-
-            {(stream || currentAuditText) && (
+            {audits[currentCompetitor.name] ? (
               <div>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
-                  <Label sub>Audit — review before accepting</Label>
-                  {currentAuditText && !loading && <CopyBtn text={currentAuditText} />}
+                  <Label sub>Audit — accepted</Label>
+                  <CopyBtn text={audits[currentCompetitor.name]} />
                 </div>
-                <OutputBlock content={loading ? stream : currentAuditText} streaming={loading} maxH={480} />
-                {currentAuditText && !loading && (
-                  <div style={{ display: "flex", gap: 10, marginTop: 12, justifyContent: "flex-end" }}>
-                    <Btn variant="ghost" small onClick={() => { setCurrentAuditText(""); setStream(""); }}>
-                      Re-audit
+                <OutputBlock content={audits[currentCompetitor.name]} maxH={480} />
+                <div style={{ display: "flex", gap: 10, marginTop: 12, justifyContent: "flex-end" }}>
+                  <Btn variant="ghost" small onClick={() => {
+                    setAudits(prev => { const n = {...prev}; delete n[currentCompetitor.name]; return n; });
+                    setPromptText(""); setPastedResult("");
+                  }}>Re-audit</Btn>
+                  {currentAuditIdx < competitors.length - 1 ? (
+                    <Btn small onClick={() => { setCurrentAuditIdx(i => i + 1); setPromptText(""); setPastedResult(""); }}>
+                      Next ({competitors[currentAuditIdx + 1]?.name}) →
                     </Btn>
+                  ) : (
+                    <Btn small onClick={() => { markComplete(3); setStep(4); }}>Synthesize →</Btn>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <div>
+                <div style={{ display: "flex", gap: 10, marginBottom: 16, justifyContent: "flex-end" }}>
+                  <Btn variant="ghost" small onClick={skipAudit}>
+                    Skip this one
+                  </Btn>
+                  <Btn onClick={handleAuditCompetitor} disabled={!!promptText}>
+                    Audit {currentCompetitor.name}
+                  </Btn>
+                </div>
+                <PromptPanel promptText={promptText} pastedResult={pastedResult} setPastedResult={setPastedResult} />
+                {promptText && pastedResult.trim() && (
+                  <div style={{ display: "flex", gap: 10, marginTop: 12, justifyContent: "flex-end" }}>
+                    <Btn variant="ghost" small onClick={() => { setPromptText(""); setPastedResult(""); }}>Cancel</Btn>
                     <Btn small onClick={acceptAudit}>
                       {currentAuditIdx < competitors.length - 1 ? `Accept → Next (${competitors[currentAuditIdx + 1]?.name})` : "Accept → Synthesize"}
                     </Btn>
@@ -817,35 +837,38 @@ Use this exact structure:
         {step === 4 && (
           <div>
             <SectionHeader step={4} title="Synthesize Landscape"
-              desc={`Claude synthesizes ${auditedCount} competitor audits into a full landscape — convention map, competitive matrix, gaps, and differentiation opportunity.`} />
+              desc={`Synthesize ${auditedCount} competitor audits into a full landscape — convention map, competitive matrix, gaps, and differentiation opportunity.`} />
 
             {!synthesis && (
-              <div style={{ display: "flex", justifyContent: "flex-end" }}>
-                <Btn onClick={handleSynthesize} disabled={loading}>
-                  {loading ? "Synthesizing…" : `Synthesize ${auditedCount} Audits`}
-                </Btn>
+              <div>
+                <div style={{ display: "flex", justifyContent: "flex-end" }}>
+                  <Btn onClick={handleSynthesize} disabled={!!promptText}>
+                    Synthesize {auditedCount} Audits
+                  </Btn>
+                </div>
+                <PromptPanel promptText={promptText} pastedResult={pastedResult} setPastedResult={setPastedResult} />
+                {promptText && pastedResult.trim() && (
+                  <div style={{ display: "flex", gap: 10, marginTop: 12, justifyContent: "flex-end" }}>
+                    <Btn variant="ghost" small onClick={() => { setPromptText(""); setPastedResult(""); }}>Cancel</Btn>
+                    <Btn small onClick={acceptSynthesis}>Accept Synthesis</Btn>
+                  </div>
+                )}
               </div>
             )}
 
-            {(stream || synthesis) && (
+            {synthesis && (
               <div style={{ marginTop: 16 }}>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
                   <Label sub>Competitive landscape synthesis</Label>
                   <div style={{ display: "flex", gap: 8 }}>
-                    {synthesis && !loading && (
-                      <>
-                        <CopyBtn text={synthesis} />
-                        <Btn small variant="ghost" onClick={() => downloadMd(synthesis, "competitive-landscape.md")}>↓ .md</Btn>
-                      </>
-                    )}
+                    <CopyBtn text={synthesis} />
+                    <Btn small variant="ghost" onClick={() => downloadMd(synthesis, "competitive-landscape.md")}>↓ .md</Btn>
                   </div>
                 </div>
-                <OutputBlock content={loading ? stream : synthesis} streaming={loading} maxH={520} />
-                {synthesis && !loading && (
-                  <div style={{ display: "flex", gap: 10, marginTop: 12, justifyContent: "flex-end" }}>
-                    <Btn variant="ghost" small onClick={() => { setSynthesis(""); setStream(""); }}>Re-synthesize</Btn>
-                  </div>
-                )}
+                <OutputBlock content={synthesis} maxH={520} />
+                <div style={{ display: "flex", gap: 10, marginTop: 12, justifyContent: "flex-end" }}>
+                  <Btn variant="ghost" small onClick={() => { setSynthesis(""); setPromptText(""); setPastedResult(""); }}>Re-synthesize</Btn>
+                </div>
               </div>
             )}
           </div>
@@ -858,42 +881,45 @@ Use this exact structure:
               desc="A structured summary of the competitive analysis — paste it as the first message when opening the Define phase, alongside the Research Synthesis handoff." />
 
             {!handoff && (
-              <div style={{ display: "flex", justifyContent: "flex-end" }}>
-                <Btn onClick={handleGenerateHandoff} disabled={loading}>
-                  {loading ? "Generating…" : "Generate Handoff Block"}
-                </Btn>
+              <div>
+                <div style={{ display: "flex", justifyContent: "flex-end" }}>
+                  <Btn onClick={handleGenerateHandoff} disabled={!!promptText}>
+                    Generate Handoff Block
+                  </Btn>
+                </div>
+                <PromptPanel promptText={promptText} pastedResult={pastedResult} setPastedResult={setPastedResult} />
+                {promptText && pastedResult.trim() && (
+                  <div style={{ display: "flex", gap: 10, marginTop: 12, justifyContent: "flex-end" }}>
+                    <Btn variant="ghost" small onClick={() => { setPromptText(""); setPastedResult(""); }}>Cancel</Btn>
+                    <Btn small onClick={acceptHandoff}>Accept Handoff Block</Btn>
+                  </div>
+                )}
               </div>
             )}
 
-            {(stream || handoff) && (
+            {handoff && (
               <div style={{ marginTop: 16 }}>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
                   <Label sub>Discover → Define handoff block</Label>
                   <div style={{ display: "flex", gap: 8 }}>
-                    {handoff && !loading && (
-                      <>
-                        <CopyBtn text={handoff} />
-                        <Btn small variant="ghost" onClick={() => downloadMd(handoff, "handoff-competitive-analysis.md")}>↓ .md</Btn>
-                      </>
-                    )}
+                    <CopyBtn text={handoff} />
+                    <Btn small variant="ghost" onClick={() => downloadMd(handoff, "handoff-competitive-analysis.md")}>↓ .md</Btn>
                   </div>
                 </div>
-                <OutputBlock content={loading ? stream : handoff} streaming={loading} maxH={500} />
+                <OutputBlock content={handoff} maxH={500} />
 
-                {handoff && !loading && (
-                  <div style={{
-                    marginTop: 20, padding: "14px 16px",
-                    background: T.discoverDim, border: `1px solid ${T.discoverBorder}`,
-                    borderRadius: 8,
+                <div style={{
+                  marginTop: 20, padding: "14px 16px",
+                  background: T.discoverDim, border: `1px solid ${T.discoverBorder}`,
+                  borderRadius: 8,
+                }}>
+                  <span style={{
+                    fontSize: 11, fontFamily: "'JetBrains Mono', monospace",
+                    letterSpacing: "0.08em", textTransform: "uppercase", color: T.discover,
                   }}>
-                    <span style={{
-                      fontSize: 11, fontFamily: "'JetBrains Mono', monospace",
-                      letterSpacing: "0.08em", textTransform: "uppercase", color: T.discover,
-                    }}>
-                      ✓ Analysis complete — {competitors.length} competitors · {auditedCount} audited · handoff ready for Define
-                    </span>
-                  </div>
-                )}
+                    ✓ Analysis complete — {competitors.length} competitors · {auditedCount} audited · handoff ready for Define
+                  </span>
+                </div>
               </div>
             )}
           </div>

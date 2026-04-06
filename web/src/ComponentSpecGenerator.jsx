@@ -14,20 +14,37 @@ const STEPS = [
   { id: 5, label: "Handoff",    short: "Complete spec document"   },
 ];
 
-async function callClaude(system, user, onChunk) {
-  const res = await fetch("/api/claude", {
-    method: "POST", headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ model: "claude-haiku-4-5-20251001", max_tokens: 1000, stream: true, system, messages: [{ role: "user", content: user }] }),
-  });
-  if (!res.ok) { onChunk("⚠️ Error " + res.status + ". Check your API key and try again."); return ""; }
-  const reader = res.body.getReader(); const dec = new TextDecoder(); let full = "";
-  while (true) {
-    const { done, value } = await reader.read(); if (done) break;
-    for (const line of dec.decode(value).split("\n").filter(l => l.startsWith("data: "))) {
-      try { const j = JSON.parse(line.slice(6)); if (j.type === "content_block_delta" && j.delta?.text) { full += j.delta.text; onChunk(full); } } catch {}
-    }
-  }
-  return full;
+function PromptPanel({ promptText, pastedResult, setPastedResult }) {
+  const [copied, setCopied] = useState(false);
+  if (!promptText) return null;
+  return (
+    <div style={{ background: T.surface, border: `1px solid ${T.border}`, borderRadius: 8, padding: "16px 18px", marginTop: 16 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+        <span style={{ fontSize: 11, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.08em", textTransform: "uppercase", color: T.deliver }}>
+          Prompt ready — copy and run in Claude
+        </span>
+        <div style={{ display: "flex", gap: 8 }}>
+          <button
+            onClick={() => { navigator.clipboard.writeText(promptText); setCopied(true); setTimeout(() => setCopied(false), 2000); }}
+            style={{ padding: "6px 14px", fontSize: 11, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.06em", textTransform: "uppercase", fontWeight: 600, cursor: "pointer", borderRadius: 6, border: `1.5px solid ${T.deliver}`, background: copied ? T.deliver : "transparent", color: copied ? T.bg : T.deliver, transition: "all 0.15s" }}
+          >{copied ? "✓ Copied" : "Copy Prompt"}</button>
+          <a href="https://claude.ai" target="_blank" rel="noopener noreferrer"
+            style={{ padding: "6px 14px", fontSize: 11, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.06em", textTransform: "uppercase", fontWeight: 600, borderRadius: 6, border: `1.5px solid ${T.border}`, color: T.muted, textDecoration: "none", display: "inline-block" }}
+          >Open Claude.ai →</a>
+        </div>
+      </div>
+      <pre style={{ whiteSpace: "pre-wrap", fontSize: 12, lineHeight: 1.7, color: T.text, fontFamily: "'DM Sans', sans-serif", margin: 0, maxHeight: 320, overflowY: "auto" }}>{promptText}</pre>
+      <div style={{ marginTop: 16 }}>
+        <div style={{ fontSize: 11, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.08em", textTransform: "uppercase", color: T.muted, marginBottom: 8 }}>Paste Claude's response here</div>
+        <textarea
+          value={pastedResult} onChange={e => setPastedResult(e.target.value)}
+          placeholder="Run the prompt in Claude, then paste the result here to continue…" rows={6}
+          style={{ width: "100%", boxSizing: "border-box", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, padding: "12px 14px", color: T.text, fontSize: 13, lineHeight: 1.6, fontFamily: "'DM Sans', sans-serif", resize: "vertical", outline: "none" }}
+          onFocus={e => e.target.style.borderColor = T.deliver} onBlur={e => e.target.style.borderColor = T.border}
+        />
+      </div>
+    </div>
+  );
 }
 
 function Label({ children, sub }) {
@@ -52,11 +69,10 @@ function CopyBtn({ text }) {
   return <Btn small variant="ghost" onClick={() => { navigator.clipboard.writeText(text); setC(true); setTimeout(() => setC(false), 1800); }}>{c ? "✓ Copied" : "Copy"}</Btn>;
 }
 
-function OutputBlock({ content, streaming, maxH = 480 }) {
+function OutputBlock({ content, maxH = 480 }) {
   return (
     <div style={{ background: T.surface, border: `1px solid ${T.border}`, borderRadius: 8, padding: "16px 18px", fontSize: 13, lineHeight: 1.7, color: T.text, fontFamily: "'DM Sans', sans-serif", whiteSpace: "pre-wrap", wordBreak: "break-word", maxHeight: maxH, overflowY: "auto" }}>
       {content || <span style={{ color: T.dim, fontStyle: "italic" }}>Output will appear here…</span>}
-      {streaming && <span style={{ display: "inline-block", width: 6, height: 14, background: T.deliver, marginLeft: 2, animation: "blink 0.8s step-end infinite", verticalAlign: "middle" }} />}
     </div>
   );
 }
@@ -95,8 +111,8 @@ function StepIndicator({ current, completed }) {
 export default function ComponentSpecGenerator() {
   const [step, setStep] = useState(1);
   const [completed, setCompleted] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [stream, setStream] = useState("");
+  const [promptText, setPromptText] = useState("");
+  const [pastedResult, setPastedResult] = useState("");
 
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
@@ -118,11 +134,9 @@ export default function ComponentSpecGenerator() {
     URL.revokeObjectURL(url);
   }
 
-  async function handleAnatomy() {
-    setLoading(true); setStream("");
-    const result = await callClaude(
-      "You are a design systems expert generating component documentation. Be precise and systematic. Use consistent naming. Flag anything that's missing or ambiguous.",
-      `Generate the complete anatomy for this component.
+  function handleAnatomy() {
+    const sys = "You are a design systems expert generating component documentation. Be precise and systematic. Use consistent naming. Flag anything that's missing or ambiguous.";
+    const msg = `Generate the complete anatomy for this component.
 
 Component: ${name}
 Description: ${description}
@@ -150,17 +164,21 @@ For every element that makes up this component (including optional ones, contain
 |---|---|---|
 | [Name] | [what changes visually or functionally] | [context] |
 
-Flag any element or variant that needs a design decision before this spec is complete.`,
-      setStream
-    );
-    setAnatomy(result); setLoading(false); mark(1);
+Flag any element or variant that needs a design decision before this spec is complete.`;
+    setPromptText(sys + "\n\n" + msg);
+    setPastedResult("");
   }
 
-  async function handleStates() {
-    setLoading(true); setStream("");
-    const result = await callClaude(
-      "You are a design systems expert. Document every interactive state completely — developers build from these specs. Default and hover are not enough. Every state needs a trigger, visual change, and functional change. Be specific about timing and transitions.",
-      `Generate complete state documentation for this component.
+  function acceptAnatomy() {
+    setAnatomy(pastedResult);
+    setPromptText("");
+    setPastedResult("");
+    mark(1);
+  }
+
+  function handleStates() {
+    const sys = "You are a design systems expert. Document every interactive state completely — developers build from these specs. Default and hover are not enough. Every state needs a trigger, visual change, and functional change. Be specific about timing and transitions.";
+    const msg = `Generate complete state documentation for this component.
 
 Component: ${name}
 Description: ${description}
@@ -188,17 +206,21 @@ States to cover (apply all that are relevant):
 - Success — positive confirmation
 - Empty — no content to display
 
-For each state, flag if it's missing from the current design.`,
-      setStream
-    );
-    setStates(result); setLoading(false); mark(2);
+For each state, flag if it's missing from the current design.`;
+    setPromptText(sys + "\n\n" + msg);
+    setPastedResult("");
   }
 
-  async function handleBehavior() {
-    setLoading(true); setStream("");
-    const result = await callClaude(
-      "You are a design systems expert documenting interaction behavior for developers. Be specific about timing, easing, keyboard bindings, and focus management. These are the details that get wrong most often in implementation.",
-      `Document all interactive behaviors for this component.
+  function acceptStates() {
+    setStates(pastedResult);
+    setPromptText("");
+    setPastedResult("");
+    mark(2);
+  }
+
+  function handleBehavior() {
+    const sys = "You are a design systems expert documenting interaction behavior for developers. Be specific about timing, easing, keyboard bindings, and focus management. These are the details that get wrong most often in implementation.";
+    const msg = `Document all interactive behaviors for this component.
 
 Component: ${name}
 Description: ${description}
@@ -237,17 +259,21 @@ After [action]: focus returns to [trigger element]
 - prefers-reduced-motion: [what happens when user has reduced motion enabled]
 
 ## Open Questions
-[Any behavior that hasn't been designed or decided yet]`,
-      setStream
-    );
-    setBehavior(result); setLoading(false); mark(3);
+[Any behavior that hasn't been designed or decided yet]`;
+    setPromptText(sys + "\n\n" + msg);
+    setPastedResult("");
   }
 
-  async function handleSpacing() {
-    setLoading(true); setStream("");
-    const result = await callClaude(
-      "You are a design systems expert generating spacing, typography, and edge case documentation. Use design token names where provided. Be systematic about edge cases — think about content at extremes.",
-      `Generate spacing, typography, sizing, and edge case documentation.
+  function acceptBehavior() {
+    setBehavior(pastedResult);
+    setPromptText("");
+    setPastedResult("");
+    mark(3);
+  }
+
+  function handleSpacing() {
+    const sys = "You are a design systems expert generating spacing, typography, and edge case documentation. Use design token names where provided. Be systematic about edge cases — think about content at extremes.";
+    const msg = `Generate spacing, typography, sizing, and edge case documentation.
 
 Component: ${name}
 Description: ${description}
@@ -284,18 +310,22 @@ For each scenario:
 **Dark mode:** Are all states and tokens designed for dark mode?
 **High contrast:** Do focus indicators and borders survive forced colors?
 **Reduced motion:** Do transitions respect prefers-reduced-motion?
-**Nested usage:** Inside a disabled container — does the component inherit disabled state?`,
-      setStream
-    );
-    setSpacing(result); setLoading(false); mark(4);
+**Nested usage:** Inside a disabled container — does the component inherit disabled state?`;
+    setPromptText(sys + "\n\n" + msg);
+    setPastedResult("");
   }
 
-  async function handleFullSpec() {
-    setLoading(true); setStream("");
+  function acceptSpacing() {
+    setSpacing(pastedResult);
+    setPromptText("");
+    setPastedResult("");
+    mark(4);
+  }
+
+  function handleFullSpec() {
     const allContent = [anatomy, states, behavior, spacing].filter(Boolean).join("\n\n---\n\n");
-    const result = await callClaude(
-      "You are a design systems expert assembling a complete component specification document. Organize all generated content into a clean, navigable spec that a developer can use as their single source of truth.",
-      `Assemble a complete component specification document from this content.
+    const sys = "You are a design systems expert assembling a complete component specification document. Organize all generated content into a clean, navigable spec that a developer can use as their single source of truth.";
+    const msg = `Assemble a complete component specification document from this content.
 
 Component: ${name}
 Date: ${new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}
@@ -343,10 +373,16 @@ Date: [date] | Phase: Deliver
 
 ---
 *Validate this spec against the Figma file before handoff.*
-*Add Figma frame links to each section.*`,
-      setStream
-    );
-    setFullSpec(result); setLoading(false); mark(5);
+*Add Figma frame links to each section.*`;
+    setPromptText(sys + "\n\n" + msg);
+    setPastedResult("");
+  }
+
+  function acceptFullSpec() {
+    setFullSpec(pastedResult);
+    setPromptText("");
+    setPastedResult("");
+    mark(5);
   }
 
   return (
@@ -354,7 +390,6 @@ Date: [date] | Phase: Deliver
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;600;700&display=swap');
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
         ::-webkit-scrollbar { width: 4px; } ::-webkit-scrollbar-thumb { background: #2a2a2a; border-radius: 2px; }
         :focus-visible { outline: 2px solid #999; outline-offset: 2px; border-radius: 4px; }
       `}</style>
@@ -375,7 +410,7 @@ Date: [date] | Phase: Deliver
         {step === 1 && (
           <div>
             <SectionHeader step={1} title="Component Definition"
-              desc="Describe the component and Claude generates the complete anatomy — every element, variant, and usage rule." />
+              desc="Describe the component and generate the complete anatomy — every element, variant, and usage rule." />
             <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
                 <div>
@@ -404,18 +439,25 @@ Date: [date] | Phase: Deliver
                 </div>
               )}
               {!anatomy ? (
-                <div style={{ display: "flex", justifyContent: "flex-end" }}>
-                  <Btn disabled={!name.trim() || !description.trim() || loading} onClick={handleAnatomy}>
-                    {loading ? "Generating…" : "Generate Anatomy →"}
-                  </Btn>
+                <div>
+                  <div style={{ display: "flex", justifyContent: "flex-end" }}>
+                    <Btn disabled={!name.trim() || !description.trim()} onClick={handleAnatomy}>
+                      Generate Anatomy →
+                    </Btn>
+                  </div>
+                  <PromptPanel promptText={promptText} pastedResult={pastedResult} setPastedResult={setPastedResult} />
+                  {promptText && (
+                    <div style={{ display: "flex", gap: 10, marginTop: 12, justifyContent: "flex-end" }}>
+                      <Btn small disabled={!pastedResult.trim()} onClick={acceptAnatomy}>Accept Anatomy →</Btn>
+                    </div>
+                  )}
                 </div>
               ) : (
                 <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
-                  <Btn variant="ghost" small onClick={() => { setAnatomy(""); setStream(""); }}>Re-generate</Btn>
+                  <Btn variant="ghost" small onClick={() => setAnatomy("")}>Re-generate</Btn>
                   <Btn small onClick={() => { mark(1); setStep(2); }}>Document States →</Btn>
                 </div>
               )}
-              {!anatomy && stream && <OutputBlock content={stream} streaming={loading} />}
             </div>
           </div>
         )}
@@ -424,20 +466,24 @@ Date: [date] | Phase: Deliver
           <div>
             <SectionHeader step={2} title="Interactive States"
               desc="Every state this component can be in — Default through Error — with triggers, visual changes, timing, and screen reader announcements." />
-            {!states && <div style={{ display: "flex", justifyContent: "flex-end" }}><Btn onClick={handleStates} disabled={loading}>{loading ? "Generating…" : "Generate All States"}</Btn></div>}
-            {(stream || states) && (
+            {!states && <div style={{ display: "flex", justifyContent: "flex-end" }}><Btn onClick={handleStates}>Generate All States</Btn></div>}
+            <PromptPanel promptText={promptText} pastedResult={pastedResult} setPastedResult={setPastedResult} />
+            {promptText && (
+              <div style={{ display: "flex", gap: 10, marginTop: 12, justifyContent: "flex-end" }}>
+                <Btn small disabled={!pastedResult.trim()} onClick={acceptStates}>Accept States →</Btn>
+              </div>
+            )}
+            {states && !promptText && (
               <div>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
                   <Label sub>Default · Hover · Focus · Active · Disabled · Loading · Error · Success · Empty</Label>
-                  {states && !loading && <CopyBtn text={states} />}
+                  <CopyBtn text={states} />
                 </div>
-                <OutputBlock content={loading ? stream : states} streaming={loading} maxH={520} />
-                {states && !loading && (
-                  <div style={{ display: "flex", gap: 10, marginTop: 12, justifyContent: "flex-end" }}>
-                    <Btn variant="ghost" small onClick={() => { setStates(""); setStream(""); }}>Re-generate</Btn>
-                    <Btn small onClick={() => { mark(2); setStep(3); }}>Document Behavior →</Btn>
-                  </div>
-                )}
+                <OutputBlock content={states} maxH={520} />
+                <div style={{ display: "flex", gap: 10, marginTop: 12, justifyContent: "flex-end" }}>
+                  <Btn variant="ghost" small onClick={() => setStates("")}>Re-generate</Btn>
+                  <Btn small onClick={() => { mark(2); setStep(3); }}>Document Behavior →</Btn>
+                </div>
               </div>
             )}
           </div>
@@ -447,20 +493,24 @@ Date: [date] | Phase: Deliver
           <div>
             <SectionHeader step={3} title="Behavior and Interactions"
               desc="What happens on every click, key press, and touch — with timing, easing, keyboard navigation, and focus management." />
-            {!behavior && <div style={{ display: "flex", justifyContent: "flex-end" }}><Btn onClick={handleBehavior} disabled={loading}>{loading ? "Generating…" : "Generate Behavior Docs"}</Btn></div>}
-            {(stream || behavior) && (
+            {!behavior && <div style={{ display: "flex", justifyContent: "flex-end" }}><Btn onClick={handleBehavior}>Generate Behavior Docs</Btn></div>}
+            <PromptPanel promptText={promptText} pastedResult={pastedResult} setPastedResult={setPastedResult} />
+            {promptText && (
+              <div style={{ display: "flex", gap: 10, marginTop: 12, justifyContent: "flex-end" }}>
+                <Btn small disabled={!pastedResult.trim()} onClick={acceptBehavior}>Accept Behavior →</Btn>
+              </div>
+            )}
+            {behavior && !promptText && (
               <div>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
                   <Label sub>Interactions · keyboard · focus management · animation</Label>
-                  {behavior && !loading && <CopyBtn text={behavior} />}
+                  <CopyBtn text={behavior} />
                 </div>
-                <OutputBlock content={loading ? stream : behavior} streaming={loading} maxH={500} />
-                {behavior && !loading && (
-                  <div style={{ display: "flex", gap: 10, marginTop: 12, justifyContent: "flex-end" }}>
-                    <Btn variant="ghost" small onClick={() => { setBehavior(""); setStream(""); }}>Re-generate</Btn>
-                    <Btn small onClick={() => { mark(3); setStep(4); }}>Spacing + Edge Cases →</Btn>
-                  </div>
-                )}
+                <OutputBlock content={behavior} maxH={500} />
+                <div style={{ display: "flex", gap: 10, marginTop: 12, justifyContent: "flex-end" }}>
+                  <Btn variant="ghost" small onClick={() => setBehavior("")}>Re-generate</Btn>
+                  <Btn small onClick={() => { mark(3); setStep(4); }}>Spacing + Edge Cases →</Btn>
+                </div>
               </div>
             )}
           </div>
@@ -470,20 +520,24 @@ Date: [date] | Phase: Deliver
           <div>
             <SectionHeader step={4} title="Spacing, Typography + Edge Cases"
               desc="Token-mapped spacing and typography values, sizing rules, and systematic edge cases — content extremes, responsive behavior, accessibility modes." />
-            {!spacing && <div style={{ display: "flex", justifyContent: "flex-end" }}><Btn onClick={handleSpacing} disabled={loading}>{loading ? "Generating…" : "Generate Spacing + Edge Cases"}</Btn></div>}
-            {(stream || spacing) && (
+            {!spacing && <div style={{ display: "flex", justifyContent: "flex-end" }}><Btn onClick={handleSpacing}>Generate Spacing + Edge Cases</Btn></div>}
+            <PromptPanel promptText={promptText} pastedResult={pastedResult} setPastedResult={setPastedResult} />
+            {promptText && (
+              <div style={{ display: "flex", gap: 10, marginTop: 12, justifyContent: "flex-end" }}>
+                <Btn small disabled={!pastedResult.trim()} onClick={acceptSpacing}>Accept Spacing →</Btn>
+              </div>
+            )}
+            {spacing && !promptText && (
               <div>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
                   <Label sub>Spacing · typography · sizing · edge cases</Label>
-                  {spacing && !loading && <CopyBtn text={spacing} />}
+                  <CopyBtn text={spacing} />
                 </div>
-                <OutputBlock content={loading ? stream : spacing} streaming={loading} maxH={500} />
-                {spacing && !loading && (
-                  <div style={{ display: "flex", gap: 10, marginTop: 12, justifyContent: "flex-end" }}>
-                    <Btn variant="ghost" small onClick={() => { setSpacing(""); setStream(""); }}>Re-generate</Btn>
-                    <Btn small onClick={() => { mark(4); setStep(5); }}>Assemble Full Spec →</Btn>
-                  </div>
-                )}
+                <OutputBlock content={spacing} maxH={500} />
+                <div style={{ display: "flex", gap: 10, marginTop: 12, justifyContent: "flex-end" }}>
+                  <Btn variant="ghost" small onClick={() => setSpacing("")}>Re-generate</Btn>
+                  <Btn small onClick={() => { mark(4); setStep(5); }}>Assemble Full Spec →</Btn>
+                </div>
               </div>
             )}
           </div>
@@ -493,26 +547,28 @@ Date: [date] | Phase: Deliver
           <div>
             <SectionHeader step={5} title="Complete Spec Document"
               desc="All four sections assembled into a single, navigable spec. Validate against the Figma file before handoff." />
-            {!fullSpec && <div style={{ display: "flex", justifyContent: "flex-end" }}><Btn onClick={handleFullSpec} disabled={loading}>{loading ? "Assembling…" : "Generate Full Spec"}</Btn></div>}
-            {(stream || fullSpec) && (
+            {!fullSpec && <div style={{ display: "flex", justifyContent: "flex-end" }}><Btn onClick={handleFullSpec}>Generate Full Spec</Btn></div>}
+            <PromptPanel promptText={promptText} pastedResult={pastedResult} setPastedResult={setPastedResult} />
+            {promptText && (
+              <div style={{ display: "flex", gap: 10, marginTop: 12, justifyContent: "flex-end" }}>
+                <Btn small disabled={!pastedResult.trim()} onClick={acceptFullSpec}>Accept Full Spec →</Btn>
+              </div>
+            )}
+            {fullSpec && !promptText && (
               <div>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
                   <Label sub>Complete component specification — ready for handoff review</Label>
-                  {fullSpec && !loading && (
-                    <div style={{ display: "flex", gap: 8 }}>
-                      <CopyBtn text={fullSpec} />
-                      <Btn small variant="ghost" onClick={() => dl(fullSpec, `${name.toLowerCase().replace(/\s+/g, "-")}-spec.md`)}>↓ .md</Btn>
-                    </div>
-                  )}
-                </div>
-                <OutputBlock content={loading ? stream : fullSpec} streaming={loading} maxH={560} />
-                {fullSpec && !loading && (
-                  <div style={{ marginTop: 20, padding: "14px 16px", background: T.deliverDim, border: `1px solid ${T.deliverBorder}`, borderRadius: 8 }}>
-                    <span style={{ fontSize: 11, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.08em", textTransform: "uppercase", color: T.deliver }}>
-                      ✓ Validate against Figma before sharing — Claude generates, designer confirms
-                    </span>
+                  <div style={{ display: "flex", gap: 8 }}>
+                    <CopyBtn text={fullSpec} />
+                    <Btn small variant="ghost" onClick={() => dl(fullSpec, `${name.toLowerCase().replace(/\s+/g, "-")}-spec.md`)}>↓ .md</Btn>
                   </div>
-                )}
+                </div>
+                <OutputBlock content={fullSpec} maxH={560} />
+                <div style={{ marginTop: 20, padding: "14px 16px", background: T.deliverDim, border: `1px solid ${T.deliverBorder}`, borderRadius: 8 }}>
+                  <span style={{ fontSize: 11, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.08em", textTransform: "uppercase", color: T.deliver }}>
+                    ✓ Validate against Figma before sharing — Claude generates, designer confirms
+                  </span>
+                </div>
               </div>
             )}
           </div>

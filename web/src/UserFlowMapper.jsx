@@ -14,20 +14,37 @@ const STEPS = [
   { id: 5, label: "Handoff",   short: "Prototype brief"          },
 ];
 
-async function callClaude(system, user, onChunk) {
-  const res = await fetch("/api/claude", {
-    method: "POST", headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ model: "claude-haiku-4-5-20251001", max_tokens: 1000, stream: true, system, messages: [{ role: "user", content: user }] }),
-  });
-  if (!res.ok) { onChunk("⚠️ Error " + res.status + ". Check your API key and try again."); return ""; }
-  const reader = res.body.getReader(); const dec = new TextDecoder(); let full = "";
-  while (true) {
-    const { done, value } = await reader.read(); if (done) break;
-    for (const line of dec.decode(value).split("\n").filter(l => l.startsWith("data: "))) {
-      try { const j = JSON.parse(line.slice(6)); if (j.type === "content_block_delta" && j.delta?.text) { full += j.delta.text; onChunk(full); } } catch {}
-    }
-  }
-  return full;
+function PromptPanel({ promptText, pastedResult, setPastedResult }) {
+  const [copied, setCopied] = useState(false);
+  if (!promptText) return null;
+  return (
+    <div style={{ background: T.surface, border: `1px solid ${T.border}`, borderRadius: 8, padding: "16px 18px", marginTop: 16 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+        <span style={{ fontSize: 11, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.08em", textTransform: "uppercase", color: T.proto }}>
+          Prompt ready — copy and run in Claude
+        </span>
+        <div style={{ display: "flex", gap: 8 }}>
+          <button
+            onClick={() => { navigator.clipboard.writeText(promptText); setCopied(true); setTimeout(() => setCopied(false), 2000); }}
+            style={{ padding: "6px 14px", fontSize: 11, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.06em", textTransform: "uppercase", fontWeight: 600, cursor: "pointer", borderRadius: 6, border: `1.5px solid ${T.proto}`, background: copied ? T.proto : "transparent", color: copied ? "#fff" : T.proto, transition: "all 0.15s" }}
+          >{copied ? "✓ Copied" : "Copy Prompt"}</button>
+          <a href="https://claude.ai" target="_blank" rel="noopener noreferrer"
+            style={{ padding: "6px 14px", fontSize: 11, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.06em", textTransform: "uppercase", fontWeight: 600, borderRadius: 6, border: `1.5px solid ${T.border}`, color: T.muted, textDecoration: "none", display: "inline-block" }}
+          >Open Claude.ai →</a>
+        </div>
+      </div>
+      <pre style={{ whiteSpace: "pre-wrap", fontSize: 12, lineHeight: 1.7, color: T.text, fontFamily: "'DM Sans', sans-serif", margin: 0, maxHeight: 320, overflowY: "auto" }}>{promptText}</pre>
+      <div style={{ marginTop: 16 }}>
+        <div style={{ fontSize: 11, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.08em", textTransform: "uppercase", color: T.muted, marginBottom: 8 }}>Paste Claude's response here</div>
+        <textarea
+          value={pastedResult} onChange={e => setPastedResult(e.target.value)}
+          placeholder="Run the prompt in Claude, then paste the result here to continue…" rows={6}
+          style={{ width: "100%", boxSizing: "border-box", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, padding: "12px 14px", color: T.text, fontSize: 13, lineHeight: 1.6, fontFamily: "'DM Sans', sans-serif", resize: "vertical", outline: "none" }}
+          onFocus={e => e.target.style.borderColor = T.proto} onBlur={e => e.target.style.borderColor = T.border}
+        />
+      </div>
+    </div>
+  );
 }
 
 function Label({ children, sub }) {
@@ -52,11 +69,10 @@ function CopyBtn({ text }) {
   return <Btn small variant="ghost" onClick={() => { navigator.clipboard.writeText(text); setC(true); setTimeout(() => setC(false), 1800); }}>{c ? "✓ Copied" : "Copy"}</Btn>;
 }
 
-function OutputBlock({ content, streaming, maxH = 500 }) {
+function OutputBlock({ content, maxH = 500 }) {
   return (
     <div style={{ background: T.surface, border: `1px solid ${T.border}`, borderRadius: 8, padding: "16px 18px", fontSize: 13, lineHeight: 1.7, color: T.text, fontFamily: "'DM Sans', sans-serif", whiteSpace: "pre-wrap", wordBreak: "break-word", maxHeight: maxH, overflowY: "auto" }}>
       {content || <span style={{ color: T.dim, fontStyle: "italic" }}>Output will appear here…</span>}
-      {streaming && <span style={{ display: "inline-block", width: 6, height: 14, background: T.proto, marginLeft: 2, animation: "blink 0.8s step-end infinite", verticalAlign: "middle" }} />}
     </div>
   );
 }
@@ -95,8 +111,8 @@ function StepIndicator({ current, completed }) {
 export default function UserFlowMapper() {
   const [step, setStep] = useState(1);
   const [completed, setCompleted] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [stream, setStream] = useState("");
+  const [promptText, setPromptText] = useState("");
+  const [pastedResult, setPastedResult] = useState("");
 
   const [entry, setEntry] = useState("");
   const [goal, setGoal] = useState("");
@@ -118,11 +134,9 @@ export default function UserFlowMapper() {
     URL.revokeObjectURL(url);
   }
 
-  async function handleHappyPath() {
-    setLoading(true); setStream("");
-    const result = await callClaude(
-      "You are a UX designer mapping user flows. Be systematic and specific — list every step as a discrete action or response. Flag every decision point explicitly. Your output becomes the wireframing scope.",
-      `Map the happy path for this user flow.
+  function handleHappyPath() {
+    const sys = "You are a UX designer mapping user flows. Be systematic and specific — list every step as a discrete action or response. Flag every decision point explicitly. Your output becomes the wireframing scope.";
+    const msg = `Map the happy path for this user flow.
 
 Entry point: ${entry}
 User's goal: ${goal}
@@ -144,17 +158,21 @@ List each decision point from above:
 
 ## Steps requiring a screen or state change
 List only the steps that need a distinct UI state:
-- Step [N]: [Screen name] — [What it shows/does]`,
-      setStream
-    );
-    setHappyPath(result); setLoading(false); mark(2);
+- Step [N]: [Screen name] — [What it shows/does]`;
+    setPromptText(sys + "\n\n" + msg);
+    setPastedResult("");
   }
 
-  async function handleBranches() {
-    setLoading(true); setStream("");
-    const result = await callClaude(
-      "You are a UX designer mapping every path through a feature — not just the optimistic one. Be systematic. Every decision point branches. Every async step can fail. Every form field can be wrong. Your output determines prototype completeness.",
-      `Map all alternative paths, errors, and edge cases for this flow.
+  function acceptHappyPath() {
+    setHappyPath(pastedResult);
+    setPromptText("");
+    setPastedResult("");
+    mark(2);
+  }
+
+  function handleBranches() {
+    const sys = "You are a UX designer mapping every path through a feature — not just the optimistic one. Be systematic. Every decision point branches. Every async step can fail. Every form field can be wrong. Your output determines prototype completeness.";
+    const msg = `Map all alternative paths, errors, and edge cases for this flow.
 
 User's goal: ${goal}
 Persona: ${persona}
@@ -188,17 +206,21 @@ Map these systematically:
 - Partial state: User returns to a partially completed flow
 - Slow connection: Async operations take 10× longer than expected
 - Double-tap: User submits the same action twice quickly
-- Session timeout: User is idle and their session expires mid-flow`,
-      setStream
-    );
-    setBranches(result); setLoading(false); mark(3);
+- Session timeout: User is idle and their session expires mid-flow`;
+    setPromptText(sys + "\n\n" + msg);
+    setPastedResult("");
   }
 
-  async function handleInventory() {
-    setLoading(true); setStream("");
-    const result = await callClaude(
-      "You are a UX designer building the wireframing scope from a user flow. Every branch and every state becomes a screen. Be complete and systematic. This inventory is what gets built.",
-      `Generate a complete screen inventory from this user flow.
+  function acceptBranches() {
+    setBranches(pastedResult);
+    setPromptText("");
+    setPastedResult("");
+    mark(3);
+  }
+
+  function handleInventory() {
+    const sys = "You are a UX designer building the wireframing scope from a user flow. Every branch and every state becomes a screen. Be complete and systematic. This inventory is what gets built.";
+    const msg = `Generate a complete screen inventory from this user flow.
 
 User's goal: ${goal}
 Core prototype question: ${protoQuestion || "Not specified"}
@@ -241,17 +263,22 @@ Given the core prototype question "${protoQuestion || "answer the riskiest assum
 **Defer to v2:** [List — with rationale]
 **Can stub (show as placeholder):** [List]
 
-**Prototype screen count (v1):** [N of N total]`,
-      setStream
-    );
-    setInventory(result); setLoading(false); mark(4); setStep(5);
+**Prototype screen count (v1):** [N of N total]`;
+    setPromptText(sys + "\n\n" + msg);
+    setPastedResult("");
   }
 
-  async function handleHandoff() {
-    setLoading(true); setStream("");
-    const result = await callClaude(
-      "You are a senior UX designer generating a prototype brief. Be specific and actionable — the person receiving this brief should be able to start wireframing immediately without asking any clarifying questions.",
-      `Generate a prototype brief from this user flow mapping session.
+  function acceptInventory() {
+    setInventory(pastedResult);
+    setPromptText("");
+    setPastedResult("");
+    mark(4);
+    setStep(5);
+  }
+
+  function handleHandoff() {
+    const sys = "You are a senior UX designer generating a prototype brief. Be specific and actionable — the person receiving this brief should be able to start wireframing immediately without asking any clarifying questions.";
+    const msg = `Generate a prototype brief from this user flow mapping session.
 
 Entry: ${entry}
 Goal: ${goal}
@@ -288,10 +315,16 @@ Screen inventory: ${inventory}
 
 ---
 **Estimated build time:** [Hours based on scope and fidelity]
-**Screen count (v1):** [N]`,
-      setStream
-    );
-    setHandoff(result); setLoading(false); mark(5);
+**Screen count (v1):** [N]`;
+    setPromptText(sys + "\n\n" + msg);
+    setPastedResult("");
+  }
+
+  function acceptHandoff() {
+    setHandoff(pastedResult);
+    setPromptText("");
+    setPastedResult("");
+    mark(5);
   }
 
   return (
@@ -299,7 +332,6 @@ Screen inventory: ${inventory}
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;600;700&display=swap');
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
         ::-webkit-scrollbar { width: 4px; } ::-webkit-scrollbar-thumb { background: #2a2a2a; border-radius: 2px; }
         :focus-visible { outline: 2px solid #999; outline-offset: 2px; border-radius: 4px; }
       `}</style>
@@ -365,20 +397,24 @@ Screen inventory: ${inventory}
         {step === 2 && (
           <div>
             <SectionHeader step={2} title="Happy Path" desc="Map every step from entry to success — user actions and system responses. Decision points get flagged as branches to map next." />
-            {!happyPath && <div style={{ display: "flex", justifyContent: "flex-end" }}><Btn onClick={handleHappyPath} disabled={loading}>{loading ? "Mapping…" : "Map the Happy Path"}</Btn></div>}
-            {(stream || happyPath) && (
+            {!happyPath && <div style={{ display: "flex", justifyContent: "flex-end" }}><Btn onClick={handleHappyPath}>Map the Happy Path</Btn></div>}
+            <PromptPanel promptText={promptText} pastedResult={pastedResult} setPastedResult={setPastedResult} />
+            {promptText && (
+              <div style={{ display: "flex", gap: 10, marginTop: 12, justifyContent: "flex-end" }}>
+                <Btn small disabled={!pastedResult.trim()} onClick={acceptHappyPath}>Accept Happy Path →</Btn>
+              </div>
+            )}
+            {happyPath && !promptText && (
               <div>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
                   <Label sub>Step-by-step happy path + decision points</Label>
-                  {happyPath && !loading && <CopyBtn text={happyPath} />}
+                  <CopyBtn text={happyPath} />
                 </div>
-                <OutputBlock content={loading ? stream : happyPath} streaming={loading} />
-                {happyPath && !loading && (
-                  <div style={{ display: "flex", gap: 10, marginTop: 12, justifyContent: "flex-end" }}>
-                    <Btn variant="ghost" small onClick={() => { setHappyPath(""); setStream(""); }}>Re-map</Btn>
-                    <Btn small onClick={() => { mark(2); setStep(3); }}>Map Branches + Errors →</Btn>
-                  </div>
-                )}
+                <OutputBlock content={happyPath} />
+                <div style={{ display: "flex", gap: 10, marginTop: 12, justifyContent: "flex-end" }}>
+                  <Btn variant="ghost" small onClick={() => setHappyPath("")}>Re-map</Btn>
+                  <Btn small onClick={() => { mark(2); setStep(3); }}>Map Branches + Errors →</Btn>
+                </div>
               </div>
             )}
           </div>
@@ -387,20 +423,24 @@ Screen inventory: ${inventory}
         {step === 3 && (
           <div>
             <SectionHeader step={3} title="Branches + Errors" desc="Every decision point branches. Every async step can fail. This step maps all alternative paths, error states, and edge cases." />
-            {!branches && <div style={{ display: "flex", justifyContent: "flex-end" }}><Btn onClick={handleBranches} disabled={loading}>{loading ? "Mapping…" : "Map Branches + Errors"}</Btn></div>}
-            {(stream || branches) && (
+            {!branches && <div style={{ display: "flex", justifyContent: "flex-end" }}><Btn onClick={handleBranches}>Map Branches + Errors</Btn></div>}
+            <PromptPanel promptText={promptText} pastedResult={pastedResult} setPastedResult={setPastedResult} />
+            {promptText && (
+              <div style={{ display: "flex", gap: 10, marginTop: 12, justifyContent: "flex-end" }}>
+                <Btn small disabled={!pastedResult.trim()} onClick={acceptBranches}>Accept Branches →</Btn>
+              </div>
+            )}
+            {branches && !promptText && (
               <div>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
                   <Label sub>Alternative paths · error states · edge cases</Label>
-                  {branches && !loading && <CopyBtn text={branches} />}
+                  <CopyBtn text={branches} />
                 </div>
-                <OutputBlock content={loading ? stream : branches} streaming={loading} maxH={520} />
-                {branches && !loading && (
-                  <div style={{ display: "flex", gap: 10, marginTop: 12, justifyContent: "flex-end" }}>
-                    <Btn variant="ghost" small onClick={() => { setBranches(""); setStream(""); }}>Re-map</Btn>
-                    <Btn small onClick={() => { mark(3); setStep(4); }}>Generate Screen Inventory →</Btn>
-                  </div>
-                )}
+                <OutputBlock content={branches} maxH={520} />
+                <div style={{ display: "flex", gap: 10, marginTop: 12, justifyContent: "flex-end" }}>
+                  <Btn variant="ghost" small onClick={() => setBranches("")}>Re-map</Btn>
+                  <Btn small onClick={() => { mark(3); setStep(4); }}>Generate Screen Inventory →</Btn>
+                </div>
               </div>
             )}
           </div>
@@ -408,26 +448,28 @@ Screen inventory: ${inventory}
 
         {step === 4 && (
           <div>
-            <SectionHeader step={4} title="Screen Inventory" desc="Every state from the flow becomes a screen entry. Claude generates the complete inventory and recommends v1 prototype scope." />
-            {!inventory && <div style={{ display: "flex", justifyContent: "flex-end" }}><Btn onClick={handleInventory} disabled={loading}>{loading ? "Building…" : "Generate Screen Inventory"}</Btn></div>}
-            {(stream || inventory) && (
+            <SectionHeader step={4} title="Screen Inventory" desc="Every state from the flow becomes a screen entry. Generate the complete inventory and recommended v1 prototype scope." />
+            {!inventory && <div style={{ display: "flex", justifyContent: "flex-end" }}><Btn onClick={handleInventory}>Generate Screen Inventory</Btn></div>}
+            <PromptPanel promptText={promptText} pastedResult={pastedResult} setPastedResult={setPastedResult} />
+            {promptText && (
+              <div style={{ display: "flex", gap: 10, marginTop: 12, justifyContent: "flex-end" }}>
+                <Btn small disabled={!pastedResult.trim()} onClick={acceptInventory}>Accept Inventory →</Btn>
+              </div>
+            )}
+            {inventory && !promptText && (
               <div>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
                   <Label sub>Complete screen list · v1 prototype scope</Label>
-                  {inventory && !loading && (
-                    <div style={{ display: "flex", gap: 8 }}>
-                      <CopyBtn text={inventory} />
-                      <Btn small variant="ghost" onClick={() => dl([happyPath, branches, inventory].join("\n\n---\n\n"), "user-flow-map.md")}>↓ Full flow .md</Btn>
-                    </div>
-                  )}
-                </div>
-                <OutputBlock content={loading ? stream : inventory} streaming={loading} maxH={540} />
-                {inventory && !loading && (
-                  <div style={{ display: "flex", gap: 10, marginTop: 12, justifyContent: "flex-end" }}>
-                    <Btn variant="ghost" small onClick={() => { setInventory(""); setStream(""); }}>Re-generate</Btn>
-                    <Btn small onClick={() => setStep(5)}>Generate Prototype Brief →</Btn>
+                  <div style={{ display: "flex", gap: 8 }}>
+                    <CopyBtn text={inventory} />
+                    <Btn small variant="ghost" onClick={() => dl([happyPath, branches, inventory].join("\n\n---\n\n"), "user-flow-map.md")}>↓ Full flow .md</Btn>
                   </div>
-                )}
+                </div>
+                <OutputBlock content={inventory} maxH={540} />
+                <div style={{ display: "flex", gap: 10, marginTop: 12, justifyContent: "flex-end" }}>
+                  <Btn variant="ghost" small onClick={() => setInventory("")}>Re-generate</Btn>
+                  <Btn small onClick={() => setStep(5)}>Generate Prototype Brief →</Btn>
+                </div>
               </div>
             )}
           </div>
@@ -436,26 +478,28 @@ Screen inventory: ${inventory}
         {step === 5 && (
           <div>
             <SectionHeader step={5} title="Prototype Brief" desc="A complete wireframing brief — scope, critical path, open questions, and estimated build time. Ready to hand to the wireframer." />
-            {!handoff && <div style={{ display: "flex", justifyContent: "flex-end" }}><Btn onClick={handleHandoff} disabled={loading}>{loading ? "Generating…" : "Generate Prototype Brief"}</Btn></div>}
-            {(stream || handoff) && (
+            {!handoff && <div style={{ display: "flex", justifyContent: "flex-end" }}><Btn onClick={handleHandoff}>Generate Prototype Brief</Btn></div>}
+            <PromptPanel promptText={promptText} pastedResult={pastedResult} setPastedResult={setPastedResult} />
+            {promptText && (
+              <div style={{ display: "flex", gap: 10, marginTop: 12, justifyContent: "flex-end" }}>
+                <Btn small disabled={!pastedResult.trim()} onClick={acceptHandoff}>Accept Brief →</Btn>
+              </div>
+            )}
+            {handoff && !promptText && (
               <div>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
                   <Label sub>Wireframing scope + prototype brief</Label>
-                  {handoff && !loading && (
-                    <div style={{ display: "flex", gap: 8 }}>
-                      <CopyBtn text={handoff} />
-                      <Btn small variant="ghost" onClick={() => dl(handoff, "prototype-brief.md")}>↓ .md</Btn>
-                    </div>
-                  )}
-                </div>
-                <OutputBlock content={loading ? stream : handoff} streaming={loading} maxH={520} />
-                {handoff && !loading && (
-                  <div style={{ marginTop: 20, padding: "14px 16px", background: T.protoDim, border: `1px solid ${T.protoBorder}`, borderRadius: 8 }}>
-                    <span style={{ fontSize: 11, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.08em", textTransform: "uppercase", color: T.proto }}>
-                      ✓ Flow mapped — prototype brief ready for wireframing
-                    </span>
+                  <div style={{ display: "flex", gap: 8 }}>
+                    <CopyBtn text={handoff} />
+                    <Btn small variant="ghost" onClick={() => dl(handoff, "prototype-brief.md")}>↓ .md</Btn>
                   </div>
-                )}
+                </div>
+                <OutputBlock content={handoff} maxH={520} />
+                <div style={{ marginTop: 20, padding: "14px 16px", background: T.protoDim, border: `1px solid ${T.protoBorder}`, borderRadius: 8 }}>
+                  <span style={{ fontSize: 11, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.08em", textTransform: "uppercase", color: T.proto }}>
+                    ✓ Flow mapped — prototype brief ready for wireframing
+                  </span>
+                </div>
               </div>
             )}
           </div>

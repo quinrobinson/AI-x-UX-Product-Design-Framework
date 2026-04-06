@@ -6,6 +6,8 @@ const T = {
   deliver: "#14B8A6", deliverDim: "rgba(20,184,166,0.12)", deliverBorder: "rgba(20,184,166,0.25)",
 };
 
+const ACCENT = T.deliver;
+
 const STEPS = [
   { id: 1, label: "Setup",      short: "Feature + screens"        },
   { id: 2, label: "Issues",     short: "Log discrepancies"        },
@@ -19,22 +21,6 @@ const SEVERITY_COLORS = {
   "P2": "#3B82F6",
   "P3": "#666666",
 };
-
-async function callClaude(system, user, onChunk) {
-  const res = await fetch("/api/claude", {
-    method: "POST", headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ model: "claude-haiku-4-5-20251001", max_tokens: 1000, stream: true, system, messages: [{ role: "user", content: user }] }),
-  });
-  if (!res.ok) { onChunk("⚠️ Error " + res.status + ". Check your API key and try again."); return ""; }
-  const reader = res.body.getReader(); const dec = new TextDecoder(); let full = "";
-  while (true) {
-    const { done, value } = await reader.read(); if (done) break;
-    for (const line of dec.decode(value).split("\n").filter(l => l.startsWith("data: "))) {
-      try { const j = JSON.parse(line.slice(6)); if (j.type === "content_block_delta" && j.delta?.text) { full += j.delta.text; onChunk(full); } } catch {}
-    }
-  }
-  return full;
-}
 
 function Label({ children, sub }) {
   return <div style={{ marginBottom: sub ? 4 : 8 }}><span style={{ fontSize: sub ? 11 : 12, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.07em", textTransform: "uppercase", color: sub ? T.muted : T.deliver }}>{children}</span></div>;
@@ -58,11 +44,10 @@ function CopyBtn({ text }) {
   return <Btn small variant="ghost" onClick={() => { navigator.clipboard.writeText(text); setC(true); setTimeout(() => setC(false), 1800); }}>{c ? "✓ Copied" : "Copy"}</Btn>;
 }
 
-function OutputBlock({ content, streaming, maxH = 480 }) {
+function OutputBlock({ content, maxH = 480 }) {
   return (
     <div style={{ background: T.surface, border: `1px solid ${T.border}`, borderRadius: 8, padding: "16px 18px", fontSize: 13, lineHeight: 1.7, color: T.text, fontFamily: "'DM Sans', sans-serif", whiteSpace: "pre-wrap", wordBreak: "break-word", maxHeight: maxH, overflowY: "auto" }}>
       {content || <span style={{ color: T.dim, fontStyle: "italic" }}>Output will appear here…</span>}
-      {streaming && <span style={{ display: "inline-block", width: 6, height: 14, background: T.deliver, marginLeft: 2, animation: "blink 0.8s step-end infinite", verticalAlign: "middle" }} />}
     </div>
   );
 }
@@ -98,11 +83,45 @@ function StepIndicator({ current, completed }) {
   );
 }
 
+function PromptPanel({ promptText, pastedResult, setPastedResult }) {
+  const [copied, setCopied] = useState(false);
+  if (!promptText) return null;
+  return (
+    <div style={{ background: T.surface, border: `1px solid ${T.border}`, borderRadius: 8, padding: "16px 18px", marginTop: 16 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+        <span style={{ fontSize: 11, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.08em", textTransform: "uppercase", color: ACCENT }}>
+          Prompt ready — copy and run in Claude
+        </span>
+        <div style={{ display: "flex", gap: 8 }}>
+          <button
+            onClick={() => { navigator.clipboard.writeText(promptText); setCopied(true); setTimeout(() => setCopied(false), 2000); }}
+            style={{ padding: "6px 14px", fontSize: 11, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.06em", textTransform: "uppercase", fontWeight: 600, cursor: "pointer", borderRadius: 6, border: `1.5px solid ${ACCENT}`, background: copied ? ACCENT : "transparent", color: copied ? "#fff" : ACCENT, transition: "all 0.15s" }}
+          >{copied ? "✓ Copied" : "Copy Prompt"}</button>
+          <a href="https://claude.ai" target="_blank" rel="noopener noreferrer"
+            style={{ padding: "6px 14px", fontSize: 11, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.06em", textTransform: "uppercase", fontWeight: 600, cursor: "pointer", borderRadius: 6, border: `1.5px solid ${T.border}`, background: "transparent", color: T.muted, textDecoration: "none", transition: "all 0.15s" }}
+          >Open Claude.ai →</a>
+        </div>
+      </div>
+      <pre style={{ whiteSpace: "pre-wrap", fontSize: 12, lineHeight: 1.7, color: T.text, fontFamily: "'JetBrains Mono', monospace", background: T.card, border: `1px solid ${T.border}`, borderRadius: 6, padding: "12px 14px", maxHeight: 260, overflowY: "auto", margin: 0 }}>{promptText}</pre>
+      <div style={{ marginTop: 16 }}>
+        <div style={{ fontSize: 11, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.07em", textTransform: "uppercase", color: T.muted, marginBottom: 8 }}>Paste Claude's response here</div>
+        <textarea
+          value={pastedResult}
+          onChange={e => setPastedResult(e.target.value)}
+          placeholder="Run the prompt in Claude, then paste the result here to continue…"
+          rows={6}
+          style={{ width: "100%", boxSizing: "border-box", background: T.card, border: `1px solid ${T.border}`, borderRadius: 6, padding: "12px 14px", color: T.text, fontSize: 13, lineHeight: 1.6, fontFamily: "'DM Sans', sans-serif", resize: "vertical", outline: "none" }}
+          onFocus={e => e.target.style.borderColor = ACCENT}
+          onBlur={e => e.target.style.borderColor = T.border}
+        />
+      </div>
+    </div>
+  );
+}
+
 export default function DesignQALogger() {
   const [step, setStep] = useState(1);
   const [completed, setCompleted] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [stream, setStream] = useState("");
 
   const [feature, setFeature] = useState("");
   const [screens, setScreens] = useState("");
@@ -113,6 +132,9 @@ export default function DesignQALogger() {
   const [prioritized, setPrioritized] = useState("");
   const [qaReport, setQaReport] = useState("");
 
+  const [promptText, setPromptText] = useState("");
+  const [pastedResult, setPastedResult] = useState("");
+
   const mark = (id) => setCompleted(p => [...new Set([...p, id])]);
 
   function dl(content, filename) {
@@ -122,11 +144,9 @@ export default function DesignQALogger() {
     URL.revokeObjectURL(url);
   }
 
-  async function handleStructure() {
-    setLoading(true); setStream("");
-    const result = await callClaude(
-      "You are a design QA specialist structuring implementation review notes. Be precise and consistent. Every issue needs a clear spec reference and a specific fix. Design QA is not subjective — it's comparing what was built against what was approved.",
-      `Structure these design QA notes into a consistent issue log.
+  function handleStructure() {
+    const sys = "You are a design QA specialist structuring implementation review notes. Be precise and consistent. Every issue needs a clear spec reference and a specific fix. Design QA is not subjective — it's comparing what was built against what was approved.";
+    const msg = `Structure these design QA notes into a consistent issue log.
 
 Feature: ${feature}
 Screens reviewed: ${screens}
@@ -153,17 +173,20 @@ After all issues, add a summary:
 [List any screens or elements that match the spec perfectly — equal weight to issues]
 
 ## Unclear Scope
-[Anything ambiguous — where the spec and implementation differ but it's unclear if it's intentional]`,
-      setStream
-    );
-    setStructuredIssues(result); setLoading(false); mark(2);
+[Anything ambiguous — where the spec and implementation differ but it's unclear if it's intentional]`;
+    setPromptText(sys + "\n\n" + msg);
+    setPastedResult("");
   }
 
-  async function handlePrioritize() {
-    setLoading(true); setStream("");
-    const result = await callClaude(
-      "You are a design QA lead prioritizing issues for a production release. Apply severity consistently. P0 = blocks launch (broken functionality or severe accessibility failure). P1 = must fix before launch (significant visual or UX deviation). P2 = fix soon post-launch. P3 = polish when time allows.",
-      `Rate and prioritize every issue in this QA log.
+  function acceptStructuredIssues() {
+    setStructuredIssues(pastedResult);
+    setPromptText(""); setPastedResult("");
+    mark(2);
+  }
+
+  function handlePrioritize() {
+    const sys = "You are a design QA lead prioritizing issues for a production release. Apply severity consistently. P0 = blocks launch (broken functionality or severe accessibility failure). P1 = must fix before launch (significant visual or UX deviation). P2 = fix soon post-launch. P3 = polish when time allows.";
+    const msg = `Rate and prioritize every issue in this QA log.
 
 Feature: ${feature}
 
@@ -193,17 +216,20 @@ Produce:
 - P3 (polish): [N]
 
 ## Launch recommendation
-[Safe to launch if P0 = 0 / Hold: N P0 issues must resolve first / Launch with known issues: list P1s being deferred with rationale]`,
-      setStream
-    );
-    setPrioritized(result); setLoading(false); mark(3);
+[Safe to launch if P0 = 0 / Hold: N P0 issues must resolve first / Launch with known issues: list P1s being deferred with rationale]`;
+    setPromptText(sys + "\n\n" + msg);
+    setPastedResult("");
   }
 
-  async function handleReport() {
-    setLoading(true); setStream("");
-    const result = await callClaude(
-      "You are a design QA lead generating a final QA report for stakeholders and developers. Be clear about what needs to happen before launch. Sign-off is a real decision — state it explicitly.",
-      `Generate a complete design QA report.
+  function acceptPrioritized() {
+    setPrioritized(pastedResult);
+    setPromptText(""); setPastedResult("");
+    mark(3);
+  }
+
+  function handleReport() {
+    const sys = "You are a design QA lead generating a final QA report for stakeholders and developers. Be clear about what needs to happen before launch. Sign-off is a real decision — state it explicitly.";
+    const msg = `Generate a complete design QA report.
 
 Feature: ${feature}
 Environment: ${environment || "Staging"}
@@ -263,10 +289,15 @@ Build: [what was implemented]
 - [ ] Accessibility: screen reader tested on primary flow
 - [ ] Responsive: tested on [smallest supported viewport]
 - [ ] Dark mode: tested (if applicable)
-- [ ] Design approved for production: [Designer] — [Date]`,
-      setStream
-    );
-    setQaReport(result); setLoading(false); mark(4);
+- [ ] Design approved for production: [Designer] — [Date]`;
+    setPromptText(sys + "\n\n" + msg);
+    setPastedResult("");
+  }
+
+  function acceptQaReport() {
+    setQaReport(pastedResult);
+    setPromptText(""); setPastedResult("");
+    mark(4);
   }
 
   const issueCount = (structuredIssues.match(/^## Issue/gm) || []).length;
@@ -277,7 +308,6 @@ Build: [what was implemented]
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;600;700&display=swap');
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
         ::-webkit-scrollbar { width: 4px; } ::-webkit-scrollbar-thumb { background: #2a2a2a; border-radius: 2px; }
         :focus-visible { outline: 2px solid #999; outline-offset: 2px; border-radius: 4px; }
       `}</style>
@@ -345,20 +375,31 @@ Build: [what was implemented]
           <div>
             <SectionHeader step={2} title="Structure Issues"
               desc="Claude converts scattered notes into consistent issue entries — each with screen, element, spec vs. actual, and specific fix." />
-            {!structuredIssues && <div style={{ display: "flex", justifyContent: "flex-end" }}><Btn onClick={handleStructure} disabled={loading}>{loading ? "Structuring…" : "Structure All Issues"}</Btn></div>}
-            {(stream || structuredIssues) && (
+            {!structuredIssues && (
+              <div>
+                <div style={{ display: "flex", justifyContent: "flex-end" }}>
+                  <Btn onClick={handleStructure} disabled={!!promptText}>Structure All Issues</Btn>
+                </div>
+                <PromptPanel promptText={promptText} pastedResult={pastedResult} setPastedResult={setPastedResult} />
+                {promptText && pastedResult.trim() && (
+                  <div style={{ display: "flex", gap: 10, marginTop: 12, justifyContent: "flex-end" }}>
+                    <Btn variant="ghost" small onClick={() => { setPromptText(""); setPastedResult(""); }}>Cancel</Btn>
+                    <Btn small onClick={acceptStructuredIssues}>Accept Issues</Btn>
+                  </div>
+                )}
+              </div>
+            )}
+            {structuredIssues && (
               <div>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
                   <Label sub>Screen · element · spec says · build has · fix</Label>
-                  {structuredIssues && !loading && <CopyBtn text={structuredIssues} />}
+                  <CopyBtn text={structuredIssues} />
                 </div>
-                <OutputBlock content={loading ? stream : structuredIssues} streaming={loading} maxH={540} />
-                {structuredIssues && !loading && (
-                  <div style={{ display: "flex", gap: 10, marginTop: 12, justifyContent: "flex-end" }}>
-                    <Btn variant="ghost" small onClick={() => { setStructuredIssues(""); setStream(""); }}>Re-structure</Btn>
-                    <Btn small onClick={() => { mark(2); setStep(3); }}>Prioritize Issues →</Btn>
-                  </div>
-                )}
+                <OutputBlock content={structuredIssues} maxH={540} />
+                <div style={{ display: "flex", gap: 10, marginTop: 12, justifyContent: "flex-end" }}>
+                  <Btn variant="ghost" small onClick={() => { setStructuredIssues(""); setPromptText(""); setPastedResult(""); }}>Re-structure</Btn>
+                  <Btn small onClick={() => { mark(2); setStep(3); }}>Prioritize Issues →</Btn>
+                </div>
               </div>
             )}
           </div>
@@ -376,25 +417,34 @@ Build: [what was implemented]
                 </div>
               ))}
             </div>
-            {!prioritized && <div style={{ display: "flex", justifyContent: "flex-end" }}><Btn onClick={handlePrioritize} disabled={loading}>{loading ? "Prioritizing…" : "Rate All Issues"}</Btn></div>}
-            {(stream || prioritized) && (
+            {!prioritized && (
+              <div>
+                <div style={{ display: "flex", justifyContent: "flex-end" }}>
+                  <Btn onClick={handlePrioritize} disabled={!!promptText}>Rate All Issues</Btn>
+                </div>
+                <PromptPanel promptText={promptText} pastedResult={pastedResult} setPastedResult={setPastedResult} />
+                {promptText && pastedResult.trim() && (
+                  <div style={{ display: "flex", gap: 10, marginTop: 12, justifyContent: "flex-end" }}>
+                    <Btn variant="ghost" small onClick={() => { setPromptText(""); setPastedResult(""); }}>Cancel</Btn>
+                    <Btn small onClick={acceptPrioritized}>Accept Priority List</Btn>
+                  </div>
+                )}
+              </div>
+            )}
+            {prioritized && (
               <div>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
                   <Label sub>Priority table · summary · launch recommendation</Label>
-                  {prioritized && !loading && (
-                    <div style={{ display: "flex", gap: 8 }}>
-                      <CopyBtn text={prioritized} />
-                      <Btn small variant="ghost" onClick={() => dl([structuredIssues, prioritized].join("\n\n---\n\n"), "qa-log.md")}>↓ Issue log .md</Btn>
-                    </div>
-                  )}
-                </div>
-                <OutputBlock content={loading ? stream : prioritized} streaming={loading} maxH={500} />
-                {prioritized && !loading && (
-                  <div style={{ display: "flex", gap: 10, marginTop: 12, justifyContent: "flex-end" }}>
-                    <Btn variant="ghost" small onClick={() => { setPrioritized(""); setStream(""); }}>Re-prioritize</Btn>
-                    <Btn small onClick={() => { mark(3); setStep(4); }}>Generate QA Report →</Btn>
+                  <div style={{ display: "flex", gap: 8 }}>
+                    <CopyBtn text={prioritized} />
+                    <Btn small variant="ghost" onClick={() => dl([structuredIssues, prioritized].join("\n\n---\n\n"), "qa-log.md")}>↓ Issue log .md</Btn>
                   </div>
-                )}
+                </div>
+                <OutputBlock content={prioritized} maxH={500} />
+                <div style={{ display: "flex", gap: 10, marginTop: 12, justifyContent: "flex-end" }}>
+                  <Btn variant="ghost" small onClick={() => { setPrioritized(""); setPromptText(""); setPastedResult(""); }}>Re-prioritize</Btn>
+                  <Btn small onClick={() => { mark(3); setStep(4); }}>Generate QA Report →</Btn>
+                </div>
               </div>
             )}
           </div>
@@ -404,26 +454,35 @@ Build: [what was implemented]
           <div>
             <SectionHeader step={4} title="QA Report"
               desc="Complete QA report with launch recommendation, sign-off checklist, and P0/P1 fix list — ready to share with engineering and PM." />
-            {!qaReport && <div style={{ display: "flex", justifyContent: "flex-end" }}><Btn onClick={handleReport} disabled={loading}>{loading ? "Generating…" : "Generate QA Report"}</Btn></div>}
-            {(stream || qaReport) && (
+            {!qaReport && (
+              <div>
+                <div style={{ display: "flex", justifyContent: "flex-end" }}>
+                  <Btn onClick={handleReport} disabled={!!promptText}>Generate QA Report</Btn>
+                </div>
+                <PromptPanel promptText={promptText} pastedResult={pastedResult} setPastedResult={setPastedResult} />
+                {promptText && pastedResult.trim() && (
+                  <div style={{ display: "flex", gap: 10, marginTop: 12, justifyContent: "flex-end" }}>
+                    <Btn variant="ghost" small onClick={() => { setPromptText(""); setPastedResult(""); }}>Cancel</Btn>
+                    <Btn small onClick={acceptQaReport}>Accept QA Report</Btn>
+                  </div>
+                )}
+              </div>
+            )}
+            {qaReport && (
               <div>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
                   <Label sub>Summary · launch decision · P0/P1 fixes · sign-off checklist</Label>
-                  {qaReport && !loading && (
-                    <div style={{ display: "flex", gap: 8 }}>
-                      <CopyBtn text={qaReport} />
-                      <Btn small variant="ghost" onClick={() => dl(qaReport, `${feature.toLowerCase().replace(/\s+/g, "-")}-qa-report.md`)}>↓ Report .md</Btn>
-                    </div>
-                  )}
-                </div>
-                <OutputBlock content={loading ? stream : qaReport} streaming={loading} maxH={560} />
-                {qaReport && !loading && (
-                  <div style={{ marginTop: 20, padding: "14px 16px", background: T.deliverDim, border: `1px solid ${T.deliverBorder}`, borderRadius: 8 }}>
-                    <span style={{ fontSize: 11, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.08em", textTransform: "uppercase", color: T.deliver }}>
-                      ✓ Share report with engineering — resolve P0s before any production deploy
-                    </span>
+                  <div style={{ display: "flex", gap: 8 }}>
+                    <CopyBtn text={qaReport} />
+                    <Btn small variant="ghost" onClick={() => dl(qaReport, `${feature.toLowerCase().replace(/\s+/g, "-")}-qa-report.md`)}>↓ Report .md</Btn>
                   </div>
-                )}
+                </div>
+                <OutputBlock content={qaReport} maxH={560} />
+                <div style={{ marginTop: 20, padding: "14px 16px", background: T.deliverDim, border: `1px solid ${T.deliverBorder}`, borderRadius: 8 }}>
+                  <span style={{ fontSize: 11, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.08em", textTransform: "uppercase", color: T.deliver }}>
+                    ✓ Share report with engineering — resolve P0s before any production deploy
+                  </span>
+                </div>
               </div>
             )}
           </div>

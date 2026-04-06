@@ -14,20 +14,37 @@ const STEPS = [
   { id: 5, label: "Brief",      short: "Build brief + handoff"    },
 ];
 
-async function callClaude(system, user, onChunk) {
-  const res = await fetch("/api/claude", {
-    method: "POST", headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ model: "claude-haiku-4-5-20251001", max_tokens: 1000, stream: true, system, messages: [{ role: "user", content: user }] }),
-  });
-  if (!res.ok) { onChunk("⚠️ Error " + res.status + ". Check your API key and try again."); return ""; }
-  const reader = res.body.getReader(); const dec = new TextDecoder(); let full = "";
-  while (true) {
-    const { done, value } = await reader.read(); if (done) break;
-    for (const line of dec.decode(value).split("\n").filter(l => l.startsWith("data: "))) {
-      try { const j = JSON.parse(line.slice(6)); if (j.type === "content_block_delta" && j.delta?.text) { full += j.delta.text; onChunk(full); } } catch {}
-    }
-  }
-  return full;
+function PromptPanel({ promptText, pastedResult, setPastedResult }) {
+  const [copied, setCopied] = useState(false);
+  if (!promptText) return null;
+  return (
+    <div style={{ background: T.surface, border: `1px solid ${T.border}`, borderRadius: 8, padding: "16px 18px", marginTop: 16 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+        <span style={{ fontSize: 11, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.08em", textTransform: "uppercase", color: T.proto }}>
+          Prompt ready — copy and run in Claude
+        </span>
+        <div style={{ display: "flex", gap: 8 }}>
+          <button
+            onClick={() => { navigator.clipboard.writeText(promptText); setCopied(true); setTimeout(() => setCopied(false), 2000); }}
+            style={{ padding: "6px 14px", fontSize: 11, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.06em", textTransform: "uppercase", fontWeight: 600, cursor: "pointer", borderRadius: 6, border: `1.5px solid ${T.proto}`, background: copied ? T.proto : "transparent", color: copied ? "#fff" : T.proto, transition: "all 0.15s" }}
+          >{copied ? "✓ Copied" : "Copy Prompt"}</button>
+          <a href="https://claude.ai" target="_blank" rel="noopener noreferrer"
+            style={{ padding: "6px 14px", fontSize: 11, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.06em", textTransform: "uppercase", fontWeight: 600, borderRadius: 6, border: `1.5px solid ${T.border}`, color: T.muted, textDecoration: "none", display: "inline-block" }}
+          >Open Claude.ai →</a>
+        </div>
+      </div>
+      <pre style={{ whiteSpace: "pre-wrap", fontSize: 12, lineHeight: 1.7, color: T.text, fontFamily: "'DM Sans', sans-serif", margin: 0, maxHeight: 320, overflowY: "auto" }}>{promptText}</pre>
+      <div style={{ marginTop: 16 }}>
+        <div style={{ fontSize: 11, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.08em", textTransform: "uppercase", color: T.muted, marginBottom: 8 }}>Paste Claude's response here</div>
+        <textarea
+          value={pastedResult} onChange={e => setPastedResult(e.target.value)}
+          placeholder="Run the prompt in Claude, then paste the result here to continue…" rows={6}
+          style={{ width: "100%", boxSizing: "border-box", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, padding: "12px 14px", color: T.text, fontSize: 13, lineHeight: 1.6, fontFamily: "'DM Sans', sans-serif", resize: "vertical", outline: "none" }}
+          onFocus={e => e.target.style.borderColor = T.proto} onBlur={e => e.target.style.borderColor = T.border}
+        />
+      </div>
+    </div>
+  );
 }
 
 function Label({ children, sub }) {
@@ -48,11 +65,10 @@ function CopyBtn({ text }) {
   return <Btn small variant="ghost" onClick={() => { navigator.clipboard.writeText(text); setC(true); setTimeout(() => setC(false), 1800); }}>{c ? "✓ Copied" : "Copy"}</Btn>;
 }
 
-function OutputBlock({ content, streaming, maxH = 500 }) {
+function OutputBlock({ content, maxH = 500 }) {
   return (
     <div style={{ background: T.surface, border: `1px solid ${T.border}`, borderRadius: 8, padding: "16px 18px", fontSize: 13, lineHeight: 1.7, color: T.text, fontFamily: "'DM Sans', sans-serif", whiteSpace: "pre-wrap", wordBreak: "break-word", maxHeight: maxH, overflowY: "auto" }}>
       {content || <span style={{ color: T.dim, fontStyle: "italic" }}>Output will appear here…</span>}
-      {streaming && <span style={{ display: "inline-block", width: 6, height: 14, background: T.proto, marginLeft: 2, animation: "blink 0.8s step-end infinite", verticalAlign: "middle" }} />}
     </div>
   );
 }
@@ -91,8 +107,8 @@ function StepIndicator({ current, completed }) {
 export default function ComponentArchitecturePlanner() {
   const [step, setStep] = useState(1);
   const [completed, setCompleted] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [stream, setStream] = useState("");
+  const [promptText, setPromptText] = useState("");
+  const [pastedResult, setPastedResult] = useState("");
 
   // Step 1 inputs
   const [screenInventory, setScreenInventory] = useState("");
@@ -115,8 +131,7 @@ export default function ComponentArchitecturePlanner() {
     URL.revokeObjectURL(url);
   }
 
-  async function handleComponents() {
-    setLoading(true); setStream("");
+  function handleComponents() {
     const sys = `You are a senior design systems architect. Analyze a screen inventory and produce a structured component breakdown. Group components into three tiers:
 
 ATOMIC — single-purpose primitives: Button, Input, Label, Badge, Icon, Avatar, Divider, Spinner, Tag, Toggle, Checkbox, Radio
@@ -139,12 +154,19 @@ ${tokenContext ? `Design tokens available:\n${tokenContext}` : "No custom token 
 
 Analyze every screen, identify all unique UI patterns, and produce the full component breakdown grouped by tier. Flag anything that appears on 3+ screens as high-priority.`;
 
-    const result = await callClaude(sys, user, setStream);
-    setComponents(result); setStream(""); mark(1); setStep(2); setLoading(false);
+    setPromptText(sys + "\n\n" + user);
+    setPastedResult("");
   }
 
-  async function handleVariants() {
-    setLoading(true); setStream("");
+  function acceptComponents() {
+    setComponents(pastedResult);
+    setPromptText("");
+    setPastedResult("");
+    mark(1);
+    setStep(2);
+  }
+
+  function handleVariants() {
     const sys = `You are a design systems architect defining variant matrices. For each component, define every axis of variation a designer needs to account for before building in Figma.
 
 Variant axes to consider:
@@ -168,12 +190,19 @@ ${tokenContext ? `Token context:\n${tokenContext}` : "Using --sds-* defaults."}
 
 For each component in the list, produce the complete variant matrix. Be specific — a Button has different variant needs than a Data Table.`;
 
-    const result = await callClaude(sys, user, setStream);
-    setVariants(result); setStream(""); mark(2); setStep(3); setLoading(false);
+    setPromptText(sys + "\n\n" + user);
+    setPastedResult("");
   }
 
-  async function handleTokens() {
-    setLoading(true); setStream("");
+  function acceptVariants() {
+    setVariants(pastedResult);
+    setPromptText("");
+    setPastedResult("");
+    mark(2);
+    setStep(3);
+  }
+
+  function handleTokens() {
     const tokenPrefix = tokenContext ? "Use the exact token names from the provided token set." : "Use --sds-* naming convention: --sds-color-*, --sds-size-space-*, --sds-size-radius-*, --sds-typography-*, --sds-shadow-*.";
 
     const sys = `You are a design systems architect mapping components to design tokens. Every visual property must map to a named token — no hardcoded values in specs.
@@ -200,12 +229,19 @@ ${tokenContext ? `Available tokens:\n${tokenContext}` : "Apply --sds-* naming co
 
 Produce the token assignment map. Every property of every component should have a named token. Flag any properties where a token doesn't exist and a new token should be created.`;
 
-    const result = await callClaude(sys, user, setStream);
-    setTokens(result); setStream(""); mark(3); setStep(4); setLoading(false);
+    setPromptText(sys + "\n\n" + user);
+    setPastedResult("");
   }
 
-  async function handleBrief() {
-    setLoading(true); setStream("");
+  function acceptTokens() {
+    setTokens(pastedResult);
+    setPromptText("");
+    setPastedResult("");
+    mark(3);
+    setStep(4);
+  }
+
+  function handleBrief() {
     const sys = `You are a senior design systems architect generating a build brief and phase handoff. The brief must be actionable — a designer should be able to open Figma and start building immediately.
 
 The brief includes:
@@ -231,8 +267,16 @@ Product context: ${productContext || "Not specified"}
 
 Generate the complete build brief with ordered build list, Figma structure recommendation, build principles, open questions, and handoff block for the Component State Specifier.`;
 
-    const result = await callClaude(sys, user, setStream);
-    setBrief(result); setStream(""); mark(4); setStep(5); setLoading(false);
+    setPromptText(sys + "\n\n" + user);
+    setPastedResult("");
+  }
+
+  function acceptBrief() {
+    setBrief(pastedResult);
+    setPromptText("");
+    setPastedResult("");
+    mark(4);
+    setStep(5);
   }
 
   const fullDoc = `# Component Architecture Plan\n\n## Component Inventory\n${components}\n\n## Variant Matrix\n${variants}\n\n## Token Assignments\n${tokens}\n\n## Build Brief\n${brief}`;
@@ -240,7 +284,6 @@ Generate the complete build brief with ordered build list, Figma structure recom
   return (
     <div style={{ background: T.bg, minHeight: "100vh", padding: "40px 32px", fontFamily: "'DM Sans', sans-serif", color: T.text }}>
       <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;700&family=DM+Serif+Display&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
-      <style>{`@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }`}</style>
 
       {/* Header */}
       <div style={{ maxWidth: 760, margin: "0 auto 40px" }}>
@@ -259,12 +302,10 @@ Generate the complete build brief with ordered build list, Figma structure recom
           <div>
             <SectionHeader step={1} title="Screen Inventory" desc="Paste the screen inventory from your User Flow Mapper output, or describe the screens you're building. Include every screen and state — the more complete the input, the more precise the component breakdown." />
             <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-
               <div>
                 <Label>Screen inventory</Label>
                 <Textarea value={screenInventory} onChange={setScreenInventory} placeholder="Paste your screen list here. Example:&#10;- Home / Dashboard (default, empty, loading)&#10;- Login (default, error, forgot password)&#10;- Product List (default, filtered, empty)&#10;- Product Detail (default, out of stock)&#10;- Cart (items, empty, processing)&#10;- Checkout (address, payment, confirmation)&#10;- User Profile (view, edit)&#10;- Settings (notifications, privacy, account)" rows={10} />
               </div>
-
               <div>
                 <Label>Platform</Label>
                 <div style={{ display: "flex", gap: 8 }}>
@@ -273,23 +314,26 @@ Generate the complete build brief with ordered build list, Figma structure recom
                   ))}
                 </div>
               </div>
-
               <div>
                 <Label>Product context <span style={{ color: T.dim, textTransform: "none", fontFamily: "'DM Sans', sans-serif", fontSize: 11 }}>(optional)</span></Label>
                 <Textarea value={productContext} onChange={setProductContext} placeholder="Brief description of the product, user, and key interactions. Helps Claude make better decisions about component complexity and variant needs." rows={3} />
               </div>
-
               <div>
                 <Label>Design tokens <span style={{ color: T.dim, textTransform: "none", fontFamily: "'DM Sans', sans-serif", fontSize: 11 }}>(optional — paste CSS custom properties)</span></Label>
-                <Textarea value={tokenContext} onChange={setTokenContext} placeholder="Paste your CSS custom properties here if you have them. Example:&#10;--sds-color-primary-600: #2563EB;&#10;--sds-size-space-200: 8px;&#10;&#10;If left blank, Claude will use --sds-* naming convention defaults." rows={5} />
+                <Textarea value={tokenContext} onChange={setTokenContext} placeholder="Paste your CSS custom properties here if you have them. Example:&#10;--sds-color-primary-600: #2563EB;&#10;--sds-size-space-200: 8px;&#10;&#10;If left blank, output uses --sds-* naming convention defaults." rows={5} />
                 <p style={{ fontSize: 11, color: T.dim, margin: "6px 0 0", lineHeight: 1.5 }}>Export from the Design System Builder → Copy CSS → paste above. If blank, output uses <code style={{ fontFamily: "'JetBrains Mono', monospace", color: T.proto }}>--sds-*</code> defaults.</p>
               </div>
-
               <div style={{ display: "flex", justifyContent: "flex-end" }}>
-                <Btn onClick={handleComponents} disabled={!screenInventory.trim() || loading}>
-                  {loading ? "Identifying components…" : "Identify components →"}
+                <Btn onClick={handleComponents} disabled={!screenInventory.trim()}>
+                  Identify components →
                 </Btn>
               </div>
+              <PromptPanel promptText={promptText} pastedResult={pastedResult} setPastedResult={setPastedResult} />
+              {promptText && (
+                <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
+                  <Btn small disabled={!pastedResult.trim()} onClick={acceptComponents}>Accept Components →</Btn>
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -298,20 +342,19 @@ Generate the complete build brief with ordered build list, Figma structure recom
         {step === 2 && (
           <div>
             <SectionHeader step={2} title="Component Identification" desc="Every unique UI pattern across your screens, grouped into atomic, molecular, and organism tiers. Existing components are flagged separately from custom builds." />
-            {loading ? (
-              <div>
-                <Label sub>Analyzing screens…</Label>
-                <OutputBlock content={stream} streaming={true} maxH={480} />
+            <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+              <OutputBlock content={components} maxH={480} />
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <CopyBtn text={components} />
+                <Btn onClick={handleVariants}>Define variant matrix →</Btn>
               </div>
-            ) : (
-              <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-                <OutputBlock content={components} maxH={480} />
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  <CopyBtn text={components} />
-                  <Btn onClick={handleVariants} disabled={loading}>Define variant matrix →</Btn>
+              <PromptPanel promptText={promptText} pastedResult={pastedResult} setPastedResult={setPastedResult} />
+              {promptText && (
+                <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
+                  <Btn small disabled={!pastedResult.trim()} onClick={acceptVariants}>Accept Variants →</Btn>
                 </div>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         )}
 
@@ -319,20 +362,19 @@ Generate the complete build brief with ordered build list, Figma structure recom
         {step === 3 && (
           <div>
             <SectionHeader step={3} title="Variant Matrix" desc="For each component: every axis of variation, the default state, and v1 vs v2 priority. No over-engineering — only variants that will actually be built." />
-            {loading ? (
-              <div>
-                <Label sub>Mapping variants…</Label>
-                <OutputBlock content={stream} streaming={true} maxH={480} />
+            <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+              <OutputBlock content={variants} maxH={480} />
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <CopyBtn text={variants} />
+                <Btn onClick={handleTokens}>Assign tokens →</Btn>
               </div>
-            ) : (
-              <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-                <OutputBlock content={variants} maxH={480} />
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  <CopyBtn text={variants} />
-                  <Btn onClick={handleTokens} disabled={loading}>Assign tokens →</Btn>
+              <PromptPanel promptText={promptText} pastedResult={pastedResult} setPastedResult={setPastedResult} />
+              {promptText && (
+                <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
+                  <Btn small disabled={!pastedResult.trim()} onClick={acceptTokens}>Accept Token Assignments →</Btn>
                 </div>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         )}
 
@@ -340,20 +382,19 @@ Generate the complete build brief with ordered build list, Figma structure recom
         {step === 4 && (
           <div>
             <SectionHeader step={4} title="Token Assignment" desc="Every visual property mapped to a named token. No hardcoded values. New tokens that need to be created are flagged explicitly." />
-            {loading ? (
-              <div>
-                <Label sub>Mapping tokens…</Label>
-                <OutputBlock content={stream} streaming={true} maxH={480} />
+            <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+              <OutputBlock content={tokens} maxH={480} />
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <CopyBtn text={tokens} />
+                <Btn onClick={handleBrief}>Generate build brief →</Btn>
               </div>
-            ) : (
-              <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-                <OutputBlock content={tokens} maxH={480} />
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  <CopyBtn text={tokens} />
-                  <Btn onClick={handleBrief} disabled={loading}>Generate build brief →</Btn>
+              <PromptPanel promptText={promptText} pastedResult={pastedResult} setPastedResult={setPastedResult} />
+              {promptText && (
+                <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
+                  <Btn small disabled={!pastedResult.trim()} onClick={acceptBrief}>Accept Build Brief →</Btn>
                 </div>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         )}
 
@@ -361,28 +402,21 @@ Generate the complete build brief with ordered build list, Figma structure recom
         {step === 5 && (
           <div>
             <SectionHeader step={5} title="Build Brief + Handoff" desc="Ordered build list, Figma structure, build principles, open questions, and a handoff block for the Component State Specifier. Copy any single component row to start speccing states." />
-            {loading ? (
-              <div>
-                <Label sub>Generating build brief…</Label>
-                <OutputBlock content={stream} streaming={true} maxH={480} />
-              </div>
-            ) : (
-              <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-                <OutputBlock content={brief} maxH={480} />
+            <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+              <OutputBlock content={brief} maxH={480} />
 
-                {/* Callout */}
-                <div style={{ background: T.card, border: `1px solid ${T.protoBorder}`, borderRadius: 8, padding: "14px 16px" }}>
-                  <div style={{ fontSize: 11, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.08em", textTransform: "uppercase", color: T.proto, marginBottom: 8 }}>Next step</div>
-                  <p style={{ fontSize: 13, color: T.muted, margin: 0, lineHeight: 1.6 }}>Copy any component row from the handoff block above and paste it into the <strong style={{ color: T.text }}>Component State Specifier</strong> to document every state before building in Figma.</p>
-                </div>
-
-                <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", flexWrap: "wrap" }}>
-                  <CopyBtn text={brief} />
-                  <Btn variant="ghost" small onClick={() => dl(fullDoc, "component-architecture-plan.md")}>Download full plan (.md)</Btn>
-                  <Btn variant="ghost" small onClick={() => dl(brief, "build-brief.md")}>Download build brief</Btn>
-                </div>
+              {/* Callout */}
+              <div style={{ background: T.card, border: `1px solid ${T.protoBorder}`, borderRadius: 8, padding: "14px 16px" }}>
+                <div style={{ fontSize: 11, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.08em", textTransform: "uppercase", color: T.proto, marginBottom: 8 }}>Next step</div>
+                <p style={{ fontSize: 13, color: T.muted, margin: 0, lineHeight: 1.6 }}>Copy any component row from the handoff block above and paste it into the <strong style={{ color: T.text }}>Component State Specifier</strong> to document every state before building in Figma.</p>
               </div>
-            )}
+
+              <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", flexWrap: "wrap" }}>
+                <CopyBtn text={brief} />
+                <Btn variant="ghost" small onClick={() => dl(fullDoc, "component-architecture-plan.md")}>Download full plan (.md)</Btn>
+                <Btn variant="ghost" small onClick={() => dl(brief, "build-brief.md")}>Download build brief</Btn>
+              </div>
+            </div>
           </div>
         )}
       </div>

@@ -6,6 +6,8 @@ const T = {
   proto: "#3B82F6", protoDim: "rgba(59,130,246,0.12)", protoBorder: "rgba(59,130,246,0.25)",
 };
 
+const ACCENT = T.proto;
+
 const STEPS = [
   { id: 1, label: "Prototype",    short: "Summary + screens built"   },
   { id: 2, label: "Decisions",    short: "Design decisions log"      },
@@ -13,22 +15,6 @@ const STEPS = [
   { id: 4, label: "Hypotheses",   short: "Ranked assumptions"        },
   { id: 5, label: "Handoff",      short: "Validate handoff block"    },
 ];
-
-async function callClaude(system, user, onChunk) {
-  const res = await fetch("/api/claude", {
-    method: "POST", headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ model: "claude-haiku-4-5-20251001", max_tokens: 1000, stream: true, system, messages: [{ role: "user", content: user }] }),
-  });
-  if (!res.ok) { onChunk("⚠️ Error " + res.status + ". Check your API key and try again."); return ""; }
-  const reader = res.body.getReader(); const dec = new TextDecoder(); let full = "";
-  while (true) {
-    const { done, value } = await reader.read(); if (done) break;
-    for (const line of dec.decode(value).split("\n").filter(l => l.startsWith("data: "))) {
-      try { const j = JSON.parse(line.slice(6)); if (j.type === "content_block_delta" && j.delta?.text) { full += j.delta.text; onChunk(full); } } catch {}
-    }
-  }
-  return full;
-}
 
 function Label({ children, sub }) {
   return <div style={{ marginBottom: sub ? 4 : 8 }}><span style={{ fontSize: sub ? 11 : 12, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.07em", textTransform: "uppercase", color: sub ? T.muted : T.proto }}>{children}</span></div>;
@@ -52,11 +38,10 @@ function CopyBtn({ text, label = "Copy" }) {
   return <Btn small variant="ghost" onClick={() => { navigator.clipboard.writeText(text); setC(true); setTimeout(() => setC(false), 1800); }}>{c ? "✓ Copied" : label}</Btn>;
 }
 
-function OutputBlock({ content, streaming, maxH = 480 }) {
+function OutputBlock({ content, maxH = 480 }) {
   return (
     <div style={{ background: T.surface, border: `1px solid ${T.border}`, borderRadius: 8, padding: "16px 18px", fontSize: 13, lineHeight: 1.7, color: T.text, fontFamily: "'DM Sans', sans-serif", whiteSpace: "pre-wrap", wordBreak: "break-word", maxHeight: maxH, overflowY: "auto" }}>
       {content || <span style={{ color: T.dim, fontStyle: "italic" }}>Output will appear here…</span>}
-      {streaming && <span style={{ display: "inline-block", width: 6, height: 14, background: T.proto, marginLeft: 2, animation: "blink 0.8s step-end infinite", verticalAlign: "middle" }} />}
     </div>
   );
 }
@@ -92,11 +77,45 @@ function StepIndicator({ current, completed }) {
   );
 }
 
+function PromptPanel({ promptText, pastedResult, setPastedResult }) {
+  const [copied, setCopied] = useState(false);
+  if (!promptText) return null;
+  return (
+    <div style={{ background: T.surface, border: `1px solid ${T.border}`, borderRadius: 8, padding: "16px 18px", marginTop: 16 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+        <span style={{ fontSize: 11, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.08em", textTransform: "uppercase", color: ACCENT }}>
+          Prompt ready — copy and run in Claude
+        </span>
+        <div style={{ display: "flex", gap: 8 }}>
+          <button
+            onClick={() => { navigator.clipboard.writeText(promptText); setCopied(true); setTimeout(() => setCopied(false), 2000); }}
+            style={{ padding: "6px 14px", fontSize: 11, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.06em", textTransform: "uppercase", fontWeight: 600, cursor: "pointer", borderRadius: 6, border: `1.5px solid ${ACCENT}`, background: copied ? ACCENT : "transparent", color: copied ? "#fff" : ACCENT, transition: "all 0.15s" }}
+          >{copied ? "✓ Copied" : "Copy Prompt"}</button>
+          <a href="https://claude.ai" target="_blank" rel="noopener noreferrer"
+            style={{ padding: "6px 14px", fontSize: 11, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.06em", textTransform: "uppercase", fontWeight: 600, cursor: "pointer", borderRadius: 6, border: `1.5px solid ${T.border}`, background: "transparent", color: T.muted, textDecoration: "none", transition: "all 0.15s" }}
+          >Open Claude.ai →</a>
+        </div>
+      </div>
+      <pre style={{ whiteSpace: "pre-wrap", fontSize: 12, lineHeight: 1.7, color: T.text, fontFamily: "'JetBrains Mono', monospace", background: T.card, border: `1px solid ${T.border}`, borderRadius: 6, padding: "12px 14px", maxHeight: 260, overflowY: "auto", margin: 0 }}>{promptText}</pre>
+      <div style={{ marginTop: 16 }}>
+        <div style={{ fontSize: 11, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.07em", textTransform: "uppercase", color: T.muted, marginBottom: 8 }}>Paste Claude's response here</div>
+        <textarea
+          value={pastedResult}
+          onChange={e => setPastedResult(e.target.value)}
+          placeholder="Run the prompt in Claude, then paste the result here to continue…"
+          rows={6}
+          style={{ width: "100%", boxSizing: "border-box", background: T.card, border: `1px solid ${T.border}`, borderRadius: 6, padding: "12px 14px", color: T.text, fontSize: 13, lineHeight: 1.6, fontFamily: "'DM Sans', sans-serif", resize: "vertical", outline: "none" }}
+          onFocus={e => e.target.style.borderColor = ACCENT}
+          onBlur={e => e.target.style.borderColor = T.border}
+        />
+      </div>
+    </div>
+  );
+}
+
 export default function PrototypeHandoffGenerator() {
   const [step, setStep] = useState(1);
   const [completed, setCompleted] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [stream, setStream] = useState("");
 
   // Step 1 — Prototype summary
   const [protoLink, setProtoLink] = useState("");
@@ -112,6 +131,9 @@ export default function PrototypeHandoffGenerator() {
   const [gaps, setGaps] = useState("");
   const [hypotheses, setHypotheses] = useState("");
   const [handoff, setHandoff] = useState("");
+
+  const [promptText, setPromptText] = useState("");
+  const [pastedResult, setPastedResult] = useState("");
 
   const mark = (id) => setCompleted(p => [...new Set([...p, id])]);
 
@@ -129,8 +151,7 @@ Screens built: ${screensBuilt}
 Flows covered: ${flowsCovered}
 Problem statement: ${problemStatement || "Not specified"}`;
 
-  async function handleDecisions() {
-    setLoading(true); setStream("");
+  function handleDecisions() {
     const sys = `You are a senior product designer documenting design decisions made during a prototype build. Your job is to surface and structure the decisions that were made — not to invent them, but to help the designer articulate what they actually did and why.
 
 For each decision document:
@@ -146,7 +167,7 @@ Also flag any decisions that are TEMPORARY — made for the prototype but will n
 
     const user = `${protoContext}
 
-Based on the prototype description above, help me document the key design decisions that were made during the build. 
+Based on the prototype description above, help me document the key design decisions that were made during the build.
 
 For the screens and flows described, identify and document:
 1. Navigation and layout decisions
@@ -157,12 +178,17 @@ For the screens and flows described, identify and document:
 
 Generate the design decision log. Flag any that are prototype-only/temporary.`;
 
-    const result = await callClaude(sys, user, setStream);
-    setDecisions(result); setStream(""); mark(1); setStep(2); setLoading(false);
+    setPromptText(sys + "\n\n" + user);
+    setPastedResult("");
   }
 
-  async function handleGaps() {
-    setLoading(true); setStream("");
+  function acceptDecisions() {
+    setDecisions(pastedResult);
+    setPromptText(""); setPastedResult("");
+    mark(1); setStep(2);
+  }
+
+  function handleGaps() {
     const sys = `You are a senior UX designer documenting the gaps and shortcuts in a prototype before usability testing. This is critical information for test facilitators — they need to know what's real vs placeholder so they don't accidentally test the wrong thing or get derailed by incomplete areas.
 
 Document gaps in three categories:
@@ -191,12 +217,17 @@ ${decisions}
 
 Document the gaps and shortcuts in this prototype. Based on the screens and flows built, identify what's missing, what's mocked, and what test facilitators need to know before running sessions.`;
 
-    const result = await callClaude(sys, user, setStream);
-    setGaps(result); setStream(""); mark(2); setStep(3); setLoading(false);
+    setPromptText(sys + "\n\n" + user);
+    setPastedResult("");
   }
 
-  async function handleHypotheses() {
-    setLoading(true); setStream("");
+  function acceptGaps() {
+    setGaps(pastedResult);
+    setPromptText(""); setPastedResult("");
+    mark(2); setStep(3);
+  }
+
+  function handleHypotheses() {
     const sys = `You are a senior product designer converting a prototype and its design decisions into testable hypotheses ranked by risk. The goal is to walk into usability testing knowing exactly what you're trying to learn — and what's most likely to fail.
 
 For each hypothesis:
@@ -223,12 +254,17 @@ ${gaps}
 
 Generate the ranked hypotheses and draft usability test tasks. Focus on the riskiest assumptions — the things most likely to fail with real users and most costly if they do.`;
 
-    const result = await callClaude(sys, user, setStream);
-    setHypotheses(result); setStream(""); mark(3); setStep(4); setLoading(false);
+    setPromptText(sys + "\n\n" + user);
+    setPastedResult("");
   }
 
-  async function handleHandoff() {
-    setLoading(true); setStream("");
+  function acceptHypotheses() {
+    setHypotheses(pastedResult);
+    setPromptText(""); setPastedResult("");
+    mark(3); setStep(4);
+  }
+
+  function handleHandoff() {
     const sys = `You are a senior product designer generating a structured phase handoff block from Prototype to Validate. This block will be pasted as the opening message in the Findings Synthesizer tool — it must contain everything the test facilitator needs to set up the session correctly.
 
 The handoff block must be formatted exactly as follows — use these headers verbatim so the Findings Synthesizer can parse them:
@@ -294,8 +330,14 @@ ${hypotheses}
 
 Generate the complete Prototype → Validate handoff block. Extract real content — no placeholders. This block gets pasted directly into the Findings Synthesizer as the first message.`;
 
-    const result = await callClaude(sys, user, setStream);
-    setHandoff(result); setStream(""); mark(4); setStep(5); setLoading(false);
+    setPromptText(sys + "\n\n" + user);
+    setPastedResult("");
+  }
+
+  function acceptHandoff() {
+    setHandoff(pastedResult);
+    setPromptText(""); setPastedResult("");
+    mark(4); setStep(5);
   }
 
   const fullDoc = `# Prototype Handoff\n\n## Prototype Summary\n${protoContext}\n\n## Design Decisions Log\n${decisions}\n\n## Known Gaps + Shortcuts\n${gaps}\n\n## Hypotheses + Task Scenarios\n${hypotheses}\n\n## Validate Handoff Block\n${handoff}`;
@@ -303,7 +345,6 @@ Generate the complete Prototype → Validate handoff block. Extract real content
   return (
     <div style={{ background: T.bg, minHeight: "100vh", padding: "40px 32px", fontFamily: "'DM Sans', sans-serif", color: T.text }}>
       <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;700&family=DM+Serif+Display&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
-      <style>{`@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }`}</style>
 
       {/* Header */}
       <div style={{ maxWidth: 760, margin: "0 auto 40px" }}>
@@ -378,10 +419,17 @@ Generate the complete Prototype → Validate handoff block. Extract real content
               </div>
 
               <div style={{ display: "flex", justifyContent: "flex-end" }}>
-                <Btn onClick={handleDecisions} disabled={!screensBuilt.trim() || !flowsCovered.trim() || loading}>
-                  {loading ? "Documenting decisions…" : "Document design decisions →"}
+                <Btn onClick={handleDecisions} disabled={!screensBuilt.trim() || !flowsCovered.trim() || !!promptText}>
+                  Document design decisions →
                 </Btn>
               </div>
+              <PromptPanel promptText={promptText} pastedResult={pastedResult} setPastedResult={setPastedResult} />
+              {promptText && pastedResult.trim() && (
+                <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
+                  <Btn variant="ghost" small onClick={() => { setPromptText(""); setPastedResult(""); }}>Cancel</Btn>
+                  <Btn small onClick={acceptDecisions}>Accept Decisions</Btn>
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -390,21 +438,21 @@ Generate the complete Prototype → Validate handoff block. Extract real content
         {step === 2 && (
           <div>
             <SectionHeader step={2} title="Design Decisions Log" desc="Every significant decision made during the build — with context, alternatives rejected, and rationale. Temporary prototype-only decisions are flagged." />
-            {loading ? (
-              <div>
-                <Label sub>Documenting decisions…</Label>
-                <OutputBlock content={stream} streaming={true} maxH={480} />
+            <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+              <OutputBlock content={decisions} maxH={480} />
+              <p style={{ fontSize: 12, color: T.dim, margin: 0, lineHeight: 1.5 }}>Review the decisions above before documenting gaps.</p>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <CopyBtn text={decisions} />
+                <Btn onClick={handleGaps} disabled={!!promptText}>Document gaps + shortcuts →</Btn>
               </div>
-            ) : (
-              <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-                <OutputBlock content={decisions} maxH={480} />
-                <p style={{ fontSize: 12, color: T.dim, margin: 0, lineHeight: 1.5 }}>Review and edit above if any decisions are missing or need clarification before proceeding.</p>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  <CopyBtn text={decisions} />
-                  <Btn onClick={handleGaps} disabled={loading}>Document gaps + shortcuts →</Btn>
+              <PromptPanel promptText={promptText} pastedResult={pastedResult} setPastedResult={setPastedResult} />
+              {promptText && pastedResult.trim() && (
+                <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
+                  <Btn variant="ghost" small onClick={() => { setPromptText(""); setPastedResult(""); }}>Cancel</Btn>
+                  <Btn small onClick={acceptGaps}>Accept Gaps</Btn>
                 </div>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         )}
 
@@ -412,20 +460,20 @@ Generate the complete Prototype → Validate handoff block. Extract real content
         {step === 3 && (
           <div>
             <SectionHeader step={3} title="Known Gaps + Shortcuts" desc="What's mocked, what's missing, and what test facilitators need to know before running sessions. Prevents tests from going off-track on incomplete areas." />
-            {loading ? (
-              <div>
-                <Label sub>Surfacing gaps…</Label>
-                <OutputBlock content={stream} streaming={true} maxH={480} />
+            <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+              <OutputBlock content={gaps} maxH={480} />
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <CopyBtn text={gaps} />
+                <Btn onClick={handleHypotheses} disabled={!!promptText}>Generate hypotheses + tasks →</Btn>
               </div>
-            ) : (
-              <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-                <OutputBlock content={gaps} maxH={480} />
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  <CopyBtn text={gaps} />
-                  <Btn onClick={handleHypotheses} disabled={loading}>Generate hypotheses + tasks →</Btn>
+              <PromptPanel promptText={promptText} pastedResult={pastedResult} setPastedResult={setPastedResult} />
+              {promptText && pastedResult.trim() && (
+                <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
+                  <Btn variant="ghost" small onClick={() => { setPromptText(""); setPastedResult(""); }}>Cancel</Btn>
+                  <Btn small onClick={acceptHypotheses}>Accept Hypotheses</Btn>
                 </div>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         )}
 
@@ -433,20 +481,20 @@ Generate the complete Prototype → Validate handoff block. Extract real content
         {step === 4 && (
           <div>
             <SectionHeader step={4} title="Hypotheses + Task Scenarios" desc="Assumptions ranked by risk, with success criteria and draft task scenarios for the usability test. Highest-risk assumptions tested first." />
-            {loading ? (
-              <div>
-                <Label sub>Ranking assumptions…</Label>
-                <OutputBlock content={stream} streaming={true} maxH={480} />
+            <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+              <OutputBlock content={hypotheses} maxH={480} />
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <CopyBtn text={hypotheses} />
+                <Btn onClick={handleHandoff} disabled={!!promptText}>Generate validate handoff block →</Btn>
               </div>
-            ) : (
-              <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-                <OutputBlock content={hypotheses} maxH={480} />
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  <CopyBtn text={hypotheses} />
-                  <Btn onClick={handleHandoff} disabled={loading}>Generate validate handoff block →</Btn>
+              <PromptPanel promptText={promptText} pastedResult={pastedResult} setPastedResult={setPastedResult} />
+              {promptText && pastedResult.trim() && (
+                <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
+                  <Btn variant="ghost" small onClick={() => { setPromptText(""); setPastedResult(""); }}>Cancel</Btn>
+                  <Btn small onClick={acceptHandoff}>Accept Handoff Block</Btn>
                 </div>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         )}
 
@@ -454,37 +502,30 @@ Generate the complete Prototype → Validate handoff block. Extract real content
         {step === 5 && (
           <div>
             <SectionHeader step={5} title="Validate Handoff Block" desc="Everything the Findings Synthesizer needs, formatted to paste as the opening message. Includes prototype summary, decisions, gaps, hypotheses, task scenarios, and pass/fail criteria." />
-            {loading ? (
-              <div>
-                <Label sub>Generating handoff block…</Label>
-                <OutputBlock content={stream} streaming={true} maxH={480} />
-              </div>
-            ) : (
-              <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-                <OutputBlock content={handoff} maxH={480} />
+            <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+              <OutputBlock content={handoff} maxH={480} />
 
-                {/* How to use callout */}
-                <div style={{ background: T.card, border: `1px solid ${T.protoBorder}`, borderRadius: 8, padding: "16px 18px" }}>
-                  <div style={{ fontSize: 11, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.08em", textTransform: "uppercase", color: T.proto, marginBottom: 10 }}>How to use this handoff block</div>
-                  <div style={{ display: "grid", gridTemplateColumns: "24px 1fr", gap: "8px 12px", fontSize: 13, color: T.muted, lineHeight: 1.5 }}>
-                    <span style={{ color: T.proto, fontFamily: "'JetBrains Mono', monospace", fontSize: 12 }}>01</span>
-                    <span>Copy the handoff block above</span>
-                    <span style={{ color: T.proto, fontFamily: "'JetBrains Mono', monospace", fontSize: 12 }}>02</span>
-                    <span>Open the <strong style={{ color: T.text }}>Findings Synthesizer</strong> tool</span>
-                    <span style={{ color: T.proto, fontFamily: "'JetBrains Mono', monospace", fontSize: 12 }}>03</span>
-                    <span>Paste as your very first message — Claude will use it to structure every session and synthesize across participants</span>
-                    <span style={{ color: T.proto, fontFamily: "'JetBrains Mono', monospace", fontSize: 12 }}>04</span>
-                    <span>The task scenarios and pass/fail criteria pre-fill the test setup — no need to write them again</span>
-                  </div>
-                </div>
-
-                <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", flexWrap: "wrap" }}>
-                  <CopyBtn text={handoff} label="Copy handoff block" />
-                  <Btn variant="ghost" small onClick={() => dl(fullDoc, "prototype-handoff.md")}>Download full handoff (.md)</Btn>
-                  <Btn variant="ghost" small onClick={() => dl(handoff, "validate-handoff-block.md")}>Download handoff block</Btn>
+              {/* How to use callout */}
+              <div style={{ background: T.card, border: `1px solid ${T.protoBorder}`, borderRadius: 8, padding: "16px 18px" }}>
+                <div style={{ fontSize: 11, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.08em", textTransform: "uppercase", color: T.proto, marginBottom: 10 }}>How to use this handoff block</div>
+                <div style={{ display: "grid", gridTemplateColumns: "24px 1fr", gap: "8px 12px", fontSize: 13, color: T.muted, lineHeight: 1.5 }}>
+                  <span style={{ color: T.proto, fontFamily: "'JetBrains Mono', monospace", fontSize: 12 }}>01</span>
+                  <span>Copy the handoff block above</span>
+                  <span style={{ color: T.proto, fontFamily: "'JetBrains Mono', monospace", fontSize: 12 }}>02</span>
+                  <span>Open the <strong style={{ color: T.text }}>Findings Synthesizer</strong> tool</span>
+                  <span style={{ color: T.proto, fontFamily: "'JetBrains Mono', monospace", fontSize: 12 }}>03</span>
+                  <span>Paste as your very first message — Claude will use it to structure every session and synthesize across participants</span>
+                  <span style={{ color: T.proto, fontFamily: "'JetBrains Mono', monospace", fontSize: 12 }}>04</span>
+                  <span>The task scenarios and pass/fail criteria pre-fill the test setup — no need to write them again</span>
                 </div>
               </div>
-            )}
+
+              <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", flexWrap: "wrap" }}>
+                <CopyBtn text={handoff} label="Copy handoff block" />
+                <Btn variant="ghost" small onClick={() => dl(fullDoc, "prototype-handoff.md")}>Download full handoff (.md)</Btn>
+                <Btn variant="ghost" small onClick={() => dl(handoff, "validate-handoff-block.md")}>Download handoff block</Btn>
+              </div>
+            </div>
           </div>
         )}
       </div>

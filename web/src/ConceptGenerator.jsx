@@ -67,37 +67,62 @@ const ANGLES = [
   },
 ];
 
-// ─── API ──────────────────────────────────────────────────────────────────────
-async function callClaude(system, user, onChunk) {
-  const res = await fetch("/api/claude", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      model: "claude-haiku-4-5-20251001",
-      max_tokens: 1000,
-      stream: true,
-      system,
-      messages: [{ role: "user", content: user }],
-    }),
-  });
-  if (!res.ok) { onChunk("⚠️ Error " + res.status + ". Check your API key and try again."); return ""; }
-  const reader = res.body.getReader();
-  const dec = new TextDecoder();
-  let full = "";
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    for (const line of dec.decode(value).split("\n").filter(l => l.startsWith("data: "))) {
-      try {
-        const j = JSON.parse(line.slice(6));
-        if (j.type === "content_block_delta" && j.delta?.text) {
-          full += j.delta.text;
-          onChunk(full);
-        }
-      } catch {}
-    }
-  }
-  return full;
+// ─── PromptPanel ──────────────────────────────────────────────────────────────
+function PromptPanel({ promptText, pastedResult, setPastedResult }) {
+  const [copied, setCopied] = useState(false);
+  if (!promptText) return null;
+  return (
+    <div style={{ background: T.surface, border: `1px solid ${T.border}`, borderRadius: 8, padding: "16px 18px", marginTop: 16 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+        <span style={{ fontSize: 11, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.08em", textTransform: "uppercase", color: T.ideate }}>
+          Prompt ready — copy and run in Claude
+        </span>
+        <div style={{ display: "flex", gap: 8 }}>
+          <button
+            onClick={() => { navigator.clipboard.writeText(promptText); setCopied(true); setTimeout(() => setCopied(false), 2000); }}
+            style={{
+              padding: "6px 14px", fontSize: 11, fontFamily: "'JetBrains Mono', monospace",
+              letterSpacing: "0.06em", textTransform: "uppercase", fontWeight: 600,
+              cursor: "pointer", borderRadius: 6, border: `1.5px solid ${T.ideate}`,
+              background: copied ? T.ideate : "transparent",
+              color: copied ? T.bg : T.ideate, transition: "all 0.15s",
+            }}
+          >{copied ? "✓ Copied" : "Copy Prompt"}</button>
+          <a
+            href="https://claude.ai" target="_blank" rel="noopener noreferrer"
+            style={{
+              padding: "6px 14px", fontSize: 11, fontFamily: "'JetBrains Mono', monospace",
+              letterSpacing: "0.06em", textTransform: "uppercase", fontWeight: 600,
+              borderRadius: 6, border: `1.5px solid ${T.border}`,
+              color: T.muted, textDecoration: "none", display: "inline-block",
+            }}
+          >Open Claude.ai →</a>
+        </div>
+      </div>
+      <pre style={{ whiteSpace: "pre-wrap", fontSize: 12, lineHeight: 1.7, color: T.text, fontFamily: "'DM Sans', sans-serif", margin: 0, maxHeight: 320, overflowY: "auto" }}>{promptText}</pre>
+      <div style={{ marginTop: 16 }}>
+        <div style={{ fontSize: 11, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.08em", textTransform: "uppercase", color: T.muted, marginBottom: 8 }}>
+          Paste Claude's response here
+        </div>
+        <textarea
+          value={pastedResult}
+          onChange={e => setPastedResult(e.target.value)}
+          placeholder="Run the prompt in Claude, then paste the result here to continue…"
+          rows={6}
+          style={{
+            width: "100%", boxSizing: "border-box",
+            background: T.bg, border: `1px solid ${T.border}`,
+            borderRadius: 8, padding: "12px 14px",
+            color: T.text, fontSize: 13, lineHeight: 1.6,
+            fontFamily: "'DM Sans', sans-serif",
+            resize: "vertical", outline: "none",
+          }}
+          onFocus={e => e.target.style.borderColor = T.ideate}
+          onBlur={e => e.target.style.borderColor = T.border}
+        />
+      </div>
+    </div>
+  );
 }
 
 // ─── Shared UI ────────────────────────────────────────────────────────────────
@@ -183,7 +208,7 @@ function CopyBtn({ text, small = true }) {
   );
 }
 
-function OutputBlock({ content, streaming, maxH = 460 }) {
+function OutputBlock({ content, maxH = 460 }) {
   return (
     <div style={{
       background: T.surface, border: `1px solid ${T.border}`,
@@ -194,11 +219,6 @@ function OutputBlock({ content, streaming, maxH = 460 }) {
       maxHeight: maxH, overflowY: "auto",
     }}>
       {content || <span style={{ color: T.dim, fontStyle: "italic" }}>Output will appear here…</span>}
-      {streaming && <span style={{
-        display: "inline-block", width: 6, height: 14,
-        background: T.ideate, marginLeft: 2,
-        animation: "blink 0.8s step-end infinite", verticalAlign: "middle",
-      }} />}
     </div>
   );
 }
@@ -266,8 +286,8 @@ function StepIndicator({ current, completed }) {
 export default function ConceptGenerator() {
   const [step, setStep] = useState(1);
   const [completed, setCompleted] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [stream, setStream] = useState("");
+  const [promptText, setPromptText] = useState("");
+  const [pastedResult, setPastedResult] = useState("");
   const [activeAngle, setActiveAngle] = useState(null);
 
   // Step 1 — Context
@@ -301,11 +321,9 @@ export default function ConceptGenerator() {
   const allAngleResults = Object.values(angleResults).filter(Boolean).join("\n\n---\n\n");
 
   // ── Step 2: Direct generation ─────────────────────────────────────────────
-  async function handleDirect() {
-    setLoading(true); setStream("");
-    const result = await callClaude(
-      "You are a senior product designer running an ideation session. Generate concepts that are genuinely distinct from each other — not variations of the same idea. No two concepts should produce the same wireframe. Be specific and concrete.",
-      `Generate 5 distinct concept directions from these HMW questions.
+  function handleDirect() {
+    const sys = "You are a senior product designer running an ideation session. Generate concepts that are genuinely distinct from each other — not variations of the same idea. No two concepts should produce the same wireframe. Be specific and concrete.";
+    const msg = `Generate 5 distinct concept directions from these HMW questions.
 
 Problem statement: ${problemStatement}
 Primary persona: ${persona}
@@ -323,18 +341,21 @@ For each concept:
 Rules:
 - Each concept must represent a meaningfully different approach — not a variation
 - Do not evaluate or score — generate all 5 first
-- Be specific — avoid generic descriptions like "an AI-powered tool that helps users"`,
-      setStream
-    );
-    setDirectConcepts(result);
-    setLoading(false);
+- Be specific — avoid generic descriptions like "an AI-powered tool that helps users"`;
+    setPromptText(sys + "\n\n" + msg);
+    setPastedResult("");
+  }
+
+  function acceptDirect() {
+    setDirectConcepts(pastedResult);
+    setPromptText("");
+    setPastedResult("");
     markComplete(2);
   }
 
   // ── Step 3: Angle generation ──────────────────────────────────────────────
-  async function handleAngle(angleId) {
+  function handleAngle(angleId) {
     setActiveAngle(angleId);
-    setLoading(true); setStream("");
 
     const prompts = {
       firstprinciples: `Generate 3 concepts using first principles thinking.
@@ -434,24 +455,22 @@ Then extract 3 distinct concepts that different people with this persona might i
       persona: "You are an empathy-driven designer who generates concepts by inhabiting the user's perspective. Speak as the user before speaking as the designer.",
     };
 
-    const result = await callClaude(
-      systemPrompts[angleId],
-      prompts[angleId],
-      (chunk) => setStream(chunk)
-    );
+    setPromptText(systemPrompts[angleId] + "\n\n" + prompts[angleId]);
+    setPastedResult("");
+  }
 
-    setAngleResults(prev => ({ ...prev, [angleId]: result }));
-    setLoading(false);
+  function acceptAngle(angleId) {
+    setAngleResults(prev => ({ ...prev, [angleId]: pastedResult }));
+    setPromptText("");
+    setPastedResult("");
     setActiveAngle(null);
   }
 
   // ── Step 4: Concept cards ─────────────────────────────────────────────────
-  async function handleConceptCards() {
-    setLoading(true); setStream("");
+  function handleConceptCards() {
     const allConcepts = [directConcepts, allAngleResults].filter(Boolean).join("\n\n---\n\n");
-    const result = await callClaude(
-      "You are a design strategist organizing a concept set. Identify distinct concepts — not variations. Merge duplicates. Document each cleanly.",
-      `Review all concepts generated across multiple angles and produce a clean concept card set.
+    const sys = "You are a design strategist organizing a concept set. Identify distinct concepts — not variations. Merge duplicates. Document each cleanly.";
+    const msg = `Review all concepts generated across multiple angles and produce a clean concept card set.
 
 Rules:
 - Identify distinct concepts — if two are variations of the same idea, merge them into one
@@ -479,21 +498,23 @@ After all cards:
 
 **Total concepts:** [N]
 **Most unexpected concept:** [Name] — [why it's unexpected]
-**Concepts that don't fit the problem:** [List any — explain why]`,
-      setStream
-    );
-    setConceptCards(result);
-    setLoading(false);
+**Concepts that don't fit the problem:** [List any — explain why]`;
+    setPromptText(sys + "\n\n" + msg);
+    setPastedResult("");
+  }
+
+  function acceptConceptCards() {
+    setConceptCards(pastedResult);
+    setPromptText("");
+    setPastedResult("");
     markComplete(4);
     setStep(5);
   }
 
   // ── Step 5: Handoff ────────────────────────────────────────────────────────
-  async function handleHandoff() {
-    setLoading(true); setStream("");
-    const result = await callClaude(
-      "You are a senior product designer generating a structured ideation handoff. Extract real content — no placeholders. Be specific.",
-      `Generate a Concept Generation → Ideate Handoff Block.
+  function handleHandoff() {
+    const sys = "You are a senior product designer generating a structured ideation handoff. Extract real content — no placeholders. Be specific.";
+    const msg = `Generate a Concept Generation → Ideate Handoff Block.
 
 Problem statement: ${problemStatement}
 Primary persona: ${persona}
@@ -539,11 +560,15 @@ Generate using this exact structure:
 
 ---
 Do not evaluate or rank. That happens in Idea Clustering.
-Paste this block when opening Idea Clustering.`,
-      setStream
-    );
-    setHandoff(result);
-    setLoading(false);
+Paste this block when opening Idea Clustering.`;
+    setPromptText(sys + "\n\n" + msg);
+    setPastedResult("");
+  }
+
+  function acceptHandoff() {
+    setHandoff(pastedResult);
+    setPromptText("");
+    setPastedResult("");
     markComplete(5);
   }
 
@@ -555,7 +580,6 @@ Paste this block when opening Idea Clustering.`,
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;600;700&display=swap');
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
         ::-webkit-scrollbar { width: 4px; }
         ::-webkit-scrollbar-thumb { background: #2a2a2a; border-radius: 2px; }
         :focus-visible { outline: 2px solid #999; outline-offset: 2px; border-radius: 4px; }
@@ -628,25 +652,31 @@ Paste this block when opening Idea Clustering.`,
 
             {!directConcepts && (
               <div style={{ display: "flex", justifyContent: "flex-end" }}>
-                <Btn onClick={handleDirect} disabled={loading}>
-                  {loading ? "Generating…" : "Generate 5 Concepts"}
+                <Btn onClick={handleDirect}>
+                  Generate 5 Concepts
                 </Btn>
               </div>
             )}
 
-            {(stream || directConcepts) && (
+            <PromptPanel promptText={promptText} pastedResult={pastedResult} setPastedResult={setPastedResult} />
+
+            {promptText && (
+              <div style={{ display: "flex", gap: 10, marginTop: 12, justifyContent: "flex-end" }}>
+                <Btn small disabled={!pastedResult.trim()} onClick={acceptDirect}>Accept Concepts →</Btn>
+              </div>
+            )}
+
+            {directConcepts && !promptText && (
               <div>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
                   <Label sub>5 concepts from HMW questions</Label>
-                  {directConcepts && !loading && <CopyBtn text={directConcepts} />}
+                  <CopyBtn text={directConcepts} />
                 </div>
-                <OutputBlock content={loading ? stream : directConcepts} streaming={loading} />
-                {directConcepts && !loading && (
-                  <div style={{ display: "flex", gap: 10, marginTop: 12, justifyContent: "flex-end" }}>
-                    <Btn variant="ghost" small onClick={() => { setDirectConcepts(""); setStream(""); }}>Re-generate</Btn>
-                    <Btn small onClick={() => { markComplete(2); setStep(3); }}>Expand with Angles →</Btn>
-                  </div>
-                )}
+                <OutputBlock content={directConcepts} />
+                <div style={{ display: "flex", gap: 10, marginTop: 12, justifyContent: "flex-end" }}>
+                  <Btn variant="ghost" small onClick={() => { setDirectConcepts(""); }}>Re-generate</Btn>
+                  <Btn small onClick={() => { markComplete(2); setStep(3); }}>Expand with Angles →</Btn>
+                </div>
               </div>
             )}
           </div>
@@ -662,7 +692,7 @@ Paste this block when opening Idea Clustering.`,
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 10, marginBottom: 28 }}>
               {ANGLES.filter(a => a.id !== "hmw").map(angle => {
                 const hasResult = !!angleResults[angle.id];
-                const isRunning = loading && activeAngle === angle.id;
+                const isActive = activeAngle === angle.id;
                 return (
                   <div key={angle.id} style={{
                     background: hasResult ? T.ideateDim : T.surface,
@@ -690,8 +720,8 @@ Paste this block when opening Idea Clustering.`,
                     </div>
                     <p style={{ fontSize: 12, color: T.muted, lineHeight: 1.5, marginBottom: 12 }}>{angle.desc}</p>
                     <div style={{ display: "flex", gap: 6 }}>
-                      <Btn small disabled={loading} onClick={() => handleAngle(angle.id)}>
-                        {isRunning ? "Running…" : hasResult ? "Re-run" : "Run this angle"}
+                      <Btn small onClick={() => handleAngle(angle.id)}>
+                        {isActive && promptText ? "Prompt Ready" : hasResult ? "Re-run" : "Run this angle"}
                       </Btn>
                       {hasResult && <CopyBtn text={angleResults[angle.id]} />}
                     </div>
@@ -700,11 +730,17 @@ Paste this block when opening Idea Clustering.`,
               })}
             </div>
 
-            {/* Live output while angle running */}
-            {loading && stream && (
+            {/* PromptPanel for active angle */}
+            {promptText && activeAngle && (
               <div style={{ marginBottom: 20 }}>
-                <Label sub>Generating — {ANGLES.find(a => a.id === activeAngle)?.label}</Label>
-                <OutputBlock content={stream} streaming={true} maxH={400} />
+                <Label sub>Prompt for {ANGLES.find(a => a.id === activeAngle)?.label}</Label>
+                <PromptPanel promptText={promptText} pastedResult={pastedResult} setPastedResult={setPastedResult} />
+                <div style={{ display: "flex", gap: 10, marginTop: 12, justifyContent: "flex-end" }}>
+                  <Btn variant="ghost" small onClick={() => { setPromptText(""); setPastedResult(""); setActiveAngle(null); }}>Cancel</Btn>
+                  <Btn small disabled={!pastedResult.trim()} onClick={() => acceptAngle(activeAngle)}>
+                    Accept {ANGLES.find(a => a.id === activeAngle)?.label} Results →
+                  </Btn>
+                </div>
               </div>
             )}
 
@@ -715,7 +751,7 @@ Paste this block when opening Idea Clustering.`,
                 borderRadius: 8, padding: "14px 16px", marginBottom: 20,
               }}>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                  <span style={{ fontSize: 12, fontFamily: "'JetBrains Mono', monospace', letterSpacing: '0.06em'", color: T.muted }}>
+                  <span style={{ fontSize: 12, fontFamily: "'JetBrains Mono', monospace", color: T.muted }}>
                     {anglesRun} angle{anglesRun !== 1 ? "s" : ""} complete · ready to capture concept cards
                   </span>
                   <CopyBtn text={allAngleResults} />
@@ -725,7 +761,7 @@ Paste this block when opening Idea Clustering.`,
 
             <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
               <Btn variant="ghost" small onClick={() => setStep(2)}>← Back</Btn>
-              <Btn small disabled={loading} onClick={() => { markComplete(3); setStep(4); }}>
+              <Btn small onClick={() => { markComplete(3); setStep(4); }}>
                 Capture Concept Cards →
               </Btn>
             </div>
@@ -736,34 +772,38 @@ Paste this block when opening Idea Clustering.`,
         {step === 4 && (
           <div>
             <SectionHeader step={4} title="Capture Concept Cards"
-              desc={`Claude reviews all ${anglesRun + 1} angles of output, merges duplicates, and produces a clean concept card for each distinct direction — ready for clustering.`} />
+              desc={`Review all ${anglesRun + 1} angles of output, merge duplicates, and produce a clean concept card for each distinct direction — ready for clustering.`} />
 
             {!conceptCards && (
               <div style={{ display: "flex", justifyContent: "flex-end" }}>
-                <Btn onClick={handleConceptCards} disabled={loading}>
-                  {loading ? "Capturing…" : "Generate Concept Cards"}
+                <Btn onClick={handleConceptCards}>
+                  Generate Concept Cards
                 </Btn>
               </div>
             )}
 
-            {(stream || conceptCards) && (
+            <PromptPanel promptText={promptText} pastedResult={pastedResult} setPastedResult={setPastedResult} />
+
+            {promptText && (
+              <div style={{ display: "flex", gap: 10, marginTop: 12, justifyContent: "flex-end" }}>
+                <Btn small disabled={!pastedResult.trim()} onClick={acceptConceptCards}>Accept Concept Cards →</Btn>
+              </div>
+            )}
+
+            {conceptCards && !promptText && (
               <div>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
                   <Label sub>Concept cards — all distinct directions</Label>
-                  {conceptCards && !loading && (
-                    <div style={{ display: "flex", gap: 8 }}>
-                      <CopyBtn text={conceptCards} />
-                      <Btn small variant="ghost" onClick={() => dl(conceptCards, "concept-cards.md")}>↓ .md</Btn>
-                    </div>
-                  )}
-                </div>
-                <OutputBlock content={loading ? stream : conceptCards} streaming={loading} maxH={540} />
-                {conceptCards && !loading && (
-                  <div style={{ display: "flex", gap: 10, marginTop: 12, justifyContent: "flex-end" }}>
-                    <Btn variant="ghost" small onClick={() => { setConceptCards(""); setStream(""); }}>Re-capture</Btn>
-                    <Btn small onClick={() => setStep(5)}>Generate Handoff →</Btn>
+                  <div style={{ display: "flex", gap: 8 }}>
+                    <CopyBtn text={conceptCards} />
+                    <Btn small variant="ghost" onClick={() => dl(conceptCards, "concept-cards.md")}>↓ .md</Btn>
                   </div>
-                )}
+                </div>
+                <OutputBlock content={conceptCards} maxH={540} />
+                <div style={{ display: "flex", gap: 10, marginTop: 12, justifyContent: "flex-end" }}>
+                  <Btn variant="ghost" small onClick={() => { setConceptCards(""); }}>Re-capture</Btn>
+                  <Btn small onClick={() => setStep(5)}>Generate Handoff →</Btn>
+                </div>
               </div>
             )}
           </div>
@@ -777,38 +817,42 @@ Paste this block when opening Idea Clustering.`,
 
             {!handoff && (
               <div style={{ display: "flex", justifyContent: "flex-end" }}>
-                <Btn onClick={handleHandoff} disabled={loading}>
-                  {loading ? "Generating…" : "Generate Handoff Block"}
+                <Btn onClick={handleHandoff}>
+                  Generate Handoff Block
                 </Btn>
               </div>
             )}
 
-            {(stream || handoff) && (
+            <PromptPanel promptText={promptText} pastedResult={pastedResult} setPastedResult={setPastedResult} />
+
+            {promptText && (
+              <div style={{ display: "flex", gap: 10, marginTop: 12, justifyContent: "flex-end" }}>
+                <Btn small disabled={!pastedResult.trim()} onClick={acceptHandoff}>Accept Handoff →</Btn>
+              </div>
+            )}
+
+            {handoff && !promptText && (
               <div>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
                   <Label sub>Concept generation → Idea Clustering handoff</Label>
-                  {handoff && !loading && (
-                    <div style={{ display: "flex", gap: 8 }}>
-                      <CopyBtn text={handoff} />
-                      <Btn small variant="ghost" onClick={() => dl(handoff, "concept-generation-handoff.md")}>↓ .md</Btn>
-                    </div>
-                  )}
-                </div>
-                <OutputBlock content={loading ? stream : handoff} streaming={loading} maxH={520} />
-                {handoff && !loading && (
-                  <div style={{
-                    marginTop: 20, padding: "14px 16px",
-                    background: T.ideateDim, border: `1px solid ${T.ideateBorder}`,
-                    borderRadius: 8,
-                  }}>
-                    <span style={{
-                      fontSize: 11, fontFamily: "'JetBrains Mono', monospace",
-                      letterSpacing: "0.08em", textTransform: "uppercase", color: T.ideate,
-                    }}>
-                      ✓ Concept generation complete — paste handoff into Idea Clustering to continue
-                    </span>
+                  <div style={{ display: "flex", gap: 8 }}>
+                    <CopyBtn text={handoff} />
+                    <Btn small variant="ghost" onClick={() => dl(handoff, "concept-generation-handoff.md")}>↓ .md</Btn>
                   </div>
-                )}
+                </div>
+                <OutputBlock content={handoff} maxH={520} />
+                <div style={{
+                  marginTop: 20, padding: "14px 16px",
+                  background: T.ideateDim, border: `1px solid ${T.ideateBorder}`,
+                  borderRadius: 8,
+                }}>
+                  <span style={{
+                    fontSize: 11, fontFamily: "'JetBrains Mono', monospace",
+                    letterSpacing: "0.08em", textTransform: "uppercase", color: T.ideate,
+                  }}>
+                    ✓ Concept generation complete — paste handoff into Idea Clustering to continue
+                  </span>
+                </div>
               </div>
             )}
           </div>

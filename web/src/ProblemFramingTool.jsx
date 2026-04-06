@@ -22,37 +22,26 @@ const STEPS = [
   { id: 5, label: "Handoff",  short: "Ideate handoff block"       },
 ];
 
-// ─── API ──────────────────────────────────────────────────────────────────────
-async function callClaude(system, user, onChunk) {
-  const res = await fetch("/api/claude", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      model: "claude-haiku-4-5-20251001",
-      max_tokens: 1000,
-      stream: true,
-      system,
-      messages: [{ role: "user", content: user }],
-    }),
-  });
-  if (!res.ok) { onChunk("⚠️ Error " + res.status + ". Check your API key and try again."); return ""; }
-  const reader = res.body.getReader();
-  const dec = new TextDecoder();
-  let full = "";
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    for (const line of dec.decode(value).split("\n").filter(l => l.startsWith("data: "))) {
-      try {
-        const j = JSON.parse(line.slice(6));
-        if (j.type === "content_block_delta" && j.delta?.text) {
-          full += j.delta.text;
-          onChunk(full);
-        }
-      } catch {}
-    }
-  }
-  return full;
+// ─── Prompt Panel ─────────────────────────────────────────────────────────────
+function PromptPanel({ promptText, pastedResult, setPastedResult }) {
+  const [copied, setCopied] = useState(false);
+  if (!promptText) return null;
+  return (
+    <div style={{ background: T.surface, border: `1px solid ${T.border}`, borderRadius: 8, padding: "16px 18px", marginTop: 16 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+        <span style={{ fontSize: 11, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.08em", textTransform: "uppercase", color: T.define }}>Prompt ready — copy and run in Claude</span>
+        <div style={{ display: "flex", gap: 8 }}>
+          <button onClick={() => { navigator.clipboard.writeText(promptText); setCopied(true); setTimeout(() => setCopied(false), 2000); }} style={{ padding: "6px 12px", fontSize: 11, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.06em", textTransform: "uppercase", fontWeight: 600, cursor: "pointer", borderRadius: 5, border: `1.5px solid ${T.define}`, background: copied ? T.define : "transparent", color: copied ? "#fff" : T.define, transition: "all 0.15s" }}>{copied ? "✓ Copied" : "Copy Prompt"}</button>
+          <a href="https://claude.ai" target="_blank" rel="noopener noreferrer" style={{ padding: "6px 12px", fontSize: 11, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.06em", textTransform: "uppercase", fontWeight: 600, cursor: "pointer", borderRadius: 5, border: `1.5px solid ${T.border}`, background: "transparent", color: T.muted, textDecoration: "none", display: "inline-block" }}>Open Claude.ai →</a>
+        </div>
+      </div>
+      <pre style={{ whiteSpace: "pre-wrap", fontSize: 12, lineHeight: 1.7, color: T.text, fontFamily: "'DM Sans', sans-serif", margin: 0, maxHeight: 320, overflowY: "auto" }}>{promptText}</pre>
+      <div style={{ marginTop: 16 }}>
+        <div style={{ fontSize: 11, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.08em", textTransform: "uppercase", color: T.muted, marginBottom: 8 }}>Paste Claude's response here</div>
+        <textarea value={pastedResult} onChange={e => setPastedResult(e.target.value)} placeholder="Run the prompt in Claude, then paste the result here to continue…" rows={6} style={{ width: "100%", boxSizing: "border-box", background: T.card, border: `1px solid ${T.border}`, borderRadius: 6, padding: "10px 12px", color: T.text, fontSize: 13, lineHeight: 1.6, fontFamily: "'DM Sans', sans-serif", resize: "vertical", outline: "none" }} onFocus={e => e.target.style.borderColor = T.define} onBlur={e => e.target.style.borderColor = T.border} />
+      </div>
+    </div>
+  );
 }
 
 // ─── Shared UI ────────────────────────────────────────────────────────────────
@@ -138,7 +127,7 @@ function CopyBtn({ text }) {
   );
 }
 
-function OutputBlock({ content, streaming, maxH = 440 }) {
+function OutputBlock({ content, maxH = 440 }) {
   return (
     <div style={{
       background: T.surface, border: `1px solid ${T.border}`,
@@ -149,11 +138,6 @@ function OutputBlock({ content, streaming, maxH = 440 }) {
       maxHeight: maxH, overflowY: "auto",
     }}>
       {content || <span style={{ color: T.dim, fontStyle: "italic" }}>Output will appear here…</span>}
-      {streaming && <span style={{
-        display: "inline-block", width: 6, height: 14,
-        background: T.define, marginLeft: 2,
-        animation: "blink 0.8s step-end infinite", verticalAlign: "middle",
-      }} />}
     </div>
   );
 }
@@ -222,8 +206,8 @@ function StepIndicator({ current, completed }) {
 export default function ProblemFramingTool() {
   const [step, setStep] = useState(1);
   const [completed, setCompleted] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [stream, setStream] = useState("");
+  const [promptText, setPromptText] = useState("");
+  const [pastedResult, setPastedResult] = useState("");
 
   // Step 1 — Context
   const [researchData, setResearchData] = useState("");
@@ -254,11 +238,9 @@ export default function ProblemFramingTool() {
   }
 
   // ── Step 2: Generate three framings ─────────────────────────────────────────
-  async function handleFrame() {
-    setLoading(true); setStream("");
-    const result = await callClaude(
-      "You are a senior product designer and design strategist. Generate sharp, specific problem framings grounded in the research provided. Never produce generic statements. Every framing must be specific enough that a designer could sketch 10 different solutions to it.",
-      `Generate the problem statement in three formats, then evaluate and recommend one.
+  function handleFrame() {
+    const sys = "You are a senior product designer and design strategist. Generate sharp, specific problem framings grounded in the research provided. Never produce generic statements. Every framing must be specific enough that a designer could sketch 10 different solutions to it.";
+    const msg = `Generate the problem statement in three formats, then evaluate and recommend one.
 
 Research context:
 ${researchData}
@@ -289,20 +271,21 @@ For each format:
 - What does it exclude that might matter?
 
 ## Recommendation
-Which format best balances specificity and creative space? Why? What were the two strongest alternatives you didn't recommend?`,
-      setStream
-    );
-    setFramings(result);
-    setLoading(false);
+Which format best balances specificity and creative space? Why? What were the two strongest alternatives you didn't recommend?`;
+    setPromptText(sys + "\n\n" + msg);
+    setPastedResult("");
+  }
+
+  function acceptFramings() {
+    setFramings(pastedResult);
+    setPromptText(""); setPastedResult("");
   }
 
   // ── Step 3: Pressure-test ────────────────────────────────────────────────────
-  async function handlePressureTest() {
+  function handlePressureTest() {
     if (!chosenFraming.trim()) return;
-    setLoading(true); setStream("");
-    const result = await callClaude(
-      "You are a skeptical senior PM reviewing a problem statement. Your job is to find its weaknesses, not validate it. Be direct and specific — not encouraging.",
-      `Act as a skeptical PM reviewing this problem statement. Challenge it on four fronts.
+    const sys = "You are a skeptical senior PM reviewing a problem statement. Your job is to find its weaknesses, not validate it. Be direct and specific — not encouraging.";
+    const msg = `Act as a skeptical PM reviewing this problem statement. Challenge it on four fronts.
 
 Problem statement: "${chosenFraming}"
 
@@ -327,20 +310,21 @@ Generate two alternative framings that would produce completely different design
 
 ## Verdict
 Based on this analysis: Proceed with this framing / Refine it / Reframe entirely?
-If refine or reframe — provide the improved version.`,
-      setStream
-    );
-    setPressureTest(result);
-    setLoading(false);
+If refine or reframe — provide the improved version.`;
+    setPromptText(sys + "\n\n" + msg);
+    setPastedResult("");
+  }
+
+  function acceptPressureTest() {
+    setPressureTest(pastedResult);
     markComplete(3);
+    setPromptText(""); setPastedResult("");
   }
 
   // ── Step 4: Generate HMW questions ──────────────────────────────────────────
-  async function handleHMW() {
-    setLoading(true); setStream("");
-    const result = await callClaude(
-      "You are a senior design strategist running an ideation brief. Generate HMW questions that are specific, varied in angle, and grounded in research. Never generate generic HMW questions.",
-      `Generate 10 How Might We questions from this problem frame, then score and rank the top 5.
+  function handleHMW() {
+    const sys = "You are a senior design strategist running an ideation brief. Generate HMW questions that are specific, varied in angle, and grounded in research. Never generate generic HMW questions.";
+    const msg = `Generate 10 How Might We questions from this problem frame, then score and rank the top 5.
 
 Problem statement: "${chosenFraming || framings}"
 
@@ -373,21 +357,22 @@ Score each on:
 - Design leverage: 1–3 (how much creative space this opens)
 - Feasibility signal: 1–3 (realistic within typical product constraints)
 
-Rank the top 5 by total score. Explain in one sentence why each makes the shortlist.`,
-      setStream
-    );
-    setHmw(result);
-    setLoading(false);
+Rank the top 5 by total score. Explain in one sentence why each makes the shortlist.`;
+    setPromptText(sys + "\n\n" + msg);
+    setPastedResult("");
+  }
+
+  function acceptHMW() {
+    setHmw(pastedResult);
     markComplete(4);
     setStep(5);
+    setPromptText(""); setPastedResult("");
   }
 
   // ── Step 5: Generate handoff ─────────────────────────────────────────────────
-  async function handleHandoff() {
-    setLoading(true); setStream("");
-    const result = await callClaude(
-      "You are a senior product designer generating a structured phase handoff. Extract real content — no placeholders. Be specific and actionable.",
-      `Generate a Define → Ideate Phase Handoff Block.
+  function handleHandoff() {
+    const sys = "You are a senior product designer generating a structured phase handoff. Extract real content — no placeholders. Be specific and actionable.";
+    const msg = `Generate a Define → Ideate Phase Handoff Block.
 
 Problem statement: "${chosenFraming || framings}"
 Research context: ${researchData}
@@ -447,12 +432,15 @@ Generate using this exact structure:
 [One "what if" that pushes ideation beyond the obvious first solution]
 
 ---
-Paste this block as your first message when opening Concept Generation.`,
-      setStream
-    );
-    setHandoff(result);
-    setLoading(false);
+Paste this block as your first message when opening Concept Generation.`;
+    setPromptText(sys + "\n\n" + msg);
+    setPastedResult("");
+  }
+
+  function acceptHandoff() {
+    setHandoff(pastedResult);
     markComplete(5);
+    setPromptText(""); setPastedResult("");
   }
 
   // ─── Render ──────────────────────────────────────────────────────────────────
@@ -461,7 +449,6 @@ Paste this block as your first message when opening Concept Generation.`,
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;600;700&display=swap');
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
         ::-webkit-scrollbar { width: 4px; }
         ::-webkit-scrollbar-thumb { background: #2a2a2a; border-radius: 2px; }
         :focus-visible { outline: 2px solid #999; outline-offset: 2px; border-radius: 4px; }
@@ -527,38 +514,42 @@ Paste this block as your first message when opening Concept Generation.`,
         {step === 2 && (
           <div>
             <SectionHeader step={2} title="Generate Problem Framings"
-              desc="Claude generates the problem statement in three formats — HMW, JTBD, and User + Need + Insight — then evaluates and recommends one. Select or edit the framing before pressure-testing." />
+              desc="Build the prompt, run it in Claude, then paste the result. Claude generates the problem statement in three formats — HMW, JTBD, and User + Need + Insight — then evaluates and recommends one." />
 
             {!framings && (
               <div style={{ display: "flex", justifyContent: "flex-end" }}>
-                <Btn onClick={handleFrame} disabled={loading}>
-                  {loading ? "Generating…" : "Generate Three Framings"}
-                </Btn>
+                <Btn onClick={handleFrame}>Generate Three Framings</Btn>
               </div>
             )}
 
-            {(stream || framings) && (
+            <PromptPanel promptText={promptText} pastedResult={pastedResult} setPastedResult={setPastedResult} />
+
+            {promptText && (
+              <div style={{ display: "flex", gap: 10, marginTop: 12, justifyContent: "flex-end" }}>
+                <Btn small onClick={acceptFramings} disabled={!pastedResult.trim()}>Accept Framings →</Btn>
+              </div>
+            )}
+
+            {framings && !promptText && (
               <div>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
                   <Label sub>Three problem framings + recommendation</Label>
-                  {framings && !loading && <CopyBtn text={framings} />}
+                  <CopyBtn text={framings} />
                 </div>
-                <OutputBlock content={loading ? stream : framings} streaming={loading} maxH={480} />
+                <OutputBlock content={framings} maxH={480} />
 
-                {framings && !loading && (
-                  <div style={{ marginTop: 20 }}>
-                    <Label>Selected framing — edit or paste the recommended statement</Label>
-                    <Textarea value={chosenFraming} onChange={setChosenFraming} rows={3}
-                      placeholder="Paste or type the framing you want to pressure-test. You can edit it here." />
-                    <div style={{ display: "flex", gap: 10, marginTop: 12, justifyContent: "flex-end" }}>
-                      <Btn variant="ghost" small onClick={() => { setFramings(""); setStream(""); }}>Re-generate</Btn>
-                      <Btn small onClick={() => { markComplete(2); setStep(3); }}
-                        disabled={!chosenFraming.trim()}>
-                        Pressure-Test →
-                      </Btn>
-                    </div>
+                <div style={{ marginTop: 20 }}>
+                  <Label>Selected framing — edit or paste the recommended statement</Label>
+                  <Textarea value={chosenFraming} onChange={setChosenFraming} rows={3}
+                    placeholder="Paste or type the framing you want to pressure-test. You can edit it here." />
+                  <div style={{ display: "flex", gap: 10, marginTop: 12, justifyContent: "flex-end" }}>
+                    <Btn variant="ghost" small onClick={() => { setFramings(""); setPromptText(""); }}>Re-generate</Btn>
+                    <Btn small onClick={() => { markComplete(2); setStep(3); }}
+                      disabled={!chosenFraming.trim()}>
+                      Pressure-Test →
+                    </Btn>
                   </div>
-                )}
+                </div>
               </div>
             )}
           </div>
@@ -568,7 +559,7 @@ Paste this block as your first message when opening Concept Generation.`,
         {step === 3 && (
           <div>
             <SectionHeader step={3} title="Pressure-Test the Frame"
-              desc="Claude acts as a skeptical PM — challenging the framing on calibration, hidden assumptions, exclusions, and alternative framings. The goal is to surface weaknesses before committing." />
+              desc="Build the prompt, run it in Claude, then paste the result. Claude acts as a skeptical PM — challenging the framing on calibration, hidden assumptions, exclusions, and alternative framings." />
 
             <div style={{
               background: T.surface, border: `1px solid ${T.border}`,
@@ -580,30 +571,34 @@ Paste this block as your first message when opening Concept Generation.`,
 
             {!pressureTest && (
               <div style={{ display: "flex", justifyContent: "flex-end" }}>
-                <Btn onClick={handlePressureTest} disabled={loading}>
-                  {loading ? "Challenging…" : "Run Pressure Test"}
-                </Btn>
+                <Btn onClick={handlePressureTest}>Run Pressure Test</Btn>
               </div>
             )}
 
-            {(stream || pressureTest) && (
+            <PromptPanel promptText={promptText} pastedResult={pastedResult} setPastedResult={setPastedResult} />
+
+            {promptText && (
+              <div style={{ display: "flex", gap: 10, marginTop: 12, justifyContent: "flex-end" }}>
+                <Btn small onClick={acceptPressureTest} disabled={!pastedResult.trim()}>Accept Results →</Btn>
+              </div>
+            )}
+
+            {pressureTest && !promptText && (
               <div>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
                   <Label sub>Skeptical PM review</Label>
-                  {pressureTest && !loading && <CopyBtn text={pressureTest} />}
+                  <CopyBtn text={pressureTest} />
                 </div>
-                <OutputBlock content={loading ? stream : pressureTest} streaming={loading} maxH={500} />
+                <OutputBlock content={pressureTest} maxH={500} />
 
-                {pressureTest && !loading && (
-                  <div style={{ marginTop: 14 }}>
-                    <Label sub>Refine framing based on test (optional)</Label>
-                    <Textarea value={chosenFraming} onChange={setChosenFraming} rows={3} />
-                    <div style={{ display: "flex", gap: 10, marginTop: 12, justifyContent: "flex-end" }}>
-                      <Btn variant="ghost" small onClick={() => { setPressureTest(""); setStream(""); }}>Re-test</Btn>
-                      <Btn small onClick={() => { markComplete(3); setStep(4); }}>Generate HMW →</Btn>
-                    </div>
+                <div style={{ marginTop: 14 }}>
+                  <Label sub>Refine framing based on test (optional)</Label>
+                  <Textarea value={chosenFraming} onChange={setChosenFraming} rows={3} />
+                  <div style={{ display: "flex", gap: 10, marginTop: 12, justifyContent: "flex-end" }}>
+                    <Btn variant="ghost" small onClick={() => { setPressureTest(""); setPromptText(""); }}>Re-test</Btn>
+                    <Btn small onClick={() => { markComplete(3); setStep(4); }}>Generate HMW →</Btn>
                   </div>
-                )}
+                </div>
               </div>
             )}
           </div>
@@ -613,33 +608,35 @@ Paste this block as your first message when opening Concept Generation.`,
         {step === 4 && (
           <div>
             <SectionHeader step={4} title="How Might We Questions"
-              desc="10 HMW questions across 5 angles — root cause, emotional, constraint reframe, systemic, ambitious — scored and ranked to the top 5 for ideation." />
+              desc="Build the prompt, run it in Claude, then paste the result. 10 HMW questions across 5 angles — scored and ranked to the top 5 for ideation." />
 
             {!hmw && (
               <div style={{ display: "flex", justifyContent: "flex-end" }}>
-                <Btn onClick={handleHMW} disabled={loading}>
-                  {loading ? "Generating…" : "Generate HMW Questions"}
-                </Btn>
+                <Btn onClick={handleHMW}>Generate HMW Questions</Btn>
               </div>
             )}
 
-            {(stream || hmw) && (
+            <PromptPanel promptText={promptText} pastedResult={pastedResult} setPastedResult={setPastedResult} />
+
+            {promptText && (
+              <div style={{ display: "flex", gap: 10, marginTop: 12, justifyContent: "flex-end" }}>
+                <Btn small onClick={acceptHMW} disabled={!pastedResult.trim()}>Accept HMW →</Btn>
+              </div>
+            )}
+
+            {hmw && !promptText && (
               <div>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
                   <Label sub>10 HMW questions · top 5 ranked</Label>
-                  {hmw && !loading && (
-                    <div style={{ display: "flex", gap: 8 }}>
-                      <CopyBtn text={hmw} />
-                      <Btn small variant="ghost" onClick={() => { setHmw(""); setStream(""); setStep(4); markComplete(4) && setCompleted(c => c.filter(x => x !== 5)); }}>Re-generate</Btn>
-                    </div>
-                  )}
-                </div>
-                <OutputBlock content={loading ? stream : hmw} streaming={loading} maxH={520} />
-                {hmw && !loading && (
-                  <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 12 }}>
-                    <Btn small onClick={() => setStep(5)}>Generate Handoff →</Btn>
+                  <div style={{ display: "flex", gap: 8 }}>
+                    <CopyBtn text={hmw} />
+                    <Btn small variant="ghost" onClick={() => { setHmw(""); setPromptText(""); }}>Re-generate</Btn>
                   </div>
-                )}
+                </div>
+                <OutputBlock content={hmw} maxH={520} />
+                <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 12 }}>
+                  <Btn small onClick={() => setStep(5)}>Generate Handoff →</Btn>
+                </div>
               </div>
             )}
           </div>
@@ -649,44 +646,44 @@ Paste this block as your first message when opening Concept Generation.`,
         {step === 5 && (
           <div>
             <SectionHeader step={5} title="Ideate Handoff"
-              desc="A structured summary of the problem frame — paste it as the first message when opening Concept Generation to give Claude full Define context." />
+              desc="Build the prompt, run it in Claude, then paste the result. A structured summary of the problem frame — paste it as the first message when opening Concept Generation." />
 
             {!handoff && (
               <div style={{ display: "flex", justifyContent: "flex-end" }}>
-                <Btn onClick={handleHandoff} disabled={loading}>
-                  {loading ? "Generating…" : "Generate Handoff Block"}
-                </Btn>
+                <Btn onClick={handleHandoff}>Generate Handoff Block</Btn>
               </div>
             )}
 
-            {(stream || handoff) && (
+            <PromptPanel promptText={promptText} pastedResult={pastedResult} setPastedResult={setPastedResult} />
+
+            {promptText && (
+              <div style={{ display: "flex", gap: 10, marginTop: 12, justifyContent: "flex-end" }}>
+                <Btn small onClick={acceptHandoff} disabled={!pastedResult.trim()}>Accept Handoff →</Btn>
+              </div>
+            )}
+
+            {handoff && !promptText && (
               <div>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
                   <Label sub>Define → Ideate handoff block</Label>
                   <div style={{ display: "flex", gap: 8 }}>
-                    {handoff && !loading && (
-                      <>
-                        <CopyBtn text={handoff} />
-                        <Btn small variant="ghost" onClick={() => dl(handoff, "problem-framing-handoff.md")}>↓ .md</Btn>
-                      </>
-                    )}
+                    <CopyBtn text={handoff} />
+                    <Btn small variant="ghost" onClick={() => dl(handoff, "problem-framing-handoff.md")}>↓ .md</Btn>
                   </div>
                 </div>
-                <OutputBlock content={loading ? stream : handoff} streaming={loading} maxH={520} />
-                {handoff && !loading && (
-                  <div style={{
-                    marginTop: 20, padding: "14px 16px",
-                    background: T.defineDim, border: `1px solid ${T.defineBorder}`,
-                    borderRadius: 8,
+                <OutputBlock content={handoff} maxH={520} />
+                <div style={{
+                  marginTop: 20, padding: "14px 16px",
+                  background: T.defineDim, border: `1px solid ${T.defineBorder}`,
+                  borderRadius: 8,
+                }}>
+                  <span style={{
+                    fontSize: 11, fontFamily: "'JetBrains Mono', monospace",
+                    letterSpacing: "0.08em", textTransform: "uppercase", color: T.define,
                   }}>
-                    <span style={{
-                      fontSize: 11, fontFamily: "'JetBrains Mono', monospace",
-                      letterSpacing: "0.08em", textTransform: "uppercase", color: T.define,
-                    }}>
-                      ✓ Problem frame complete — handoff ready for Concept Generation
-                    </span>
-                  </div>
-                )}
+                    ✓ Problem frame complete — handoff ready for Concept Generation
+                  </span>
+                </div>
               </div>
             )}
           </div>

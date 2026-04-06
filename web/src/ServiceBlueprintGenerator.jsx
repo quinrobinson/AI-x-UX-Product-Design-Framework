@@ -35,39 +35,6 @@ const STEPS = [
   { id: 5, label: "Handoff",   short: "Define handoff"     },
 ];
 
-// ─── API ──────────────────────────────────────────────────────────────────────
-async function callClaude(system, user, onChunk) {
-  const res = await fetch("/api/claude", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      model: "claude-haiku-4-5-20251001",
-      max_tokens: 1000,
-      stream: true,
-      system,
-      messages: [{ role: "user", content: user }],
-    }),
-  });
-  if (!res.ok) { onChunk("⚠️ Error " + res.status + ". Check your API key and try again."); return ""; }
-  const reader = res.body.getReader();
-  const dec = new TextDecoder();
-  let full = "";
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    for (const line of dec.decode(value).split("\n").filter(l => l.startsWith("data: "))) {
-      try {
-        const j = JSON.parse(line.slice(6));
-        if (j.type === "content_block_delta" && j.delta?.text) {
-          full += j.delta.text;
-          onChunk(full);
-        }
-      } catch {}
-    }
-  }
-  return full;
-}
-
 // ─── Shared UI ────────────────────────────────────────────────────────────────
 function Label({ children, sub }) {
   return (
@@ -153,7 +120,7 @@ function CopyBtn({ text, small }) {
   );
 }
 
-function OutputBlock({ content, streaming, maxH = 400 }) {
+function OutputBlock({ content, maxH = 400 }) {
   return (
     <div style={{
       background: T.surface, border: `1px solid ${T.border}`,
@@ -164,11 +131,6 @@ function OutputBlock({ content, streaming, maxH = 400 }) {
       maxHeight: maxH, overflowY: "auto",
     }}>
       {content || <span style={{ color: T.dim, fontStyle: "italic" }}>Output will appear here…</span>}
-      {streaming && <span style={{
-        display: "inline-block", width: 6, height: 14,
-        background: T.discover, marginLeft: 2,
-        animation: "blink 0.8s step-end infinite", verticalAlign: "middle",
-      }} />}
     </div>
   );
 }
@@ -250,12 +212,46 @@ function LaneTag({ visible }) {
   );
 }
 
+function PromptPanel({ promptText, pastedResult, setPastedResult, accent = T.discover }) {
+  const [copied, setCopied] = useState(false);
+  if (!promptText) return null;
+  return (
+    <div style={{ background: T.surface, border: `1px solid ${T.border}`, borderRadius: 8, padding: "16px 18px", marginTop: 16 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+        <span style={{ fontSize: 11, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.08em", textTransform: "uppercase", color: accent }}>
+          Prompt ready — copy and run in Claude
+        </span>
+        <div style={{ display: "flex", gap: 8 }}>
+          <button
+            onClick={() => { navigator.clipboard.writeText(promptText); setCopied(true); setTimeout(() => setCopied(false), 2000); }}
+            style={{ padding: "6px 14px", fontSize: 11, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.06em", textTransform: "uppercase", fontWeight: 600, cursor: "pointer", borderRadius: 6, border: `1.5px solid ${accent}`, background: copied ? accent : "transparent", color: copied ? "#000" : accent, transition: "all 0.15s" }}
+          >{copied ? "✓ Copied" : "Copy Prompt"}</button>
+          <a href="https://claude.ai" target="_blank" rel="noopener noreferrer"
+            style={{ padding: "6px 14px", fontSize: 11, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.06em", textTransform: "uppercase", fontWeight: 600, cursor: "pointer", borderRadius: 6, border: `1.5px solid ${T.border}`, background: "transparent", color: T.muted, textDecoration: "none", transition: "all 0.15s" }}
+          >Open Claude.ai →</a>
+        </div>
+      </div>
+      <pre style={{ whiteSpace: "pre-wrap", fontSize: 12, lineHeight: 1.7, color: T.text, fontFamily: "'JetBrains Mono', monospace", background: T.card, border: `1px solid ${T.border}`, borderRadius: 6, padding: "12px 14px", maxHeight: 260, overflowY: "auto", margin: 0 }}>{promptText}</pre>
+      <div style={{ marginTop: 16 }}>
+        <div style={{ fontSize: 11, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.07em", textTransform: "uppercase", color: T.muted, marginBottom: 8 }}>Paste Claude's response here</div>
+        <textarea
+          value={pastedResult}
+          onChange={e => setPastedResult(e.target.value)}
+          placeholder="Run the prompt in Claude, then paste the result here to continue…"
+          rows={6}
+          style={{ width: "100%", boxSizing: "border-box", background: T.card, border: `1px solid ${T.border}`, borderRadius: 6, padding: "12px 14px", color: T.text, fontSize: 13, lineHeight: 1.6, fontFamily: "'DM Sans', sans-serif", resize: "vertical", outline: "none" }}
+          onFocus={e => e.target.style.borderColor = accent}
+          onBlur={e => e.target.style.borderColor = T.border}
+        />
+      </div>
+    </div>
+  );
+}
+
 // ─── Main ─────────────────────────────────────────────────────────────────────
 export default function ServiceBlueprintGenerator() {
   const [step, setStep] = useState(1);
   const [completed, setCompleted] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [stream, setStream] = useState("");
 
   // Mode
   const [mode, setMode] = useState(null); // "current" | "future" | "both"
@@ -270,15 +266,19 @@ export default function ServiceBlueprintGenerator() {
   // Step 3 — Stages
   const [stagesRaw, setStagesRaw] = useState("");
   const [stagesApproved, setStagesApproved] = useState([]);
-  const [stagesGenerated, setStagesGenerated] = useState("");
 
   // Step 4 — Blueprint
   const [blueprintCurrent, setBlueprintCurrent] = useState("");
   const [blueprintFuture, setBlueprintFuture] = useState("");
-  const [activeBlueprint, setActiveBlueprint] = useState("current"); // which to show
+  const [activeBlueprint, setActiveBlueprint] = useState("current");
+  const [pendingBlueprintMode, setPendingBlueprintMode] = useState(null); // "current" | "future"
 
   // Step 5 — Handoff
   const [handoff, setHandoff] = useState("");
+
+  // Shared prompt state
+  const [promptText, setPromptText] = useState("");
+  const [pastedResult, setPastedResult] = useState("");
 
   const isFuture = mode === "future";
   const isBoth = mode === "both";
@@ -288,12 +288,10 @@ export default function ServiceBlueprintGenerator() {
   const markComplete = (id) => setCompleted(prev => [...new Set([...prev, id])]);
 
   // ── Step 3: Suggest stages ────────────────────────────────────────────────
-  async function handleSuggestStages() {
+  function handleSuggestStages() {
     if (!persona.trim() || !goal.trim()) return;
-    setLoading(true); setStream("");
-    const result = await callClaude(
-      "You are a senior service designer. Suggest clear, sequential journey stages for a service blueprint. Be concise and specific.",
-      `Suggest 5–7 journey stages for this service blueprint scenario.
+    const sys = "You are a senior service designer. Suggest clear, sequential journey stages for a service blueprint. Be concise and specific.";
+    const user = `Suggest 5–7 journey stages for this service blueprint scenario.
 
 Persona: ${persona}
 Goal: ${goal}
@@ -306,12 +304,14 @@ Example format:
 2. Onboarding
 3. Core task
 4. Review
-5. Exit`,
-      setStream
-    );
-    setStagesGenerated(result);
-    setStagesRaw(result);
-    setLoading(false);
+5. Exit`;
+    setPromptText(sys + "\n\n" + user);
+    setPastedResult("");
+  }
+
+  function acceptSuggestedStages() {
+    setStagesRaw(pastedResult);
+    setPromptText(""); setPastedResult("");
   }
 
   function approveStages() {
@@ -326,12 +326,11 @@ Example format:
   }
 
   // ── Step 4: Generate blueprint ────────────────────────────────────────────
-  async function handleGenerateBlueprint(bpMode) {
-    setLoading(true); setStream("");
+  function handleGenerateBlueprint(bpMode) {
     const stages = stagesApproved.map(s => s.name).join(", ");
     const isFutureMode = bpMode === "future";
 
-    const sys = `You are a senior service designer generating a detailed service blueprint. 
+    const sys = `You are a senior service designer generating a detailed service blueprint.
 For each stage, populate all five swim lanes precisely.
 ${isFutureMode ? "Mark NEW elements with ✦ and IMPROVED elements with ↑. Every change must trace to a pain point or opportunity." : "Mark PAIN POINTS with ⚠️ and WORKAROUNDS with 🔧."}
 Use direct, specific language. No generic filler.`;
@@ -390,15 +389,22 @@ After all stages, add:
 ### Workarounds That Reveal Unmet Needs
 ### Emotional Journey (one sentence per stage)`;
 
-    const result = await callClaude(sys, msg, setStream);
-    if (isFutureMode) {
-      setBlueprintFuture(result);
+    setPendingBlueprintMode(bpMode);
+    setActiveBlueprint(bpMode);
+    setPromptText(sys + "\n\n" + msg);
+    setPastedResult("");
+  }
+
+  function acceptBlueprint() {
+    if (pendingBlueprintMode === "future") {
+      setBlueprintFuture(pastedResult);
       setActiveBlueprint("future");
     } else {
-      setBlueprintCurrent(result);
+      setBlueprintCurrent(pastedResult);
       setActiveBlueprint("current");
     }
-    setLoading(false);
+    setPendingBlueprintMode(null);
+    setPromptText(""); setPastedResult("");
   }
 
   function finishBlueprint() {
@@ -407,11 +413,9 @@ After all stages, add:
   }
 
   // ── Step 5: Generate handoff ──────────────────────────────────────────────
-  async function handleGenerateHandoff() {
-    setLoading(true); setStream("");
-    const result = await callClaude(
-      "You are a senior UX designer generating a structured phase handoff block. Be specific and actionable. Extract real content from the blueprint — no placeholders.",
-      `Generate a Discover → Define Phase Handoff Block from this service blueprint.
+  function handleGenerateHandoff() {
+    const sys = "You are a senior UX designer generating a structured phase handoff block. Be specific and actionable. Extract real content from the blueprint — no placeholders.";
+    const user = `Generate a Discover → Define Phase Handoff Block from this service blueprint.
 
 Mode: ${mode === "both" ? "Current + Future State" : mode === "future" ? "Future State only" : "Current State only"}
 Persona: ${persona}
@@ -467,11 +471,14 @@ Generate the handoff block using this exact structure:
 - [Design decisions needing alignment]
 
 ### Recommended Define focus
-[1–2 sentences — which problem to frame first and why]`,
-      setStream
-    );
-    setHandoff(result);
-    setLoading(false);
+[1–2 sentences — which problem to frame first and why]`;
+    setPromptText(sys + "\n\n" + user);
+    setPastedResult("");
+  }
+
+  function acceptHandoff() {
+    setHandoff(pastedResult);
+    setPromptText(""); setPastedResult("");
     markComplete(5);
   }
 
@@ -489,7 +496,6 @@ Generate the handoff block using this exact structure:
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;600;700&display=swap');
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
         :focus-visible { outline: 2px solid #999999; outline-offset: 2px; border-radius: 4px; }
         button:focus:not(:focus-visible) { outline: none; }
         ::-webkit-scrollbar { width: 4px; }
@@ -548,12 +554,6 @@ Generate the handoff block using this exact structure:
                   padding: "10px 0",
                   borderBottom: i < LANES.length - 1 ? `1px solid ${T.border}` : "none",
                 }}>
-                  {i === 2 && (
-                    <div style={{
-                      width: "100%", height: 1, background: T.border,
-                      position: "absolute", left: 0,
-                    }} />
-                  )}
                   <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 160 }}>
                     <span style={{ fontSize: 13, fontWeight: 500, color: T.text }}>{lane.label}</span>
                   </div>
@@ -662,25 +662,26 @@ Generate the handoff block using this exact structure:
 
             <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
               <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
-                <Btn variant="ghost" small onClick={handleSuggestStages} disabled={loading}>
-                  {loading ? "Suggesting…" : "Suggest Stages"}
+                <Btn variant="ghost" small onClick={handleSuggestStages} disabled={!!promptText}>
+                  Suggest Stages
                 </Btn>
               </div>
 
-              {(stream || stagesGenerated) && !stagesApproved.length && (
-                <div>
-                  <OutputBlock content={stream} streaming={loading} maxH={200} />
+              <PromptPanel promptText={promptText} pastedResult={pastedResult} setPastedResult={setPastedResult} accent={accent} />
+              {promptText && pastedResult.trim() && (
+                <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
+                  <Btn variant="ghost" small onClick={() => { setPromptText(""); setPastedResult(""); }}>Cancel</Btn>
+                  <Btn small color={accent} onClick={acceptSuggestedStages}>Use These Stages</Btn>
                 </div>
               )}
 
               <div>
                 <Label>Stages — edit or write your own (one per line, numbered)</Label>
                 <Textarea value={stagesRaw} onChange={setStagesRaw} rows={8}
-                  placeholder={"1. Awareness\n2. Onboarding\n3. Core task\n4. Review\n5. Exit"}
-                  disabled={loading} />
+                  placeholder={"1. Awareness\n2. Onboarding\n3. Core task\n4. Review\n5. Exit"} />
               </div>
               <div style={{ display: "flex", justifyContent: "flex-end" }}>
-                <Btn disabled={!stagesRaw.trim() || loading} color={accentColor} onClick={approveStages}>
+                <Btn disabled={!stagesRaw.trim()} color={accentColor} onClick={approveStages}>
                   Confirm Stages →
                 </Btn>
               </div>
@@ -733,15 +734,15 @@ Generate the handoff block using this exact structure:
 
             {/* Generate buttons */}
             <div style={{ display: "flex", gap: 10, marginBottom: 16, flexWrap: "wrap" }}>
-              {(mode === "current" || isBoth) && !blueprintCurrent && (
-                <Btn onClick={() => handleGenerateBlueprint("current")} disabled={loading}>
-                  {loading ? "Generating…" : "Generate Current State"}
+              {(mode === "current" || isBoth) && !blueprintCurrent && !promptText && (
+                <Btn onClick={() => handleGenerateBlueprint("current")}>
+                  Generate Current State
                 </Btn>
               )}
-              {(isFuture || isBoth) && !blueprintFuture && (
-                <Btn onClick={() => handleGenerateBlueprint("future")} disabled={loading || (isBoth && !blueprintCurrent)}
+              {(isFuture || isBoth) && !blueprintFuture && !promptText && (
+                <Btn onClick={() => handleGenerateBlueprint("future")} disabled={isBoth && !blueprintCurrent}
                   color={T.amber}>
-                  {loading ? "Generating…" : isBoth && !blueprintCurrent ? "Generate Current First" : "Generate Future State"}
+                  {isBoth && !blueprintCurrent ? "Generate Current First" : "Generate Future State"}
                 </Btn>
               )}
               {blueprintCurrent && !blueprintFuture && mode === "current" && (
@@ -749,9 +750,19 @@ Generate the handoff block using this exact structure:
               )}
             </div>
 
+            <PromptPanel promptText={promptText} pastedResult={pastedResult} setPastedResult={setPastedResult} accent={pendingBlueprintMode === "future" ? T.amber : T.discover} />
+            {promptText && pastedResult.trim() && (
+              <div style={{ display: "flex", gap: 10, marginTop: 12, justifyContent: "flex-end" }}>
+                <Btn variant="ghost" small onClick={() => { setPromptText(""); setPastedResult(""); setPendingBlueprintMode(null); }}>Cancel</Btn>
+                <Btn small color={pendingBlueprintMode === "future" ? T.amber : T.discover} onClick={acceptBlueprint}>
+                  Accept {pendingBlueprintMode === "future" ? "Future" : "Current"} Blueprint
+                </Btn>
+              </div>
+            )}
+
             {/* Output */}
-            {(stream || blueprintCurrent || blueprintFuture) && (
-              <div>
+            {(blueprintCurrent || blueprintFuture) && (
+              <div style={{ marginTop: 16 }}>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
                   <Label sub>
                     {isBoth
@@ -759,28 +770,23 @@ Generate the handoff block using this exact structure:
                       : `${mode} state blueprint`}
                   </Label>
                   <div style={{ display: "flex", gap: 8 }}>
-                    {(blueprintCurrent || blueprintFuture) && !loading && (
-                      <>
-                        <CopyBtn text={activeBlueprint === "future" ? blueprintFuture : blueprintCurrent} />
-                        <Btn small variant="ghost"
-                          onClick={() => downloadMd(
-                            activeBlueprint === "future" ? blueprintFuture : blueprintCurrent,
-                            `blueprint-${activeBlueprint}-state.md`
-                          )}>↓ .md</Btn>
-                      </>
-                    )}
+                    <CopyBtn text={activeBlueprint === "future" ? blueprintFuture : blueprintCurrent} />
+                    <Btn small variant="ghost"
+                      onClick={() => downloadMd(
+                        activeBlueprint === "future" ? blueprintFuture : blueprintCurrent,
+                        `blueprint-${activeBlueprint}-state.md`
+                      )}>↓ .md</Btn>
                   </div>
                 </div>
                 <OutputBlock
-                  content={loading ? stream : (activeBlueprint === "future" ? blueprintFuture : blueprintCurrent) || stream}
-                  streaming={loading}
+                  content={(activeBlueprint === "future" ? blueprintFuture : blueprintCurrent)}
                   maxH={500}
                 />
               </div>
             )}
 
-            {/* Re-generate regenerated states */}
-            {!loading && blueprintCurrent && mode !== "current" && (
+            {/* Re-generate options */}
+            {blueprintCurrent && mode !== "current" && (
               <div style={{ display: "flex", gap: 8, marginTop: 12, justifyContent: "flex-end", flexWrap: "wrap" }}>
                 <Btn variant="ghost" small onClick={() => { setBlueprintCurrent(""); setActiveBlueprint("current"); }}>
                   Re-gen Current
@@ -794,7 +800,7 @@ Generate the handoff block using this exact structure:
             )}
 
             {/* Continue */}
-            {!loading && (blueprintCurrent || blueprintFuture) &&
+            {(blueprintCurrent || blueprintFuture) &&
               ((mode === "current" && blueprintCurrent) ||
                (isFuture && blueprintFuture) ||
                (isBoth && blueprintCurrent && blueprintFuture)) && (
@@ -813,42 +819,45 @@ Generate the handoff block using this exact structure:
               color={accentColor} />
 
             {!handoff && (
-              <div style={{ display: "flex", justifyContent: "flex-end" }}>
-                <Btn onClick={handleGenerateHandoff} disabled={loading} color={accentColor}>
-                  {loading ? "Generating…" : "Generate Handoff Block"}
-                </Btn>
+              <div>
+                <div style={{ display: "flex", justifyContent: "flex-end" }}>
+                  <Btn onClick={handleGenerateHandoff} disabled={!!promptText} color={accentColor}>
+                    Generate Handoff Block
+                  </Btn>
+                </div>
+                <PromptPanel promptText={promptText} pastedResult={pastedResult} setPastedResult={setPastedResult} accent={accent} />
+                {promptText && pastedResult.trim() && (
+                  <div style={{ display: "flex", gap: 10, marginTop: 12, justifyContent: "flex-end" }}>
+                    <Btn variant="ghost" small onClick={() => { setPromptText(""); setPastedResult(""); }}>Cancel</Btn>
+                    <Btn small color={accentColor} onClick={acceptHandoff}>Accept Handoff Block</Btn>
+                  </div>
+                )}
               </div>
             )}
 
-            {(stream || handoff) && (
+            {handoff && (
               <div style={{ marginTop: 16 }}>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
                   <Label sub>Discover → Define handoff block</Label>
                   <div style={{ display: "flex", gap: 8 }}>
-                    {handoff && !loading && (
-                      <>
-                        <CopyBtn text={handoff} />
-                        <Btn small variant="ghost" onClick={() => downloadMd(handoff, "handoff-discover-define.md")}>↓ .md</Btn>
-                      </>
-                    )}
+                    <CopyBtn text={handoff} />
+                    <Btn small variant="ghost" onClick={() => downloadMd(handoff, "handoff-discover-define.md")}>↓ .md</Btn>
                   </div>
                 </div>
-                <OutputBlock content={loading ? stream : handoff} streaming={loading} maxH={500} />
+                <OutputBlock content={handoff} maxH={500} />
 
-                {handoff && !loading && (
-                  <div style={{
-                    marginTop: 20, padding: "14px 16px",
-                    background: T.discoverDim, border: `1px solid ${T.discoverBorder}`,
-                    borderRadius: 8,
+                <div style={{
+                  marginTop: 20, padding: "14px 16px",
+                  background: T.discoverDim, border: `1px solid ${T.discoverBorder}`,
+                  borderRadius: 8,
+                }}>
+                  <span style={{
+                    fontSize: 11, fontFamily: "'JetBrains Mono', monospace",
+                    letterSpacing: "0.08em", textTransform: "uppercase", color: T.discover,
                   }}>
-                    <span style={{
-                      fontSize: 11, fontFamily: "'JetBrains Mono', monospace",
-                      letterSpacing: "0.08em", textTransform: "uppercase", color: T.discover,
-                    }}>
-                      ✓ Blueprint complete — copy handoff block and paste it as the first message in Define
-                    </span>
-                  </div>
-                )}
+                    ✓ Blueprint complete — copy handoff block and paste it as the first message in Define
+                  </span>
+                </div>
               </div>
             )}
           </div>

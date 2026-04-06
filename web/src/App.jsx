@@ -1483,8 +1483,10 @@ function SetupBlock({ onOpenFigmaGuide }) {
     try { return localStorage.getItem("apdf-setup-done") === "true"; } catch { return false; }
   });
   const [copied, setCopied] = useState(false);
+  const [copiedMcp, setCopiedMcp] = useState(false);
 
   const cloneCmd = `git clone ${REPO}.git`;
+  const mcpCmd = `claude mcp add apdf -- npx @apdf/mcp`;
 
   function toggleDone() {
     const next = !done;
@@ -1542,6 +1544,20 @@ function SetupBlock({ onOpenFigmaGuide }) {
                       aria-label="Copy clone command"
                       style={{ fontSize: 10, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.06em", textTransform: "uppercase", color: copied ? "#22C55E" : T.dim, background: "none", border: "none", cursor: "pointer", padding: 0 }}>
                       {copied ? "✓" : "Copy"}
+                    </button>
+                  </div>
+                )
+              },
+              {
+                n: "④", label: "Add the APDF MCP (Claude Code users)",
+                desc: "If you use Claude Code, add the framework as an MCP — 17 design tools available directly in your workflow with no API credits needed.",
+                action: (
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <code style={{ fontSize: 11, color: T.muted, fontFamily: "'JetBrains Mono', monospace", background: T.card, padding: "3px 8px", borderRadius: 4 }}>{mcpCmd}</code>
+                    <button onClick={() => { navigator.clipboard.writeText(mcpCmd); setCopiedMcp(true); setTimeout(() => setCopiedMcp(false), 1800); }}
+                      aria-label="Copy MCP install command"
+                      style={{ fontSize: 10, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.06em", textTransform: "uppercase", color: copiedMcp ? "#22C55E" : T.dim, background: "none", border: "none", cursor: "pointer", padding: 0 }}>
+                      {copiedMcp ? "✓" : "Copy"}
                     </button>
                   </div>
                 )

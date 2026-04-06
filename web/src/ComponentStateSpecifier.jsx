@@ -14,20 +14,37 @@ const STEPS = [
   { id: 5, label: "Handoff",     short: "Figma property spec"         },
 ];
 
-async function callClaude(system, user, onChunk) {
-  const res = await fetch("/api/claude", {
-    method: "POST", headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ model: "claude-haiku-4-5-20251001", max_tokens: 1000, stream: true, system, messages: [{ role: "user", content: user }] }),
-  });
-  if (!res.ok) { onChunk("⚠️ Error " + res.status + ". Check your API key and try again."); return ""; }
-  const reader = res.body.getReader(); const dec = new TextDecoder(); let full = "";
-  while (true) {
-    const { done, value } = await reader.read(); if (done) break;
-    for (const line of dec.decode(value).split("\n").filter(l => l.startsWith("data: "))) {
-      try { const j = JSON.parse(line.slice(6)); if (j.type === "content_block_delta" && j.delta?.text) { full += j.delta.text; onChunk(full); } } catch {}
-    }
-  }
-  return full;
+function PromptPanel({ promptText, pastedResult, setPastedResult }) {
+  const [copied, setCopied] = useState(false);
+  if (!promptText) return null;
+  return (
+    <div style={{ background: T.surface, border: `1px solid ${T.border}`, borderRadius: 8, padding: "16px 18px", marginTop: 16 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+        <span style={{ fontSize: 11, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.08em", textTransform: "uppercase", color: T.proto }}>
+          Prompt ready — copy and run in Claude
+        </span>
+        <div style={{ display: "flex", gap: 8 }}>
+          <button
+            onClick={() => { navigator.clipboard.writeText(promptText); setCopied(true); setTimeout(() => setCopied(false), 2000); }}
+            style={{ padding: "6px 14px", fontSize: 11, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.06em", textTransform: "uppercase", fontWeight: 600, cursor: "pointer", borderRadius: 6, border: `1.5px solid ${T.proto}`, background: copied ? T.proto : "transparent", color: copied ? "#fff" : T.proto, transition: "all 0.15s" }}
+          >{copied ? "✓ Copied" : "Copy Prompt"}</button>
+          <a href="https://claude.ai" target="_blank" rel="noopener noreferrer"
+            style={{ padding: "6px 14px", fontSize: 11, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.06em", textTransform: "uppercase", fontWeight: 600, borderRadius: 6, border: `1.5px solid ${T.border}`, color: T.muted, textDecoration: "none", display: "inline-block" }}
+          >Open Claude.ai →</a>
+        </div>
+      </div>
+      <pre style={{ whiteSpace: "pre-wrap", fontSize: 12, lineHeight: 1.7, color: T.text, fontFamily: "'DM Sans', sans-serif", margin: 0, maxHeight: 320, overflowY: "auto" }}>{promptText}</pre>
+      <div style={{ marginTop: 16 }}>
+        <div style={{ fontSize: 11, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.08em", textTransform: "uppercase", color: T.muted, marginBottom: 8 }}>Paste Claude's response here</div>
+        <textarea
+          value={pastedResult} onChange={e => setPastedResult(e.target.value)}
+          placeholder="Run the prompt in Claude, then paste the result here to continue…" rows={6}
+          style={{ width: "100%", boxSizing: "border-box", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, padding: "12px 14px", color: T.text, fontSize: 13, lineHeight: 1.6, fontFamily: "'DM Sans', sans-serif", resize: "vertical", outline: "none" }}
+          onFocus={e => e.target.style.borderColor = T.proto} onBlur={e => e.target.style.borderColor = T.border}
+        />
+      </div>
+    </div>
+  );
 }
 
 function Label({ children, sub }) {
@@ -52,11 +69,10 @@ function CopyBtn({ text }) {
   return <Btn small variant="ghost" onClick={() => { navigator.clipboard.writeText(text); setC(true); setTimeout(() => setC(false), 1800); }}>{c ? "✓ Copied" : "Copy"}</Btn>;
 }
 
-function OutputBlock({ content, streaming, maxH = 500 }) {
+function OutputBlock({ content, maxH = 500 }) {
   return (
     <div style={{ background: T.surface, border: `1px solid ${T.border}`, borderRadius: 8, padding: "16px 18px", fontSize: 13, lineHeight: 1.7, color: T.text, fontFamily: "'DM Sans', sans-serif", whiteSpace: "pre-wrap", wordBreak: "break-word", maxHeight: maxH, overflowY: "auto" }}>
       {content || <span style={{ color: T.dim, fontStyle: "italic" }}>Output will appear here…</span>}
-      {streaming && <span style={{ display: "inline-block", width: 6, height: 14, background: T.proto, marginLeft: 2, animation: "blink 0.8s step-end infinite", verticalAlign: "middle" }} />}
     </div>
   );
 }
@@ -95,8 +111,8 @@ function StepIndicator({ current, completed }) {
 export default function ComponentStateSpecifier() {
   const [step, setStep] = useState(1);
   const [completed, setCompleted] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [stream, setStream] = useState("");
+  const [promptText, setPromptText] = useState("");
+  const [pastedResult, setPastedResult] = useState("");
 
   // Step 1 inputs
   const [componentName, setComponentName] = useState("");
@@ -121,8 +137,7 @@ export default function ComponentStateSpecifier() {
     URL.revokeObjectURL(url);
   }
 
-  async function handleStateInventory() {
-    setLoading(true); setStream("");
+  function handleStateInventory() {
     const sys = `You are a senior design systems engineer generating a complete state inventory for a UI component. Your job is to identify every state this component can be in — nothing implied, everything explicit.
 
 State categories to consider:
@@ -150,12 +165,19 @@ ${tokenContext ? `Token set available:\n${tokenContext}` : "Using --sds-* defaul
 
 Generate the complete state inventory for this component. Be thorough — missing a state here means it won't get built.`;
 
-    const result = await callClaude(sys, user, setStream);
-    setStateInventory(result); setStream(""); mark(1); setStep(2); setLoading(false);
+    setPromptText(sys + "\n\n" + user);
+    setPastedResult("");
   }
 
-  async function handleStateSpec() {
-    setLoading(true); setStream("");
+  function acceptStateInventory() {
+    setStateInventory(pastedResult);
+    setPromptText("");
+    setPastedResult("");
+    mark(1);
+    setStep(2);
+  }
+
+  function handleStateSpec() {
     const tokenPrefix = tokenContext
       ? "Use exact token names from the provided token set."
       : "Use --sds-* naming convention: --sds-color-*, --sds-size-space-*, --sds-size-radius-*, --sds-typography-*, --sds-shadow-*.";
@@ -183,12 +205,19 @@ ${variantMatrix ? `Variant matrix:\n${variantMatrix}` : ""}
 
 Write the complete per-state specification. Every state in the inventory must be fully documented. Default and hover are not enough — cover all states.`;
 
-    const result = await callClaude(sys, user, setStream);
-    setStateSpec(result); setStream(""); mark(2); setStep(3); setLoading(false);
+    setPromptText(sys + "\n\n" + user);
+    setPastedResult("");
   }
 
-  async function handleTransitions() {
-    setLoading(true); setStream("");
+  function acceptStateSpec() {
+    setStateSpec(pastedResult);
+    setPromptText("");
+    setPastedResult("");
+    mark(2);
+    setStep(3);
+  }
+
+  function handleTransitions() {
     const sys = `You are a senior interaction designer mapping the state transition choreography for a UI component. Your job is to define exactly how this component moves between states — what triggers each transition, what state it returns to, and whether any intermediate states exist.
 
 Produce:
@@ -211,12 +240,19 @@ ${stateSpec}
 
 Map the complete interaction choreography. Be specific about timing and easing for every transition.`;
 
-    const result = await callClaude(sys, user, setStream);
-    setTransitions(result); setStream(""); mark(3); setStep(4); setLoading(false);
+    setPromptText(sys + "\n\n" + user);
+    setPastedResult("");
   }
 
-  async function handleFigmaSpec() {
-    setLoading(true); setStream("");
+  function acceptTransitions() {
+    setTransitions(pastedResult);
+    setPromptText("");
+    setPastedResult("");
+    mark(3);
+    setStep(4);
+  }
+
+  function handleFigmaSpec() {
     const sys = `You are a design systems specialist generating a Figma component property specification and handoff block. This output is used to set up the component in Figma and to hand it to the Component Spec Generator for delivery documentation.
 
 Produce:
@@ -252,8 +288,16 @@ ${tokenContext ? `Token set:\n${tokenContext}` : "Using --sds-* defaults."}
 
 Generate the complete Figma property specification and Component Spec Generator handoff block.`;
 
-    const result = await callClaude(sys, user, setStream);
-    setFigmaSpec(result); setStream(""); mark(4); setStep(5); setLoading(false);
+    setPromptText(sys + "\n\n" + user);
+    setPastedResult("");
+  }
+
+  function acceptFigmaSpec() {
+    setFigmaSpec(pastedResult);
+    setPromptText("");
+    setPastedResult("");
+    mark(4);
+    setStep(5);
   }
 
   const componentSlug = componentName.toLowerCase().replace(/\s+/g, "-") || "component";
@@ -262,7 +306,6 @@ Generate the complete Figma property specification and Component Spec Generator 
   return (
     <div style={{ background: T.bg, minHeight: "100vh", padding: "40px 32px", fontFamily: "'DM Sans', sans-serif", color: T.text }}>
       <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;700&family=DM+Serif+Display&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
-      <style>{`@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }`}</style>
 
       {/* Header */}
       <div style={{ maxWidth: 760, margin: "0 auto 40px" }}>
@@ -281,12 +324,10 @@ Generate the complete Figma property specification and Component Spec Generator 
           <div>
             <SectionHeader step={1} title="Component Definition" desc="Define the component you're speccing. Paste the row from your Component Architecture Planner handoff block, or describe it from scratch." />
             <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-
               <div>
                 <Label>Component name</Label>
                 <Input value={componentName} onChange={setComponentName} placeholder="e.g. Primary Button, Search Input, Product Card, Data Table Row" />
               </div>
-
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
                 <div>
                   <Label>Component type</Label>
@@ -303,7 +344,6 @@ Generate the complete Figma property specification and Component Spec Generator 
                     ))}
                   </div>
                 </div>
-
                 <div>
                   <Label>Platform</Label>
                   <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
@@ -315,27 +355,29 @@ Generate the complete Figma property specification and Component Spec Generator 
                   </div>
                 </div>
               </div>
-
               <div>
                 <Label>Variant matrix <span style={{ color: T.dim, textTransform: "none", fontFamily: "'DM Sans', sans-serif", fontSize: 11 }}>(optional — paste from Component Architecture Planner)</span></Label>
                 <Textarea value={variantMatrix} onChange={setVariantMatrix} placeholder="Paste the variant matrix for this component from the Architecture Planner output. If blank, Claude will infer variants from the component type." rows={4} />
               </div>
-
               <div>
                 <Label>Usage context <span style={{ color: T.dim, textTransform: "none", fontFamily: "'DM Sans', sans-serif", fontSize: 11 }}>(optional)</span></Label>
                 <Textarea value={usageContext} onChange={setUsageContext} placeholder="Where and how is this component used? e.g. 'Primary action button used in forms, modals, and page headers. Never used for destructive actions.' Context improves state accuracy." rows={3} />
               </div>
-
               <div>
                 <Label>Design tokens <span style={{ color: T.dim, textTransform: "none", fontFamily: "'DM Sans', sans-serif", fontSize: 11 }}>(optional)</span></Label>
                 <Textarea value={tokenContext} onChange={setTokenContext} placeholder="Paste CSS custom properties or token assignments from the Architecture Planner. If blank, --sds-* defaults are used." rows={4} />
               </div>
-
               <div style={{ display: "flex", justifyContent: "flex-end" }}>
-                <Btn onClick={handleStateInventory} disabled={!componentName.trim() || loading}>
-                  {loading ? "Generating state inventory…" : "Generate state inventory →"}
+                <Btn onClick={handleStateInventory} disabled={!componentName.trim()}>
+                  Generate state inventory →
                 </Btn>
               </div>
+              <PromptPanel promptText={promptText} pastedResult={pastedResult} setPastedResult={setPastedResult} />
+              {promptText && (
+                <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
+                  <Btn small disabled={!pastedResult.trim()} onClick={acceptStateInventory}>Accept State Inventory →</Btn>
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -344,20 +386,19 @@ Generate the complete Figma property specification and Component Spec Generator 
         {step === 2 && (
           <div>
             <SectionHeader step={2} title="State Inventory" desc={`Every state ${componentName} can be in — with trigger, visual category, a11y criticality, and platform notes. Nothing implied, everything explicit.`} />
-            {loading ? (
-              <div>
-                <Label sub>Identifying states…</Label>
-                <OutputBlock content={stream} streaming={true} maxH={440} />
+            <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+              <OutputBlock content={stateInventory} maxH={440} />
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <CopyBtn text={stateInventory} />
+                <Btn onClick={handleStateSpec}>Write per-state spec →</Btn>
               </div>
-            ) : (
-              <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-                <OutputBlock content={stateInventory} maxH={440} />
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  <CopyBtn text={stateInventory} />
-                  <Btn onClick={handleStateSpec} disabled={loading}>Write per-state spec →</Btn>
+              <PromptPanel promptText={promptText} pastedResult={pastedResult} setPastedResult={setPastedResult} />
+              {promptText && (
+                <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
+                  <Btn small disabled={!pastedResult.trim()} onClick={acceptStateSpec}>Accept State Spec →</Btn>
                 </div>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         )}
 
@@ -365,20 +406,19 @@ Generate the complete Figma property specification and Component Spec Generator 
         {step === 3 && (
           <div>
             <SectionHeader step={3} title="Per-State Specification" desc="For every state: exact token changes from default, functional behavior, transition details, and accessibility requirements. Precise enough for a developer to build from." />
-            {loading ? (
-              <div>
-                <Label sub>Specifying each state…</Label>
-                <OutputBlock content={stream} streaming={true} maxH={480} />
+            <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+              <OutputBlock content={stateSpec} maxH={480} />
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <CopyBtn text={stateSpec} />
+                <Btn onClick={handleTransitions}>Map transition choreography →</Btn>
               </div>
-            ) : (
-              <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-                <OutputBlock content={stateSpec} maxH={480} />
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  <CopyBtn text={stateSpec} />
-                  <Btn onClick={handleTransitions} disabled={loading}>Map transition choreography →</Btn>
+              <PromptPanel promptText={promptText} pastedResult={pastedResult} setPastedResult={setPastedResult} />
+              {promptText && (
+                <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
+                  <Btn small disabled={!pastedResult.trim()} onClick={acceptTransitions}>Accept Transitions →</Btn>
                 </div>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         )}
 
@@ -386,20 +426,19 @@ Generate the complete Figma property specification and Component Spec Generator 
         {step === 4 && (
           <div>
             <SectionHeader step={4} title="Transition Choreography" desc="How this component moves between states — triggers, intermediate states, timing, easing, and platform-specific motion rules. Specific ms values, not vague descriptions." />
-            {loading ? (
-              <div>
-                <Label sub>Mapping transitions…</Label>
-                <OutputBlock content={stream} streaming={true} maxH={480} />
+            <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+              <OutputBlock content={transitions} maxH={480} />
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <CopyBtn text={transitions} />
+                <Btn onClick={handleFigmaSpec}>Generate Figma spec + handoff →</Btn>
               </div>
-            ) : (
-              <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-                <OutputBlock content={transitions} maxH={480} />
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  <CopyBtn text={transitions} />
-                  <Btn onClick={handleFigmaSpec} disabled={loading}>Generate Figma spec + handoff →</Btn>
+              <PromptPanel promptText={promptText} pastedResult={pastedResult} setPastedResult={setPastedResult} />
+              {promptText && (
+                <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
+                  <Btn small disabled={!pastedResult.trim()} onClick={acceptFigmaSpec}>Accept Figma Spec →</Btn>
                 </div>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         )}
 
@@ -407,34 +446,27 @@ Generate the complete Figma property specification and Component Spec Generator 
         {step === 5 && (
           <div>
             <SectionHeader step={5} title="Figma Property Spec + Handoff" desc="Component properties for Figma's panel, layer naming, auto-layout spec, and a handoff block for the Component Spec Generator at delivery." />
-            {loading ? (
-              <div>
-                <Label sub>Generating Figma spec…</Label>
-                <OutputBlock content={stream} streaming={true} maxH={480} />
-              </div>
-            ) : (
-              <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-                <OutputBlock content={figmaSpec} maxH={480} />
+            <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+              <OutputBlock content={figmaSpec} maxH={480} />
 
-                {/* Next steps callout */}
-                <div style={{ background: T.card, border: `1px solid ${T.protoBorder}`, borderRadius: 8, padding: "14px 16px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
-                  <div>
-                    <div style={{ fontSize: 11, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.08em", textTransform: "uppercase", color: T.proto, marginBottom: 6 }}>Build in Figma</div>
-                    <p style={{ fontSize: 12, color: T.muted, margin: 0, lineHeight: 1.5 }}>Use the Figma property spec above to set up component properties. Build each variant using the token assignments from the Architecture Planner.</p>
-                  </div>
-                  <div>
-                    <div style={{ fontSize: 11, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.08em", textTransform: "uppercase", color: T.proto, marginBottom: 6 }}>At delivery</div>
-                    <p style={{ fontSize: 12, color: T.muted, margin: 0, lineHeight: 1.5 }}>Copy the handoff block and paste it into the <strong style={{ color: T.text }}>Component Spec Generator</strong> to produce the full engineering handoff doc.</p>
-                  </div>
+              {/* Next steps callout */}
+              <div style={{ background: T.card, border: `1px solid ${T.protoBorder}`, borderRadius: 8, padding: "14px 16px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+                <div>
+                  <div style={{ fontSize: 11, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.08em", textTransform: "uppercase", color: T.proto, marginBottom: 6 }}>Build in Figma</div>
+                  <p style={{ fontSize: 12, color: T.muted, margin: 0, lineHeight: 1.5 }}>Use the Figma property spec above to set up component properties. Build each variant using the token assignments from the Architecture Planner.</p>
                 </div>
-
-                <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", flexWrap: "wrap" }}>
-                  <CopyBtn text={figmaSpec} />
-                  <Btn variant="ghost" small onClick={() => dl(fullDoc, `${componentSlug}-state-spec.md`)}>Download full spec (.md)</Btn>
-                  <Btn variant="ghost" small onClick={() => { setStep(1); setCompleted([]); setComponentName(""); setComponentType("atomic"); setPlatform("web"); setVariantMatrix(""); setTokenContext(""); setUsageContext(""); setStateInventory(""); setStateSpec(""); setTransitions(""); setFigmaSpec(""); }}>Spec another component</Btn>
+                <div>
+                  <div style={{ fontSize: 11, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.08em", textTransform: "uppercase", color: T.proto, marginBottom: 6 }}>At delivery</div>
+                  <p style={{ fontSize: 12, color: T.muted, margin: 0, lineHeight: 1.5 }}>Copy the handoff block and paste it into the <strong style={{ color: T.text }}>Component Spec Generator</strong> to produce the full engineering handoff doc.</p>
                 </div>
               </div>
-            )}
+
+              <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", flexWrap: "wrap" }}>
+                <CopyBtn text={figmaSpec} />
+                <Btn variant="ghost" small onClick={() => dl(fullDoc, `${componentSlug}-state-spec.md`)}>Download full spec (.md)</Btn>
+                <Btn variant="ghost" small onClick={() => { setStep(1); setCompleted([]); setComponentName(""); setComponentType("atomic"); setPlatform("web"); setVariantMatrix(""); setTokenContext(""); setUsageContext(""); setStateInventory(""); setStateSpec(""); setTransitions(""); setFigmaSpec(""); setPromptText(""); setPastedResult(""); }}>Spec another component</Btn>
+              </div>
+            </div>
           </div>
         )}
       </div>

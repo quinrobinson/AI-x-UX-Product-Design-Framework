@@ -14,20 +14,37 @@ const STEPS = [
   { id: 5, label: "Decision",  short: "Go / No-Go"                },
 ];
 
-async function callClaude(system, user, onChunk) {
-  const res = await fetch("/api/claude", {
-    method: "POST", headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ model: "claude-haiku-4-5-20251001", max_tokens: 1000, stream: true, system, messages: [{ role: "user", content: user }] }),
-  });
-  if (!res.ok) { onChunk("⚠️ Error " + res.status + ". Check your API key and try again."); return ""; }
-  const reader = res.body.getReader(); const dec = new TextDecoder(); let full = "";
-  while (true) {
-    const { done, value } = await reader.read(); if (done) break;
-    for (const line of dec.decode(value).split("\n").filter(l => l.startsWith("data: "))) {
-      try { const j = JSON.parse(line.slice(6)); if (j.type === "content_block_delta" && j.delta?.text) { full += j.delta.text; onChunk(full); } } catch {}
-    }
-  }
-  return full;
+function PromptPanel({ promptText, pastedResult, setPastedResult }) {
+  const [copied, setCopied] = useState(false);
+  if (!promptText) return null;
+  return (
+    <div style={{ background: T.surface, border: `1px solid ${T.border}`, borderRadius: 8, padding: "16px 18px", marginTop: 16 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+        <span style={{ fontSize: 11, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.08em", textTransform: "uppercase", color: T.validate }}>
+          Prompt ready — copy and run in Claude
+        </span>
+        <div style={{ display: "flex", gap: 8 }}>
+          <button
+            onClick={() => { navigator.clipboard.writeText(promptText); setCopied(true); setTimeout(() => setCopied(false), 2000); }}
+            style={{ padding: "6px 14px", fontSize: 11, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.06em", textTransform: "uppercase", fontWeight: 600, cursor: "pointer", borderRadius: 6, border: `1.5px solid ${T.validate}`, background: copied ? T.validate : "transparent", color: copied ? "#fff" : T.validate, transition: "all 0.15s" }}
+          >{copied ? "✓ Copied" : "Copy Prompt"}</button>
+          <a href="https://claude.ai" target="_blank" rel="noopener noreferrer"
+            style={{ padding: "6px 14px", fontSize: 11, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.06em", textTransform: "uppercase", fontWeight: 600, borderRadius: 6, border: `1.5px solid ${T.border}`, color: T.muted, textDecoration: "none", display: "inline-block" }}
+          >Open Claude.ai →</a>
+        </div>
+      </div>
+      <pre style={{ whiteSpace: "pre-wrap", fontSize: 12, lineHeight: 1.7, color: T.text, fontFamily: "'DM Sans', sans-serif", margin: 0, maxHeight: 320, overflowY: "auto" }}>{promptText}</pre>
+      <div style={{ marginTop: 16 }}>
+        <div style={{ fontSize: 11, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.08em", textTransform: "uppercase", color: T.muted, marginBottom: 8 }}>Paste Claude's response here</div>
+        <textarea
+          value={pastedResult} onChange={e => setPastedResult(e.target.value)}
+          placeholder="Run the prompt in Claude, then paste the result here to continue…" rows={6}
+          style={{ width: "100%", boxSizing: "border-box", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, padding: "12px 14px", color: T.text, fontSize: 13, lineHeight: 1.6, fontFamily: "'DM Sans', sans-serif", resize: "vertical", outline: "none" }}
+          onFocus={e => e.target.style.borderColor = T.validate} onBlur={e => e.target.style.borderColor = T.border}
+        />
+      </div>
+    </div>
+  );
 }
 
 function Label({ children, sub }) {
@@ -52,11 +69,10 @@ function CopyBtn({ text }) {
   return <Btn small variant="ghost" onClick={() => { navigator.clipboard.writeText(text); setC(true); setTimeout(() => setC(false), 1800); }}>{c ? "✓ Copied" : "Copy"}</Btn>;
 }
 
-function OutputBlock({ content, streaming, maxH = 480 }) {
+function OutputBlock({ content, maxH = 480 }) {
   return (
     <div style={{ background: T.surface, border: `1px solid ${T.border}`, borderRadius: 8, padding: "16px 18px", fontSize: 13, lineHeight: 1.7, color: T.text, fontFamily: "'DM Sans', sans-serif", whiteSpace: "pre-wrap", wordBreak: "break-word", maxHeight: maxH, overflowY: "auto" }}>
       {content || <span style={{ color: T.dim, fontStyle: "italic" }}>Output will appear here…</span>}
-      {streaming && <span style={{ display: "inline-block", width: 6, height: 14, background: T.validate, marginLeft: 2, animation: "blink 0.8s step-end infinite", verticalAlign: "middle" }} />}
     </div>
   );
 }
@@ -95,8 +111,9 @@ function StepIndicator({ current, completed }) {
 export default function FindingsSynthesizer() {
   const [step, setStep] = useState(1);
   const [completed, setCompleted] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [stream, setStream] = useState("");
+  const [promptText, setPromptText] = useState("");
+  const [pastedResult, setPastedResult] = useState("");
+  const [pendingSessionIdx, setPendingSessionIdx] = useState(null);
 
   // Setup
   const [tasks, setTasks] = useState("");
@@ -107,7 +124,6 @@ export default function FindingsSynthesizer() {
   // Sessions — array of { raw, structured }
   const [sessions, setSessions] = useState([{ id: 1, raw: "", structured: "" }]);
   const [activeSession, setActiveSession] = useState(0);
-  const [structuringIdx, setStructuringIdx] = useState(null);
 
   // Synthesis outputs
   const [synthesis, setSynthesis] = useState("");
@@ -131,13 +147,10 @@ export default function FindingsSynthesizer() {
     setSessions(prev => prev.map((s, i) => i === idx ? { ...s, [field]: value } : s));
   }
 
-  async function structureSession(idx) {
+  function buildStructurePrompt(idx) {
     const session = sessions[idx];
-    if (!session.raw.trim()) return;
-    setStructuringIdx(idx);
-    const result = await callClaude(
-      "You are a UX researcher organizing usability test session notes. Be systematic. Capture exact quotes verbatim — never paraphrase. Mark any inference with [inferred]. Use participant codes like P1, P2 — never real names.",
-      `Structure these raw usability test session notes into a consistent format.
+    const sys = "You are a UX researcher organizing usability test session notes. Be systematic. Capture exact quotes verbatim — never paraphrase. Mark any inference with [inferred]. Use participant codes like P1, P2 — never real names.";
+    const msg = `Structure these raw usability test session notes into a consistent format.
 
 Tasks tested:
 ${tasks}
@@ -173,22 +186,29 @@ For each task:
 - [Expectations that were violated]
 
 ### Overall impression
-"[Their most revealing debrief quote]"`,
-      (chunk) => {
-        setSessions(prev => prev.map((s, i) => i === idx ? { ...s, structured: chunk } : s));
-      }
-    );
-    setSessions(prev => prev.map((s, i) => i === idx ? { ...s, structured: result } : s));
-    setStructuringIdx(null);
+"[Their most revealing debrief quote]"`;
+    return sys + "\n\n" + msg;
+  }
+
+  function structureSession(idx) {
+    if (!sessions[idx].raw.trim()) return;
+    setPendingSessionIdx(idx);
+    setPromptText(buildStructurePrompt(idx));
+    setPastedResult("");
+  }
+
+  function acceptStructuredSession() {
+    setSessions(prev => prev.map((s, i) => i === pendingSessionIdx ? { ...s, structured: pastedResult } : s));
+    setPendingSessionIdx(null);
+    setPromptText("");
+    setPastedResult("");
   }
 
   const allStructured = sessions.map(s => s.structured).filter(Boolean).join("\n\n---\n\n");
 
-  async function handleSynthesize() {
-    setLoading(true); setStream("");
-    const result = await callClaude(
-      "You are a senior UX researcher synthesizing usability test findings. Be specific — cite participant codes and quote directly. Every finding must be grounded in observed behavior. Interpretations must be clearly labeled as such.",
-      `Synthesize these ${sessions.length} usability test sessions into structured findings.
+  function handleSynthesize() {
+    const sys = "You are a senior UX researcher synthesizing usability test findings. Be specific — cite participant codes and quote directly. Every finding must be grounded in observed behavior. Interpretations must be clearly labeled as such.";
+    const msg = `Synthesize these ${sessions.length} usability test sessions into structured findings.
 
 Tasks tested:
 ${tasks}
@@ -226,17 +246,21 @@ After all questions, list every distinct usability issue observed:
 ## What Worked (don't change these)
 | Element | Evidence | Participants |
 |---|---|---|
-| [What succeeded] | [How we know] | [N of ${sessions.length}] |`,
-      setStream
-    );
-    setSynthesis(result); setLoading(false); mark(3);
+| [What succeeded] | [How we know] | [N of ${sessions.length}] |`;
+    setPromptText(sys + "\n\n" + msg);
+    setPastedResult("");
   }
 
-  async function handleSeverity() {
-    setLoading(true); setStream("");
-    const result = await callClaude(
-      "You are a UX researcher rating usability issues by severity. Be consistent: Critical = task failure or abandonment. Major = significant friction, user recovers. Minor = noticeable, low impact. Cosmetic = preference only. Rank by severity first, then frequency.",
-      `Rate every usability issue from this synthesis by severity and frequency.
+  function acceptSynthesis() {
+    setSynthesis(pastedResult);
+    setPromptText("");
+    setPastedResult("");
+    mark(3);
+  }
+
+  function handleSeverity() {
+    const sys = "You are a UX researcher rating usability issues by severity. Be consistent: Critical = task failure or abandonment. Major = significant friction, user recovers. Minor = noticeable, low impact. Cosmetic = preference only. Rank by severity first, then frequency.";
+    const msg = `Rate every usability issue from this synthesis by severity and frequency.
 
 Sessions: ${sessions.length} participants
 Tasks: ${tasks}
@@ -268,17 +292,21 @@ Severity definitions:
 1. [Issue] — [specific change needed]
 
 ### Defer (Minor + Cosmetic)
-1. [Issue] — [when to address]`,
-      setStream
-    );
-    setSeverity(result); setLoading(false); mark(4);
+1. [Issue] — [when to address]`;
+    setPromptText(sys + "\n\n" + msg);
+    setPastedResult("");
   }
 
-  async function handleDecision() {
-    setLoading(true); setStream("");
-    const result = await callClaude(
-      "You are a senior product designer making a go/no-go recommendation. Be direct. The recommendation must follow from the evidence — not from how much work the team wants to do.",
-      `Generate a go/no-go assessment for this usability test.
+  function acceptSeverity() {
+    setSeverity(pastedResult);
+    setPromptText("");
+    setPastedResult("");
+    mark(4);
+  }
+
+  function handleDecision() {
+    const sys = "You are a senior product designer making a go/no-go recommendation. Be direct. The recommendation must follow from the evidence — not from how much work the team wants to do.";
+    const msg = `Generate a go/no-go assessment for this usability test.
 
 Sessions: ${sessions.length} participants
 Pass/fail criteria (defined before testing):
@@ -318,10 +346,16 @@ Rationale (2–3 sentences): [Which findings drive this recommendation. Be speci
 [The assumption that this test invalidated — and what that means for the concept]
 
 ### What to preserve regardless of decision
-[Elements that tested well — don't change these in the next cycle]`,
-      setStream
-    );
-    setDecision(result); setLoading(false); mark(5);
+[Elements that tested well — don't change these in the next cycle]`;
+    setPromptText(sys + "\n\n" + msg);
+    setPastedResult("");
+  }
+
+  function acceptDecision() {
+    setDecision(pastedResult);
+    setPromptText("");
+    setPastedResult("");
+    mark(5);
   }
 
   return (
@@ -329,7 +363,6 @@ Rationale (2–3 sentences): [Which findings drive this recommendation. Be speci
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;600;700&display=swap');
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
         ::-webkit-scrollbar { width: 4px; } ::-webkit-scrollbar-thumb { background: #2a2a2a; border-radius: 2px; }
         :focus-visible { outline: 2px solid #999; outline-offset: 2px; border-radius: 4px; }
       `}</style>
@@ -398,12 +431,12 @@ Rationale (2–3 sentences): [Which findings drive this recommendation. Be speci
         {step === 2 && (
           <div>
             <SectionHeader step={2} title="Structure Each Session"
-              desc="Paste raw notes for each participant. Claude structures them into a consistent format — completions, observations, quotes, friction points, mental model notes." />
+              desc="Paste raw notes for each participant. Build a prompt to structure them — then paste Claude's response back to save the structured session." />
 
             {/* Session tabs */}
             <div style={{ display: "flex", gap: 4, marginBottom: 20, borderBottom: `1px solid ${T.border}`, paddingBottom: 0 }}>
               {sessions.map((s, i) => (
-                <button key={s.id} onClick={() => setActiveSession(i)} style={{
+                <button key={s.id} onClick={() => { setActiveSession(i); if (pendingSessionIdx !== i) { setPromptText(""); setPastedResult(""); setPendingSessionIdx(null); } }} style={{
                   padding: "7px 14px", background: "none", border: "none",
                   borderBottom: `2px solid ${activeSession === i ? T.validate : "transparent"}`,
                   fontSize: 11, fontFamily: "'JetBrains Mono', monospace",
@@ -417,27 +450,42 @@ Rationale (2–3 sentences): [Which findings drive this recommendation. Be speci
             </div>
 
             {sessions[activeSession] && (
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
-                <div>
-                  <Label sub>Raw notes — Participant {sessions[activeSession].id}</Label>
-                  <Textarea value={sessions[activeSession].raw} onChange={v => updateSession(activeSession, "raw", v)} rows={14}
-                    placeholder="Paste raw session notes — anything goes. Stream of consciousness, timestamps, partial quotes, observations. Claude will structure it." />
-                  <div style={{ marginTop: 10, display: "flex", justifyContent: "flex-end" }}>
-                    <Btn small disabled={!sessions[activeSession].raw.trim() || structuringIdx === activeSession}
-                      onClick={() => structureSession(activeSession)}>
-                      {structuringIdx === activeSession ? "Structuring…" : sessions[activeSession].structured ? "Re-structure" : "Structure Session"}
-                    </Btn>
+              <div>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+                  <div>
+                    <Label sub>Raw notes — Participant {sessions[activeSession].id}</Label>
+                    <Textarea value={sessions[activeSession].raw} onChange={v => updateSession(activeSession, "raw", v)} rows={14}
+                      placeholder="Paste raw session notes — anything goes. Stream of consciousness, timestamps, partial quotes, observations. Claude will structure it." />
+                    <div style={{ marginTop: 10, display: "flex", justifyContent: "flex-end" }}>
+                      <Btn small disabled={!sessions[activeSession].raw.trim()}
+                        onClick={() => structureSession(activeSession)}>
+                        {pendingSessionIdx === activeSession && promptText ? "Prompt Ready" : sessions[activeSession].structured ? "Re-structure" : "Structure Session"}
+                      </Btn>
+                    </div>
+                  </div>
+                  <div>
+                    <Label sub>Structured output</Label>
+                    <OutputBlock content={sessions[activeSession].structured} maxH={340} />
+                    {sessions[activeSession].structured && (
+                      <div style={{ marginTop: 8, display: "flex", gap: 8, justifyContent: "flex-end" }}>
+                        <CopyBtn text={sessions[activeSession].structured} />
+                      </div>
+                    )}
                   </div>
                 </div>
-                <div>
-                  <Label sub>Structured output</Label>
-                  <OutputBlock content={sessions[activeSession].structured} streaming={structuringIdx === activeSession} maxH={340} />
-                  {sessions[activeSession].structured && structuringIdx !== activeSession && (
-                    <div style={{ marginTop: 8, display: "flex", gap: 8, justifyContent: "flex-end" }}>
-                      <CopyBtn text={sessions[activeSession].structured} />
+
+                {/* PromptPanel for session structuring */}
+                {pendingSessionIdx === activeSession && promptText && (
+                  <div style={{ marginTop: 16 }}>
+                    <PromptPanel promptText={promptText} pastedResult={pastedResult} setPastedResult={setPastedResult} />
+                    <div style={{ display: "flex", gap: 10, marginTop: 12, justifyContent: "flex-end" }}>
+                      <Btn variant="ghost" small onClick={() => { setPromptText(""); setPastedResult(""); setPendingSessionIdx(null); }}>Cancel</Btn>
+                      <Btn small disabled={!pastedResult.trim()} onClick={acceptStructuredSession}>
+                        Save Session P{sessions[activeSession].id} →
+                      </Btn>
                     </div>
-                  )}
-                </div>
+                  </div>
+                )}
               </div>
             )}
 
@@ -457,23 +505,27 @@ Rationale (2–3 sentences): [Which findings drive this recommendation. Be speci
         {step === 3 && (
           <div>
             <SectionHeader step={3} title="Cross-Session Synthesis"
-              desc={`Claude synthesizes ${sessions.filter(s => s.structured).length} structured sessions — identifying patterns, answering prototype questions, and building the issue list.`} />
+              desc={`Synthesize ${sessions.filter(s => s.structured).length} structured sessions — identifying patterns, answering prototype questions, and building the issue list.`} />
             {!synthesis && <div style={{ display: "flex", justifyContent: "flex-end" }}>
-              <Btn onClick={handleSynthesize} disabled={loading}>{loading ? "Synthesizing…" : "Synthesize All Sessions"}</Btn>
+              <Btn onClick={handleSynthesize}>Synthesize All Sessions</Btn>
             </div>}
-            {(stream || synthesis) && (
+            <PromptPanel promptText={promptText} pastedResult={pastedResult} setPastedResult={setPastedResult} />
+            {promptText && (
+              <div style={{ display: "flex", gap: 10, marginTop: 12, justifyContent: "flex-end" }}>
+                <Btn small disabled={!pastedResult.trim()} onClick={acceptSynthesis}>Accept Synthesis →</Btn>
+              </div>
+            )}
+            {synthesis && !promptText && (
               <div>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
                   <Label sub>Patterns · prototype question answers · issue list</Label>
-                  {synthesis && !loading && <div style={{ display: "flex", gap: 8 }}><CopyBtn text={synthesis} /></div>}
+                  <div style={{ display: "flex", gap: 8 }}><CopyBtn text={synthesis} /></div>
                 </div>
-                <OutputBlock content={loading ? stream : synthesis} streaming={loading} maxH={540} />
-                {synthesis && !loading && (
-                  <div style={{ display: "flex", gap: 10, marginTop: 12, justifyContent: "flex-end" }}>
-                    <Btn variant="ghost" small onClick={() => { setSynthesis(""); setStream(""); }}>Re-synthesize</Btn>
-                    <Btn small onClick={() => { mark(3); setStep(4); }}>Rate Severity →</Btn>
-                  </div>
-                )}
+                <OutputBlock content={synthesis} maxH={540} />
+                <div style={{ display: "flex", gap: 10, marginTop: 12, justifyContent: "flex-end" }}>
+                  <Btn variant="ghost" small onClick={() => setSynthesis("")}>Re-synthesize</Btn>
+                  <Btn small onClick={() => { mark(3); setStep(4); }}>Rate Severity →</Btn>
+                </div>
               </div>
             )}
           </div>
@@ -485,26 +537,28 @@ Rationale (2–3 sentences): [Which findings drive this recommendation. Be speci
             <SectionHeader step={4} title="Severity Rating"
               desc="Every issue rated Critical / Major / Minor / Cosmetic — with frequency count, prototype question impact, and a prioritized fix list." />
             {!severity && <div style={{ display: "flex", justifyContent: "flex-end" }}>
-              <Btn onClick={handleSeverity} disabled={loading}>{loading ? "Rating…" : "Rate All Issues"}</Btn>
+              <Btn onClick={handleSeverity}>Rate All Issues</Btn>
             </div>}
-            {(stream || severity) && (
+            <PromptPanel promptText={promptText} pastedResult={pastedResult} setPastedResult={setPastedResult} />
+            {promptText && (
+              <div style={{ display: "flex", gap: 10, marginTop: 12, justifyContent: "flex-end" }}>
+                <Btn small disabled={!pastedResult.trim()} onClick={acceptSeverity}>Accept Severity Ratings →</Btn>
+              </div>
+            )}
+            {severity && !promptText && (
               <div>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
                   <Label sub>Priority-ranked issue list</Label>
-                  {severity && !loading && (
-                    <div style={{ display: "flex", gap: 8 }}>
-                      <CopyBtn text={severity} />
-                      <Btn small variant="ghost" onClick={() => dl([synthesis, severity].join("\n\n---\n\n"), "findings-synthesis.md")}>↓ .md</Btn>
-                    </div>
-                  )}
-                </div>
-                <OutputBlock content={loading ? stream : severity} streaming={loading} maxH={500} />
-                {severity && !loading && (
-                  <div style={{ display: "flex", gap: 10, marginTop: 12, justifyContent: "flex-end" }}>
-                    <Btn variant="ghost" small onClick={() => { setSeverity(""); setStream(""); }}>Re-rate</Btn>
-                    <Btn small onClick={() => { mark(4); setStep(5); }}>Go / No-Go →</Btn>
+                  <div style={{ display: "flex", gap: 8 }}>
+                    <CopyBtn text={severity} />
+                    <Btn small variant="ghost" onClick={() => dl([synthesis, severity].join("\n\n---\n\n"), "findings-synthesis.md")}>↓ .md</Btn>
                   </div>
-                )}
+                </div>
+                <OutputBlock content={severity} maxH={500} />
+                <div style={{ display: "flex", gap: 10, marginTop: 12, justifyContent: "flex-end" }}>
+                  <Btn variant="ghost" small onClick={() => setSeverity("")}>Re-rate</Btn>
+                  <Btn small onClick={() => { mark(4); setStep(5); }}>Go / No-Go →</Btn>
+                </div>
               </div>
             )}
           </div>
@@ -516,27 +570,29 @@ Rationale (2–3 sentences): [Which findings drive this recommendation. Be speci
             <SectionHeader step={5} title="Go / No-Go Decision"
               desc="Maps findings against prototype questions and pass/fail criteria — producing a clear recommendation: Proceed, Iterate, or Return to Ideation." />
             {!decision && <div style={{ display: "flex", justifyContent: "flex-end" }}>
-              <Btn onClick={handleDecision} disabled={loading}>{loading ? "Assessing…" : "Generate Go / No-Go"}</Btn>
+              <Btn onClick={handleDecision}>Generate Go / No-Go</Btn>
             </div>}
-            {(stream || decision) && (
+            <PromptPanel promptText={promptText} pastedResult={pastedResult} setPastedResult={setPastedResult} />
+            {promptText && (
+              <div style={{ display: "flex", gap: 10, marginTop: 12, justifyContent: "flex-end" }}>
+                <Btn small disabled={!pastedResult.trim()} onClick={acceptDecision}>Accept Decision →</Btn>
+              </div>
+            )}
+            {decision && !promptText && (
               <div>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
                   <Label sub>Prototype question answers · recommendation · rationale</Label>
-                  {decision && !loading && (
-                    <div style={{ display: "flex", gap: 8 }}>
-                      <CopyBtn text={decision} />
-                      <Btn small variant="ghost" onClick={() => dl([synthesis, severity, decision].join("\n\n---\n\n"), "validate-findings-complete.md")}>↓ Full .md</Btn>
-                    </div>
-                  )}
-                </div>
-                <OutputBlock content={loading ? stream : decision} streaming={loading} maxH={520} />
-                {decision && !loading && (
-                  <div style={{ marginTop: 20, padding: "14px 16px", background: T.validateDim, border: `1px solid ${T.validateBorder}`, borderRadius: 8 }}>
-                    <span style={{ fontSize: 11, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.08em", textTransform: "uppercase", color: T.validate }}>
-                      ✓ Synthesis complete — pass to Insight Report Generator to produce the shareable document
-                    </span>
+                  <div style={{ display: "flex", gap: 8 }}>
+                    <CopyBtn text={decision} />
+                    <Btn small variant="ghost" onClick={() => dl([synthesis, severity, decision].join("\n\n---\n\n"), "validate-findings-complete.md")}>↓ Full .md</Btn>
                   </div>
-                )}
+                </div>
+                <OutputBlock content={decision} maxH={520} />
+                <div style={{ marginTop: 20, padding: "14px 16px", background: T.validateDim, border: `1px solid ${T.validateBorder}`, borderRadius: 8 }}>
+                  <span style={{ fontSize: 11, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.08em", textTransform: "uppercase", color: T.validate }}>
+                    ✓ Synthesis complete — pass to Insight Report Generator to produce the shareable document
+                  </span>
+                </div>
               </div>
             )}
           </div>

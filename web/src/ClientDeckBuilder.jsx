@@ -6,6 +6,8 @@ const T = {
   accent: "#14B8A6", accentDim: "rgba(20,184,166,0.12)", accentBorder: "rgba(20,184,166,0.25)",
 };
 
+const ACCENT = T.accent;
+
 const STEPS = [
   { id: 1, label: "Goal",     short: "Goal + audience"   },
   { id: 2, label: "Context",  short: "Phase + tone"      },
@@ -279,9 +281,11 @@ export default function ClientDeckBuilder() {
   const [step, setStep] = useState(1);
   const [completed, setCompleted] = useState([]);
   const [form, setForm] = useState({ projectName: "", deckGoal: "", audience: "", phasesCompleted: [], currentPhase: "", tone: "", keyDecisions: "", keyFindings: "", desiredOutcome: "", additionalContext: "", estimatedLength: "medium" });
-  const [loading, setLoading] = useState(false);
   const [deck, setDeck] = useState(null);
-  const [error, setError] = useState(null);
+  const [promptText, setPromptText] = useState("");
+  const [pastedResult, setPastedResult] = useState("");
+  const [parseError, setParseError] = useState(null);
+  const [copied, setCopied] = useState(false);
   const topRef = useRef(null);
 
   function set(key, val) { setForm(f => ({ ...f, [key]: val })); }
@@ -292,25 +296,27 @@ export default function ClientDeckBuilder() {
   const canNext2 = form.tone;
   const canSubmit = form.projectName.trim().length > 0;
 
-  async function generate() {
-    setLoading(true); setError(null);
+  function buildDeckPrompt() {
+    setParseError(null);
+    setPromptText(buildPrompt(form));
+    setPastedResult("");
     topRef.current?.scrollIntoView({ behavior: "smooth" });
-    try {
-      const res = await fetch("/api/claude", {
-        method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ model: "claude-haiku-4-5-20251001", max_tokens: 1000, messages: [{ role: "user", content: buildPrompt(form) }] }),
-      });
-      if (!res.ok) throw new Error(`API error: ${res.status}`);
-      const data = await res.json();
-      const text = data.content?.map(b => b.text || "").join("") || "";
-      const clean = text.replace(/```json|```/g, "").trim();
-      setDeck(JSON.parse(clean));
-      mark(3);
-    } catch (e) { setError("Something went wrong. Please try again."); }
-    finally { setLoading(false); }
   }
 
-  function reset() { setDeck(null); setStep(1); setCompleted([]); setForm({ projectName: "", deckGoal: "", audience: "", phasesCompleted: [], currentPhase: "", tone: "", keyDecisions: "", keyFindings: "", desiredOutcome: "", additionalContext: "", estimatedLength: "medium" }); }
+  function acceptDeck() {
+    try {
+      const clean = pastedResult.replace(/```json|```/g, "").trim();
+      const parsed = JSON.parse(clean);
+      setDeck(parsed);
+      mark(3);
+      setPromptText("");
+      setPastedResult("");
+    } catch (e) {
+      setParseError("Could not parse as JSON. Make sure Claude returned valid JSON (no markdown fences). You can also paste the raw text and use it as-is.");
+    }
+  }
+
+  function reset() { setDeck(null); setStep(1); setCompleted([]); setForm({ projectName: "", deckGoal: "", audience: "", phasesCompleted: [], currentPhase: "", tone: "", keyDecisions: "", keyFindings: "", desiredOutcome: "", additionalContext: "", estimatedLength: "medium" }); setPromptText(""); setPastedResult(""); setParseError(null); }
 
   return (
     <div style={{ background: T.bg, minHeight: "100vh", padding: "40px 32px", fontFamily: "'DM Sans', sans-serif", color: T.text }}>
@@ -328,11 +334,7 @@ export default function ClientDeckBuilder() {
       <div style={{ maxWidth: 760, margin: "0 auto" }} ref={topRef}>
         <StepIndicator current={deck ? 4 : step} completed={deck ? [1,2,3,4] : completed} />
 
-        {loading && <LoadingState />}
-
-        {!loading && deck && <DeckResult deck={deck} onReset={reset} />}
-
-        {!loading && !deck && (
+        {!deck && (
           <>
             {step === 1 && (
               <div>
@@ -433,16 +435,62 @@ export default function ClientDeckBuilder() {
                     <FieldLabel hint="Stakeholder sensitivities, prior feedback, project history. (optional)">Anything else Claude should know?</FieldLabel>
                     <TextArea value={form.additionalContext} onChange={v => set("additionalContext", v)} placeholder="e.g. The CTO is skeptical of a full redesign — lean on data." />
                   </div>
-                  {error && <div style={{ background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.3)", borderRadius: 8, padding: "12px 16px", fontSize: 13, color: "#EF4444" }}>{error}</div>}
-                  <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
-                    <Btn variant="ghost" onClick={() => setStep(2)}>← Back</Btn>
-                    <Btn onClick={generate} disabled={!canSubmit}>Build deck →</Btn>
-                  </div>
+
+                  {!promptText && (
+                    <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
+                      <Btn variant="ghost" onClick={() => setStep(2)}>← Back</Btn>
+                      <Btn onClick={buildDeckPrompt} disabled={!canSubmit}>Build deck →</Btn>
+                    </div>
+                  )}
+
+                  {promptText && (
+                    <div style={{ background: T.surface, border: `1px solid ${T.border}`, borderRadius: 8, padding: "16px 18px", marginTop: 8 }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+                        <span style={{ fontSize: 11, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.08em", textTransform: "uppercase", color: ACCENT }}>
+                          Prompt ready — copy and run in Claude
+                        </span>
+                        <div style={{ display: "flex", gap: 8 }}>
+                          <button
+                            onClick={() => { navigator.clipboard.writeText(promptText); setCopied(true); setTimeout(() => setCopied(false), 2000); }}
+                            style={{ padding: "6px 14px", fontSize: 11, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.06em", textTransform: "uppercase", fontWeight: 600, cursor: "pointer", borderRadius: 6, border: `1.5px solid ${ACCENT}`, background: copied ? ACCENT : "transparent", color: copied ? T.bg : ACCENT, transition: "all 0.15s" }}
+                          >{copied ? "✓ Copied" : "Copy Prompt"}</button>
+                          <a href="https://claude.ai" target="_blank" rel="noopener noreferrer"
+                            style={{ padding: "6px 14px", fontSize: 11, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.06em", textTransform: "uppercase", fontWeight: 600, cursor: "pointer", borderRadius: 6, border: `1.5px solid ${T.border}`, background: "transparent", color: T.muted, textDecoration: "none", transition: "all 0.15s" }}
+                          >Open Claude.ai →</a>
+                        </div>
+                      </div>
+                      <div style={{ fontSize: 12, color: T.muted, marginBottom: 10, lineHeight: 1.5 }}>
+                        Run this prompt in Claude, then paste the JSON response below. Claude will return a JSON object — paste it exactly as returned.
+                      </div>
+                      <pre style={{ whiteSpace: "pre-wrap", fontSize: 12, lineHeight: 1.7, color: T.text, fontFamily: "'JetBrains Mono', monospace", background: T.card, border: `1px solid ${T.border}`, borderRadius: 6, padding: "12px 14px", maxHeight: 260, overflowY: "auto", margin: 0 }}>{promptText}</pre>
+                      <div style={{ marginTop: 16 }}>
+                        <div style={{ fontSize: 11, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.07em", textTransform: "uppercase", color: T.muted, marginBottom: 8 }}>Paste Claude's JSON response here</div>
+                        <textarea
+                          value={pastedResult}
+                          onChange={e => setPastedResult(e.target.value)}
+                          placeholder={`Paste the JSON object Claude returns here. It should start with {\n  "deckTitle": "...`}
+                          rows={8}
+                          style={{ width: "100%", boxSizing: "border-box", background: T.card, border: `1px solid ${T.border}`, borderRadius: 6, padding: "12px 14px", color: T.text, fontSize: 13, lineHeight: 1.6, fontFamily: "'JetBrains Mono', monospace", resize: "vertical", outline: "none" }}
+                          onFocus={e => e.target.style.borderColor = ACCENT}
+                          onBlur={e => e.target.style.borderColor = T.border}
+                        />
+                      </div>
+                      {parseError && (
+                        <div style={{ marginTop: 10, background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.3)", borderRadius: 8, padding: "10px 14px", fontSize: 12, color: "#EF4444" }}>{parseError}</div>
+                      )}
+                      <div style={{ display: "flex", gap: 10, marginTop: 12, justifyContent: "flex-end" }}>
+                        <Btn variant="ghost" small onClick={() => { setPromptText(""); setPastedResult(""); setParseError(null); }}>Cancel</Btn>
+                        <Btn small onClick={acceptDeck} disabled={!pastedResult.trim()}>Build Deck →</Btn>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             )}
           </>
         )}
+
+        {deck && <DeckResult deck={deck} onReset={reset} />}
       </div>
     </div>
   );

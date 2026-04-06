@@ -31,36 +31,26 @@ const LANES = [
   { id: "opportunity", label: "Opportunity", desc: "Where design intervention has the most leverage" },
 ];
 
-async function callClaude(system, user, onChunk) {
-  const res = await fetch("/api/claude", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      model: "claude-haiku-4-5-20251001",
-      max_tokens: 1000,
-      stream: true,
-      system,
-      messages: [{ role: "user", content: user }],
-    }),
-  });
-  if (!res.ok) { onChunk("⚠️ Error " + res.status + ". Check your API key and try again."); return ""; }
-  const reader = res.body.getReader();
-  const dec = new TextDecoder();
-  let full = "";
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    for (const line of dec.decode(value).split("\n").filter(l => l.startsWith("data: "))) {
-      try {
-        const j = JSON.parse(line.slice(6));
-        if (j.type === "content_block_delta" && j.delta?.text) {
-          full += j.delta.text;
-          onChunk(full);
-        }
-      } catch {}
-    }
-  }
-  return full;
+// ─── Prompt Panel ─────────────────────────────────────────────────────────────
+function PromptPanel({ promptText, pastedResult, setPastedResult }) {
+  const [copied, setCopied] = useState(false);
+  if (!promptText) return null;
+  return (
+    <div style={{ background: T.surface, border: `1px solid ${T.border}`, borderRadius: 8, padding: "16px 18px", marginTop: 16 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+        <span style={{ fontSize: 11, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.08em", textTransform: "uppercase", color: T.define }}>Prompt ready — copy and run in Claude</span>
+        <div style={{ display: "flex", gap: 8 }}>
+          <button onClick={() => { navigator.clipboard.writeText(promptText); setCopied(true); setTimeout(() => setCopied(false), 2000); }} style={{ padding: "6px 12px", fontSize: 11, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.06em", textTransform: "uppercase", fontWeight: 600, cursor: "pointer", borderRadius: 5, border: `1.5px solid ${T.define}`, background: copied ? T.define : "transparent", color: copied ? "#fff" : T.define, transition: "all 0.15s" }}>{copied ? "✓ Copied" : "Copy Prompt"}</button>
+          <a href="https://claude.ai" target="_blank" rel="noopener noreferrer" style={{ padding: "6px 12px", fontSize: 11, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.06em", textTransform: "uppercase", fontWeight: 600, cursor: "pointer", borderRadius: 5, border: `1.5px solid ${T.border}`, background: "transparent", color: T.muted, textDecoration: "none", display: "inline-block" }}>Open Claude.ai →</a>
+        </div>
+      </div>
+      <pre style={{ whiteSpace: "pre-wrap", fontSize: 12, lineHeight: 1.7, color: T.text, fontFamily: "'DM Sans', sans-serif", margin: 0, maxHeight: 320, overflowY: "auto" }}>{promptText}</pre>
+      <div style={{ marginTop: 16 }}>
+        <div style={{ fontSize: 11, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.08em", textTransform: "uppercase", color: T.muted, marginBottom: 8 }}>Paste Claude's response here</div>
+        <textarea value={pastedResult} onChange={e => setPastedResult(e.target.value)} placeholder="Run the prompt in Claude, then paste the result here to continue…" rows={6} style={{ width: "100%", boxSizing: "border-box", background: T.card, border: `1px solid ${T.border}`, borderRadius: 6, padding: "10px 12px", color: T.text, fontSize: 13, lineHeight: 1.6, fontFamily: "'DM Sans', sans-serif", resize: "vertical", outline: "none" }} onFocus={e => e.target.style.borderColor = T.define} onBlur={e => e.target.style.borderColor = T.border} />
+      </div>
+    </div>
+  );
 }
 
 // ─── Shared UI ────────────────────────────────────────────────────────────────
@@ -146,7 +136,7 @@ function CopyBtn({ text }) {
   );
 }
 
-function OutputBlock({ content, streaming, maxH = 480 }) {
+function OutputBlock({ content, maxH = 480 }) {
   return (
     <div style={{
       background: T.surface, border: `1px solid ${T.border}`,
@@ -157,11 +147,6 @@ function OutputBlock({ content, streaming, maxH = 480 }) {
       maxHeight: maxH, overflowY: "auto",
     }}>
       {content || <span style={{ color: T.dim, fontStyle: "italic" }}>Output will appear here…</span>}
-      {streaming && <span style={{
-        display: "inline-block", width: 6, height: 14,
-        background: T.define, marginLeft: 2,
-        animation: "blink 0.8s step-end infinite", verticalAlign: "middle",
-      }} />}
     </div>
   );
 }
@@ -230,8 +215,8 @@ function StepIndicator({ current, completed }) {
 export default function JourneyMappingTool() {
   const [step, setStep] = useState(1);
   const [completed, setCompleted] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [stream, setStream] = useState("");
+  const [promptText, setPromptText] = useState("");
+  const [pastedResult, setPastedResult] = useState("");
 
   // Step 1 — Scenario
   const [persona, setPersona] = useState("");
@@ -264,11 +249,9 @@ export default function JourneyMappingTool() {
   }
 
   // ── Step 2: Suggest stages ───────────────────────────────────────────────────
-  async function handleSuggestStages() {
-    setLoading(true); setStream("");
-    const result = await callClaude(
-      "You are a senior UX researcher designing a journey map. Stage names should be specific to this user and scenario — never generic like 'Awareness → Consideration → Purchase'. Ground stage names in what actually happens in the research.",
-      `Suggest 5–7 journey stage names for this scenario.
+  function handleSuggestStages() {
+    const sys = "You are a senior UX researcher designing a journey map. Stage names should be specific to this user and scenario — never generic like 'Awareness → Consideration → Purchase'. Ground stage names in what actually happens in the research.";
+    const msg = `Suggest 5–7 journey stage names for this scenario.
 
 Persona: ${persona}
 Goal: ${goal}
@@ -281,12 +264,15 @@ Rules:
 - Each stage should be meaningfully distinct from the others
 - Stages should cover start to end of the experience
 
-Return ONLY a numbered list of stage names. No descriptions. No extra text.`,
-      setStream
-    );
-    setStagesSuggested(result);
-    setStagesRaw(result);
-    setLoading(false);
+Return ONLY a numbered list of stage names. No descriptions. No extra text.`;
+    setPromptText(sys + "\n\n" + msg);
+    setPastedResult("");
+  }
+
+  function acceptSuggestedStages() {
+    setStagesSuggested(pastedResult);
+    setStagesRaw(pastedResult);
+    setPromptText(""); setPastedResult("");
   }
 
   function approveStages() {
@@ -301,12 +287,10 @@ Return ONLY a numbered list of stage names. No descriptions. No extra text.`,
   }
 
   // ── Step 3: Generate journey map ─────────────────────────────────────────────
-  async function handleGenerateMap() {
-    setLoading(true); setStream("");
+  function handleGenerateMap() {
     const stages = stagesApproved.map(s => s.name).join(", ");
-    const result = await callClaude(
-      "You are a senior UX researcher generating a detailed, research-grounded journey map. Mark pain points with ⚠️ and cite research source. Mark workarounds with 🔧. Mark emotional high points with 📈 and low points with 📉. Flag anything not directly from research as [inferred] or [unknown]. Never invent data.",
-      `Generate a complete journey map across all 6 lanes for each stage.
+    const sys = "You are a senior UX researcher generating a detailed, research-grounded journey map. Mark pain points with ⚠️ and cite research source. Mark workarounds with 🔧. Mark emotional high points with 📈 and low points with 📉. Flag anything not directly from research as [inferred] or [unknown]. Never invent data.";
+    const msg = `Generate a complete journey map across all 6 lanes for each stage.
 
 Persona: ${persona}
 Goal: ${goal}
@@ -353,21 +337,22 @@ Use this structure per stage:
 After all stages, add:
 
 ## Emotional Arc Summary
-Brief narrative (2–3 sentences) describing the shape of the emotional journey — where it starts, where it bottoms out, and whether/where it recovers.`,
-      setStream
-    );
-    setJourneyMap(result);
-    setLoading(false);
+Brief narrative (2–3 sentences) describing the shape of the emotional journey — where it starts, where it bottoms out, and whether/where it recovers.`;
+    setPromptText(sys + "\n\n" + msg);
+    setPastedResult("");
+  }
+
+  function acceptMap() {
+    setJourneyMap(pastedResult);
     markComplete(3);
     setStep(4);
+    setPromptText(""); setPastedResult("");
   }
 
   // ── Step 4: Critical moments ─────────────────────────────────────────────────
-  async function handleMoments() {
-    setLoading(true); setStream("");
-    const result = await callClaude(
-      "You are a senior UX strategist synthesizing a journey map into design priorities. Be specific — cite stages and research evidence. Generate opportunities as HMW questions, not feature ideas.",
-      `Analyze this journey map and identify critical moments, then generate design opportunities.
+  function handleMoments() {
+    const sys = "You are a senior UX strategist synthesizing a journey map into design priorities. Be specific — cite stages and research evidence. Generate opportunities as HMW questions, not feature ideas.";
+    const msg = `Analyze this journey map and identify critical moments, then generate design opportunities.
 
 Journey map:
 ${journeyMap}
@@ -416,21 +401,22 @@ Then rank by design leverage:
 - **Medium** — addresses a major pain point
 - **Low** — addresses a minor friction
 
-Select the top 3 highest-leverage opportunities. Explain in one sentence each why they make the shortlist.`,
-      setStream
-    );
-    setMoments(result);
-    setLoading(false);
+Select the top 3 highest-leverage opportunities. Explain in one sentence each why they make the shortlist.`;
+    setPromptText(sys + "\n\n" + msg);
+    setPastedResult("");
+  }
+
+  function acceptMoments() {
+    setMoments(pastedResult);
     markComplete(4);
     setStep(5);
+    setPromptText(""); setPastedResult("");
   }
 
   // ── Step 5: Generate handoff ─────────────────────────────────────────────────
-  async function handleHandoff() {
-    setLoading(true); setStream("");
-    const result = await callClaude(
-      "You are a senior product designer generating a structured phase handoff. Extract real content — no placeholders. Be specific and actionable.",
-      `Generate a Define → Ideate Phase Handoff Block from this journey map.
+  function handleHandoff() {
+    const sys = "You are a senior product designer generating a structured phase handoff. Extract real content — no placeholders. Be specific and actionable.";
+    const msg = `Generate a Define → Ideate Phase Handoff Block from this journey map.
 
 Persona: ${persona}
 Goal: ${goal}
@@ -490,12 +476,15 @@ Use this exact structure:
 - [Systemic gaps that may require organizational change]
 
 ---
-Combine with Problem Framing handoff when opening Concept Generation.`,
-      setStream
-    );
-    setHandoff(result);
-    setLoading(false);
+Combine with Problem Framing handoff when opening Concept Generation.`;
+    setPromptText(sys + "\n\n" + msg);
+    setPastedResult("");
+  }
+
+  function acceptHandoff() {
+    setHandoff(pastedResult);
     markComplete(5);
+    setPromptText(""); setPastedResult("");
   }
 
   // ─── Render ──────────────────────────────────────────────────────────────────
@@ -504,7 +493,6 @@ Combine with Problem Framing handoff when opening Concept Generation.`,
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;600;700&display=swap');
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
         ::-webkit-scrollbar { width: 4px; }
         ::-webkit-scrollbar-thumb { background: #2a2a2a; border-radius: 2px; }
         :focus-visible { outline: 2px solid #999; outline-offset: 2px; border-radius: 4px; }
@@ -615,23 +603,26 @@ Combine with Problem Framing handoff when opening Concept Generation.`,
 
             <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
               <div style={{ display: "flex", justifyContent: "flex-end" }}>
-                <Btn variant="ghost" small onClick={handleSuggestStages} disabled={loading}>
-                  {loading ? "Suggesting…" : "Suggest Stages from Research"}
+                <Btn variant="ghost" small onClick={handleSuggestStages}>
+                  Suggest Stages from Research
                 </Btn>
               </div>
 
-              {(stream || stagesSuggested) && !stagesApproved.length && (
-                <OutputBlock content={stream} streaming={loading} maxH={180} />
+              <PromptPanel promptText={promptText} pastedResult={pastedResult} setPastedResult={setPastedResult} />
+
+              {promptText && (
+                <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
+                  <Btn small onClick={acceptSuggestedStages} disabled={!pastedResult.trim()}>Use These Stages</Btn>
+                </div>
               )}
 
               <div>
                 <Label>Stages — edit or write your own (one per line, numbered)</Label>
                 <Textarea value={stagesRaw} onChange={setStagesRaw} rows={8}
-                  placeholder={"1. Realizes the backlog is unmanageable\n2. Tries to prioritize manually\n3. Looks for a pattern across tickets\n4. Gets stuck on conflicting priorities\n5. Escalates to PM for guidance\n6. Commits to a scope"}
-                  disabled={loading} />
+                  placeholder={"1. Realizes the backlog is unmanageable\n2. Tries to prioritize manually\n3. Looks for a pattern across tickets\n4. Gets stuck on conflicting priorities\n5. Escalates to PM for guidance\n6. Commits to a scope"} />
               </div>
               <div style={{ display: "flex", justifyContent: "flex-end" }}>
-                <Btn disabled={!stagesRaw.trim() || loading} onClick={approveStages}>
+                <Btn disabled={!stagesRaw.trim()} onClick={approveStages}>
                   Confirm Stages →
                 </Btn>
               </div>
@@ -643,7 +634,7 @@ Combine with Problem Framing handoff when opening Concept Generation.`,
         {step === 3 && (
           <div>
             <SectionHeader step={3} title="Generate Journey Map"
-              desc={`Claude populates all 6 lanes across ${stagesApproved.length} stages using your research data. Pain points are cited and severity-rated. Workarounds are flagged. Opportunities are held for the next step.`} />
+              desc={`Build the prompt, run it in Claude, then paste the result. Claude populates all 6 lanes across ${stagesApproved.length} stages using your research data.`} />
 
             <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 20 }}>
               {stagesApproved.map(s => (
@@ -657,32 +648,34 @@ Combine with Problem Framing handoff when opening Concept Generation.`,
 
             {!journeyMap && (
               <div style={{ display: "flex", justifyContent: "flex-end" }}>
-                <Btn onClick={handleGenerateMap} disabled={loading}>
-                  {loading ? "Mapping…" : `Generate ${stagesApproved.length}-Stage Journey Map`}
+                <Btn onClick={handleGenerateMap}>
+                  Generate {stagesApproved.length}-Stage Journey Map
                 </Btn>
               </div>
             )}
 
-            {(stream || journeyMap) && (
+            <PromptPanel promptText={promptText} pastedResult={pastedResult} setPastedResult={setPastedResult} />
+
+            {promptText && (
+              <div style={{ display: "flex", gap: 10, marginTop: 12, justifyContent: "flex-end" }}>
+                <Btn small onClick={acceptMap} disabled={!pastedResult.trim()}>Accept Map →</Btn>
+              </div>
+            )}
+
+            {journeyMap && !promptText && (
               <div>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
                   <Label sub>Journey map — all 6 lanes</Label>
                   <div style={{ display: "flex", gap: 8 }}>
-                    {journeyMap && !loading && (
-                      <>
-                        <CopyBtn text={journeyMap} />
-                        <Btn small variant="ghost" onClick={() => dl(journeyMap, "journey-map.md")}>↓ .md</Btn>
-                      </>
-                    )}
+                    <CopyBtn text={journeyMap} />
+                    <Btn small variant="ghost" onClick={() => dl(journeyMap, "journey-map.md")}>↓ .md</Btn>
                   </div>
                 </div>
-                <OutputBlock content={loading ? stream : journeyMap} streaming={loading} maxH={560} />
-                {journeyMap && !loading && (
-                  <div style={{ display: "flex", gap: 8, marginTop: 12, justifyContent: "flex-end" }}>
-                    <Btn variant="ghost" small onClick={() => { setJourneyMap(""); setStream(""); }}>Re-generate</Btn>
-                    <Btn small onClick={() => setStep(4)}>Identify Critical Moments →</Btn>
-                  </div>
-                )}
+                <OutputBlock content={journeyMap} maxH={560} />
+                <div style={{ display: "flex", gap: 8, marginTop: 12, justifyContent: "flex-end" }}>
+                  <Btn variant="ghost" small onClick={() => { setJourneyMap(""); setPromptText(""); }}>Re-generate</Btn>
+                  <Btn small onClick={() => setStep(4)}>Identify Critical Moments →</Btn>
+                </div>
               </div>
             )}
           </div>
@@ -692,33 +685,35 @@ Combine with Problem Framing handoff when opening Concept Generation.`,
         {step === 4 && (
           <div>
             <SectionHeader step={4} title="Critical Moments + Opportunities"
-              desc="Claude identifies the four critical moments — friction, opportunity, truth, systemic gap — then generates 8 HMW opportunities ranked by design leverage." />
+              desc="Build the prompt, run it in Claude, then paste the result. Claude identifies the four critical moments and generates 8 HMW opportunities ranked by design leverage." />
 
             {!moments && (
               <div style={{ display: "flex", justifyContent: "flex-end" }}>
-                <Btn onClick={handleMoments} disabled={loading}>
-                  {loading ? "Analyzing…" : "Identify Critical Moments"}
-                </Btn>
+                <Btn onClick={handleMoments}>Identify Critical Moments</Btn>
               </div>
             )}
 
-            {(stream || moments) && (
+            <PromptPanel promptText={promptText} pastedResult={pastedResult} setPastedResult={setPastedResult} />
+
+            {promptText && (
+              <div style={{ display: "flex", gap: 10, marginTop: 12, justifyContent: "flex-end" }}>
+                <Btn small onClick={acceptMoments} disabled={!pastedResult.trim()}>Accept Moments →</Btn>
+              </div>
+            )}
+
+            {moments && !promptText && (
               <div>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
                   <Label sub>Critical moments · top 3 opportunities</Label>
-                  {moments && !loading && (
-                    <div style={{ display: "flex", gap: 8 }}>
-                      <CopyBtn text={moments} />
-                      <Btn small variant="ghost" onClick={() => { setMoments(""); setStream(""); }}>Re-analyze</Btn>
-                    </div>
-                  )}
-                </div>
-                <OutputBlock content={loading ? stream : moments} streaming={loading} maxH={520} />
-                {moments && !loading && (
-                  <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 12 }}>
-                    <Btn small onClick={() => { markComplete(4); setStep(5); }}>Generate Handoff →</Btn>
+                  <div style={{ display: "flex", gap: 8 }}>
+                    <CopyBtn text={moments} />
+                    <Btn small variant="ghost" onClick={() => { setMoments(""); setPromptText(""); }}>Re-analyze</Btn>
                   </div>
-                )}
+                </div>
+                <OutputBlock content={moments} maxH={520} />
+                <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 12 }}>
+                  <Btn small onClick={() => { markComplete(4); setStep(5); }}>Generate Handoff →</Btn>
+                </div>
               </div>
             )}
           </div>
@@ -728,44 +723,44 @@ Combine with Problem Framing handoff when opening Concept Generation.`,
         {step === 5 && (
           <div>
             <SectionHeader step={5} title="Ideate Handoff"
-              desc="A structured summary of the journey map — paste it alongside the Problem Framing handoff when opening Concept Generation." />
+              desc="Build the prompt, run it in Claude, then paste the result. A structured summary of the journey map — paste it alongside the Problem Framing handoff when opening Concept Generation." />
 
             {!handoff && (
               <div style={{ display: "flex", justifyContent: "flex-end" }}>
-                <Btn onClick={handleHandoff} disabled={loading}>
-                  {loading ? "Generating…" : "Generate Handoff Block"}
-                </Btn>
+                <Btn onClick={handleHandoff}>Generate Handoff Block</Btn>
               </div>
             )}
 
-            {(stream || handoff) && (
+            <PromptPanel promptText={promptText} pastedResult={pastedResult} setPastedResult={setPastedResult} />
+
+            {promptText && (
+              <div style={{ display: "flex", gap: 10, marginTop: 12, justifyContent: "flex-end" }}>
+                <Btn small onClick={acceptHandoff} disabled={!pastedResult.trim()}>Accept Handoff →</Btn>
+              </div>
+            )}
+
+            {handoff && !promptText && (
               <div>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
                   <Label sub>Define → Ideate handoff block</Label>
                   <div style={{ display: "flex", gap: 8 }}>
-                    {handoff && !loading && (
-                      <>
-                        <CopyBtn text={handoff} />
-                        <Btn small variant="ghost" onClick={() => dl(handoff, "journey-map-handoff.md")}>↓ .md</Btn>
-                      </>
-                    )}
+                    <CopyBtn text={handoff} />
+                    <Btn small variant="ghost" onClick={() => dl(handoff, "journey-map-handoff.md")}>↓ .md</Btn>
                   </div>
                 </div>
-                <OutputBlock content={loading ? stream : handoff} streaming={loading} maxH={520} />
-                {handoff && !loading && (
-                  <div style={{
-                    marginTop: 20, padding: "14px 16px",
-                    background: T.defineDim, border: `1px solid ${T.defineBorder}`,
-                    borderRadius: 8,
+                <OutputBlock content={handoff} maxH={520} />
+                <div style={{
+                  marginTop: 20, padding: "14px 16px",
+                  background: T.defineDim, border: `1px solid ${T.defineBorder}`,
+                  borderRadius: 8,
+                }}>
+                  <span style={{
+                    fontSize: 11, fontFamily: "'JetBrains Mono', monospace",
+                    letterSpacing: "0.08em", textTransform: "uppercase", color: T.define,
                   }}>
-                    <span style={{
-                      fontSize: 11, fontFamily: "'JetBrains Mono', monospace",
-                      letterSpacing: "0.08em", textTransform: "uppercase", color: T.define,
-                    }}>
-                      ✓ Journey map complete — combine handoff with Problem Framing when opening Concept Generation
-                    </span>
-                  </div>
-                )}
+                    ✓ Journey map complete — combine handoff with Problem Framing when opening Concept Generation
+                  </span>
+                </div>
               </div>
             )}
           </div>

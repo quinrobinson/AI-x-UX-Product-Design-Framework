@@ -22,36 +22,26 @@ const STEPS = [
   { id: 5, label: "Handoff",   short: "Concept Critique handoff"   },
 ];
 
-async function callClaude(system, user, onChunk) {
-  const res = await fetch("/api/claude", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      model: "claude-haiku-4-5-20251001",
-      max_tokens: 1000,
-      stream: true,
-      system,
-      messages: [{ role: "user", content: user }],
-    }),
-  });
-  if (!res.ok) { onChunk("⚠️ Error " + res.status + ". Check your API key and try again."); return ""; }
-  const reader = res.body.getReader();
-  const dec = new TextDecoder();
-  let full = "";
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    for (const line of dec.decode(value).split("\n").filter(l => l.startsWith("data: "))) {
-      try {
-        const j = JSON.parse(line.slice(6));
-        if (j.type === "content_block_delta" && j.delta?.text) {
-          full += j.delta.text;
-          onChunk(full);
-        }
-      } catch {}
-    }
-  }
-  return full;
+// ─── Prompt Panel ─────────────────────────────────────────────────────────────
+function PromptPanel({ promptText, pastedResult, setPastedResult }) {
+  const [copied, setCopied] = useState(false);
+  if (!promptText) return null;
+  return (
+    <div style={{ background: T.surface, border: `1px solid ${T.border}`, borderRadius: 8, padding: "16px 18px", marginTop: 16 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+        <span style={{ fontSize: 11, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.08em", textTransform: "uppercase", color: T.ideate }}>Prompt ready — copy and run in Claude</span>
+        <div style={{ display: "flex", gap: 8 }}>
+          <button onClick={() => { navigator.clipboard.writeText(promptText); setCopied(true); setTimeout(() => setCopied(false), 2000); }} style={{ padding: "6px 12px", fontSize: 11, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.06em", textTransform: "uppercase", fontWeight: 600, cursor: "pointer", borderRadius: 5, border: `1.5px solid ${T.ideate}`, background: copied ? T.ideate : "transparent", color: copied ? T.bg : T.ideate, transition: "all 0.15s" }}>{copied ? "✓ Copied" : "Copy Prompt"}</button>
+          <a href="https://claude.ai" target="_blank" rel="noopener noreferrer" style={{ padding: "6px 12px", fontSize: 11, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.06em", textTransform: "uppercase", fontWeight: 600, cursor: "pointer", borderRadius: 5, border: `1.5px solid ${T.border}`, background: "transparent", color: T.muted, textDecoration: "none", display: "inline-block" }}>Open Claude.ai →</a>
+        </div>
+      </div>
+      <pre style={{ whiteSpace: "pre-wrap", fontSize: 12, lineHeight: 1.7, color: T.text, fontFamily: "'DM Sans', sans-serif", margin: 0, maxHeight: 320, overflowY: "auto" }}>{promptText}</pre>
+      <div style={{ marginTop: 16 }}>
+        <div style={{ fontSize: 11, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.08em", textTransform: "uppercase", color: T.muted, marginBottom: 8 }}>Paste Claude's response here</div>
+        <textarea value={pastedResult} onChange={e => setPastedResult(e.target.value)} placeholder="Run the prompt in Claude, then paste the result here to continue…" rows={6} style={{ width: "100%", boxSizing: "border-box", background: T.card, border: `1px solid ${T.border}`, borderRadius: 6, padding: "10px 12px", color: T.text, fontSize: 13, lineHeight: 1.6, fontFamily: "'DM Sans', sans-serif", resize: "vertical", outline: "none" }} onFocus={e => e.target.style.borderColor = T.ideate} onBlur={e => e.target.style.borderColor = T.border} />
+      </div>
+    </div>
+  );
 }
 
 // ─── Shared UI ────────────────────────────────────────────────────────────────
@@ -137,7 +127,7 @@ function CopyBtn({ text }) {
   );
 }
 
-function OutputBlock({ content, streaming, maxH = 480 }) {
+function OutputBlock({ content, maxH = 480 }) {
   return (
     <div style={{
       background: T.surface, border: `1px solid ${T.border}`,
@@ -148,11 +138,6 @@ function OutputBlock({ content, streaming, maxH = 480 }) {
       maxHeight: maxH, overflowY: "auto",
     }}>
       {content || <span style={{ color: T.dim, fontStyle: "italic" }}>Output will appear here…</span>}
-      {streaming && <span style={{
-        display: "inline-block", width: 6, height: 14,
-        background: T.ideate, marginLeft: 2,
-        animation: "blink 0.8s step-end infinite", verticalAlign: "middle",
-      }} />}
     </div>
   );
 }
@@ -217,8 +202,8 @@ function StepIndicator({ current, completed }) {
 export default function IdeaClusteringTool() {
   const [step, setStep] = useState(1);
   const [completed, setCompleted] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [stream, setStream] = useState("");
+  const [promptText, setPromptText] = useState("");
+  const [pastedResult, setPastedResult] = useState("");
 
   // Step 1 — Input
   const [concepts, setConcepts] = useState("");
@@ -248,11 +233,9 @@ export default function IdeaClusteringTool() {
   }
 
   // ── Step 2: Raw clustering ─────────────────────────────────────────────────
-  async function handleCluster() {
-    setLoading(true); setStream("");
-    const result = await callClaude(
-      "You are a design strategist revealing the strategic landscape inside a raw idea set. Cluster by underlying approach and mechanism — not by surface similarity. Each cluster must represent a genuinely different bet about how to solve the problem.",
-      `Group these concepts into 5–7 meaningful clusters.
+  function handleCluster() {
+    const sys = "You are a design strategist revealing the strategic landscape inside a raw idea set. Cluster by underlying approach and mechanism — not by surface similarity. Each cluster must represent a genuinely different bet about how to solve the problem.";
+    const msg = `Group these concepts into 5–7 meaningful clusters.
 
 Rules:
 - Cluster by underlying approach or mechanism, not surface similarity
@@ -282,20 +265,21 @@ After all clusters:
 - [Concept name] — [why it doesn't fit, whether it's worth keeping]
 
 **Coverage gaps** (directions no concept addresses):
-- [Gap description]`,
-      setStream
-    );
-    setRawClusters(result);
-    setLoading(false);
+- [Gap description]`;
+    setPromptText(sys + "\n\n" + msg);
+    setPastedResult("");
+  }
+
+  function acceptClusters() {
+    setRawClusters(pastedResult);
     markComplete(2);
+    setPromptText(""); setPastedResult("");
   }
 
   // ── Step 3: Name + validate ────────────────────────────────────────────────
-  async function handleName() {
-    setLoading(true); setStream("");
-    const result = await callClaude(
-      "You are a design strategist naming clusters so they communicate strategic direction to stakeholders who weren't in the ideation session. A good cluster name tells the team what bet they're making — not just what the solutions look like.",
-      `Validate and name these clusters for strategic clarity.
+  function handleName() {
+    const sys = "You are a design strategist naming clusters so they communicate strategic direction to stakeholders who weren't in the ideation session. A good cluster name tells the team what bet they're making — not just what the solutions look like.";
+    const msg = `Validate and name these clusters for strategic clarity.
 
 Problem statement: ${problemStatement}
 Persona: ${persona}
@@ -323,20 +307,21 @@ Are all clusters genuinely different? Could any be merged without losing a meani
 For each cluster pair that feels similar — would they produce different wireframes? [Answer per pair]
 
 **User fit:**
-Which clusters most directly address ${persona}'s primary goal? Which are more tangential?`,
-      setStream
-    );
-    setNamedClusters(result);
-    setLoading(false);
+Which clusters most directly address ${persona}'s primary goal? Which are more tangential?`;
+    setPromptText(sys + "\n\n" + msg);
+    setPastedResult("");
+  }
+
+  function acceptNamed() {
+    setNamedClusters(pastedResult);
     markComplete(3);
+    setPromptText(""); setPastedResult("");
   }
 
   // ── Step 4: Landscape mapping ──────────────────────────────────────────────
-  async function handleLandscape() {
-    setLoading(true); setStream("");
-    const result = await callClaude(
-      "You are a design strategist mapping a solution landscape to enable real strategic decisions. Surface the tensions, the risks, and the coverage gaps. Make the implicit explicit.",
-      `Map the strategic landscape from these clusters.
+  function handleLandscape() {
+    const sys = "You are a design strategist mapping a solution landscape to enable real strategic decisions. Surface the tensions, the risks, and the coverage gaps. Make the implicit explicit.";
+    const msg = `Map the strategic landscape from these clusters.
 
 Problem statement: ${problemStatement}
 Persona: ${persona}
@@ -375,21 +360,22 @@ For each cluster, analyze:
 2. [Cluster name] — [one-line rationale]
 
 **Rationale for not recommending the others:**
-- [Cluster name]: [why it's lower priority]`,
-      setStream
-    );
-    setLandscape(result);
-    setLoading(false);
+- [Cluster name]: [why it's lower priority]`;
+    setPromptText(sys + "\n\n" + msg);
+    setPastedResult("");
+  }
+
+  function acceptLandscape() {
+    setLandscape(pastedResult);
     markComplete(4);
     setStep(5);
+    setPromptText(""); setPastedResult("");
   }
 
   // ── Step 5: Handoff ────────────────────────────────────────────────────────
-  async function handleHandoff() {
-    setLoading(true); setStream("");
-    const result = await callClaude(
-      "You are a senior product designer generating a structured phase handoff. Extract real content — no placeholders. Be specific and actionable.",
-      `Generate an Idea Clustering → Concept Critique Handoff Block.
+  function handleHandoff() {
+    const sys = "You are a senior product designer generating a structured phase handoff. Extract real content — no placeholders. Be specific and actionable.";
+    const msg = `Generate an Idea Clustering → Concept Critique Handoff Block.
 
 Problem statement: ${problemStatement}
 Persona: ${persona}
@@ -441,12 +427,15 @@ Use this exact structure:
 
 ---
 Paste this block when opening Concept Critique.
-Critique the recommended clusters first — not the full set.`,
-      setStream
-    );
-    setHandoff(result);
-    setLoading(false);
+Critique the recommended clusters first — not the full set.`;
+    setPromptText(sys + "\n\n" + msg);
+    setPastedResult("");
+  }
+
+  function acceptHandoff() {
+    setHandoff(pastedResult);
     markComplete(5);
+    setPromptText(""); setPastedResult("");
   }
 
   // ─── Render ───────────────────────────────────────────────────────────────
@@ -455,7 +444,6 @@ Critique the recommended clusters first — not the full set.`,
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;600;700&display=swap');
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
         ::-webkit-scrollbar { width: 4px; }
         ::-webkit-scrollbar-thumb { background: #2a2a2a; border-radius: 2px; }
         :focus-visible { outline: 2px solid #999; outline-offset: 2px; border-radius: 4px; }
@@ -490,7 +478,6 @@ Critique the recommended clusters first — not the full set.`,
             <SectionHeader step={1} title="Concept Set Input"
               desc="Paste the full concept set from the Concept Generator or your own brainstorm. Include all concepts — don't pre-filter. Clustering works best with 15+ concepts." />
 
-            {/* What clustering does */}
             <div style={{
               background: T.surface, border: `1px solid ${T.border}`,
               borderRadius: 10, padding: "16px 20px", marginBottom: 24,
@@ -543,29 +530,33 @@ Critique the recommended clusters first — not the full set.`,
         {step === 2 && (
           <div>
             <SectionHeader step={2} title="Group by Strategic Direction"
-              desc="Claude groups concepts by underlying approach and mechanism — not surface similarity. Merges obvious duplicates. Flags outliers and coverage gaps." />
+              desc="Build the prompt, run it in Claude, then paste the result. Claude groups concepts by underlying approach and mechanism — not surface similarity." />
 
             {!rawClusters && (
               <div style={{ display: "flex", justifyContent: "flex-end" }}>
-                <Btn onClick={handleCluster} disabled={loading}>
-                  {loading ? "Clustering…" : "Generate Clusters"}
-                </Btn>
+                <Btn onClick={handleCluster}>Generate Clusters</Btn>
               </div>
             )}
 
-            {(stream || rawClusters) && (
+            <PromptPanel promptText={promptText} pastedResult={pastedResult} setPastedResult={setPastedResult} />
+
+            {promptText && (
+              <div style={{ display: "flex", gap: 10, marginTop: 12, justifyContent: "flex-end" }}>
+                <Btn small onClick={acceptClusters} disabled={!pastedResult.trim()}>Accept Clusters →</Btn>
+              </div>
+            )}
+
+            {rawClusters && !promptText && (
               <div>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
                   <Label sub>Raw clusters — grouped by approach</Label>
-                  {rawClusters && !loading && <CopyBtn text={rawClusters} />}
+                  <CopyBtn text={rawClusters} />
                 </div>
-                <OutputBlock content={loading ? stream : rawClusters} streaming={loading} maxH={500} />
-                {rawClusters && !loading && (
-                  <div style={{ display: "flex", gap: 10, marginTop: 12, justifyContent: "flex-end" }}>
-                    <Btn variant="ghost" small onClick={() => { setRawClusters(""); setStream(""); }}>Re-cluster</Btn>
-                    <Btn small onClick={() => { markComplete(2); setStep(3); }}>Name Clusters →</Btn>
-                  </div>
-                )}
+                <OutputBlock content={rawClusters} maxH={500} />
+                <div style={{ display: "flex", gap: 10, marginTop: 12, justifyContent: "flex-end" }}>
+                  <Btn variant="ghost" small onClick={() => { setRawClusters(""); setPromptText(""); }}>Re-cluster</Btn>
+                  <Btn small onClick={() => { markComplete(2); setStep(3); }}>Name Clusters →</Btn>
+                </div>
               </div>
             )}
           </div>
@@ -575,29 +566,33 @@ Critique the recommended clusters first — not the full set.`,
         {step === 3 && (
           <div>
             <SectionHeader step={3} title="Name and Validate Clusters"
-              desc="Claude generates three naming options per cluster (descriptive, user-centric, provocative) and validates that clusters are genuinely distinct using the wireframe test." />
+              desc="Build the prompt, run it in Claude, then paste the result. Claude generates three naming options per cluster and validates that clusters are genuinely distinct." />
 
             {!namedClusters && (
               <div style={{ display: "flex", justifyContent: "flex-end" }}>
-                <Btn onClick={handleName} disabled={loading}>
-                  {loading ? "Naming…" : "Name Clusters"}
-                </Btn>
+                <Btn onClick={handleName}>Name Clusters</Btn>
               </div>
             )}
 
-            {(stream || namedClusters) && (
+            <PromptPanel promptText={promptText} pastedResult={pastedResult} setPastedResult={setPastedResult} />
+
+            {promptText && (
+              <div style={{ display: "flex", gap: 10, marginTop: 12, justifyContent: "flex-end" }}>
+                <Btn small onClick={acceptNamed} disabled={!pastedResult.trim()}>Accept Names →</Btn>
+              </div>
+            )}
+
+            {namedClusters && !promptText && (
               <div>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
                   <Label sub>3 naming options per cluster · wireframe test · user fit</Label>
-                  {namedClusters && !loading && <CopyBtn text={namedClusters} />}
+                  <CopyBtn text={namedClusters} />
                 </div>
-                <OutputBlock content={loading ? stream : namedClusters} streaming={loading} maxH={520} />
-                {namedClusters && !loading && (
-                  <div style={{ display: "flex", gap: 10, marginTop: 12, justifyContent: "flex-end" }}>
-                    <Btn variant="ghost" small onClick={() => { setNamedClusters(""); setStream(""); }}>Re-name</Btn>
-                    <Btn small onClick={() => { markComplete(3); setStep(4); }}>Map the Landscape →</Btn>
-                  </div>
-                )}
+                <OutputBlock content={namedClusters} maxH={520} />
+                <div style={{ display: "flex", gap: 10, marginTop: 12, justifyContent: "flex-end" }}>
+                  <Btn variant="ghost" small onClick={() => { setNamedClusters(""); setPromptText(""); }}>Re-name</Btn>
+                  <Btn small onClick={() => { markComplete(3); setStep(4); }}>Map the Landscape →</Btn>
+                </div>
               </div>
             )}
           </div>
@@ -607,34 +602,36 @@ Critique the recommended clusters first — not the full set.`,
         {step === 4 && (
           <div>
             <SectionHeader step={4} title="Map the Strategic Landscape"
-              desc="Positions each cluster from safe to transformative, surfaces core assumptions, identifies key tensions between clusters, and recommends which directions to develop further." />
+              desc="Build the prompt, run it in Claude, then paste the result. Positions each cluster from safe to transformative, surfaces core assumptions, identifies key tensions, and recommends directions to develop further." />
 
             {!landscape && (
               <div style={{ display: "flex", justifyContent: "flex-end" }}>
-                <Btn onClick={handleLandscape} disabled={loading}>
-                  {loading ? "Mapping…" : "Map the Landscape"}
-                </Btn>
+                <Btn onClick={handleLandscape}>Map the Landscape</Btn>
               </div>
             )}
 
-            {(stream || landscape) && (
+            <PromptPanel promptText={promptText} pastedResult={pastedResult} setPastedResult={setPastedResult} />
+
+            {promptText && (
+              <div style={{ display: "flex", gap: 10, marginTop: 12, justifyContent: "flex-end" }}>
+                <Btn small onClick={acceptLandscape} disabled={!pastedResult.trim()}>Accept Landscape →</Btn>
+              </div>
+            )}
+
+            {landscape && !promptText && (
               <div>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
                   <Label sub>Strategic positions · tensions · recommendations</Label>
-                  {landscape && !loading && (
-                    <div style={{ display: "flex", gap: 8 }}>
-                      <CopyBtn text={landscape} />
-                      <Btn small variant="ghost" onClick={() => dl([rawClusters, namedClusters, landscape].join("\n\n---\n\n"), "cluster-map.md")}>↓ Full map .md</Btn>
-                    </div>
-                  )}
-                </div>
-                <OutputBlock content={loading ? stream : landscape} streaming={loading} maxH={540} />
-                {landscape && !loading && (
-                  <div style={{ display: "flex", gap: 10, marginTop: 12, justifyContent: "flex-end" }}>
-                    <Btn variant="ghost" small onClick={() => { setLandscape(""); setStream(""); }}>Re-map</Btn>
-                    <Btn small onClick={() => setStep(5)}>Generate Handoff →</Btn>
+                  <div style={{ display: "flex", gap: 8 }}>
+                    <CopyBtn text={landscape} />
+                    <Btn small variant="ghost" onClick={() => dl([rawClusters, namedClusters, landscape].join("\n\n---\n\n"), "cluster-map.md")}>↓ Full map .md</Btn>
                   </div>
-                )}
+                </div>
+                <OutputBlock content={landscape} maxH={540} />
+                <div style={{ display: "flex", gap: 10, marginTop: 12, justifyContent: "flex-end" }}>
+                  <Btn variant="ghost" small onClick={() => { setLandscape(""); setPromptText(""); }}>Re-map</Btn>
+                  <Btn small onClick={() => setStep(5)}>Generate Handoff →</Btn>
+                </div>
               </div>
             )}
           </div>
@@ -644,42 +641,44 @@ Critique the recommended clusters first — not the full set.`,
         {step === 5 && (
           <div>
             <SectionHeader step={5} title="Concept Critique Handoff"
-              desc="Package the cluster map for Concept Critique. Identifies which clusters to scrutinize first and what the key tension is that must be resolved before prototyping." />
+              desc="Build the prompt, run it in Claude, then paste the result. Package the cluster map for Concept Critique." />
 
             {!handoff && (
               <div style={{ display: "flex", justifyContent: "flex-end" }}>
-                <Btn onClick={handleHandoff} disabled={loading}>
-                  {loading ? "Generating…" : "Generate Handoff Block"}
-                </Btn>
+                <Btn onClick={handleHandoff}>Generate Handoff Block</Btn>
               </div>
             )}
 
-            {(stream || handoff) && (
+            <PromptPanel promptText={promptText} pastedResult={pastedResult} setPastedResult={setPastedResult} />
+
+            {promptText && (
+              <div style={{ display: "flex", gap: 10, marginTop: 12, justifyContent: "flex-end" }}>
+                <Btn small onClick={acceptHandoff} disabled={!pastedResult.trim()}>Accept Handoff →</Btn>
+              </div>
+            )}
+
+            {handoff && !promptText && (
               <div>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
                   <Label sub>Idea Clustering → Concept Critique handoff</Label>
-                  {handoff && !loading && (
-                    <div style={{ display: "flex", gap: 8 }}>
-                      <CopyBtn text={handoff} />
-                      <Btn small variant="ghost" onClick={() => dl(handoff, "idea-clustering-handoff.md")}>↓ .md</Btn>
-                    </div>
-                  )}
-                </div>
-                <OutputBlock content={loading ? stream : handoff} streaming={loading} maxH={520} />
-                {handoff && !loading && (
-                  <div style={{
-                    marginTop: 20, padding: "14px 16px",
-                    background: T.ideateDim, border: `1px solid ${T.ideateBorder}`,
-                    borderRadius: 8,
-                  }}>
-                    <span style={{
-                      fontSize: 11, fontFamily: "'JetBrains Mono', monospace",
-                      letterSpacing: "0.08em", textTransform: "uppercase", color: T.ideate,
-                    }}>
-                      ✓ Clustering complete — paste handoff into Concept Critique to continue
-                    </span>
+                  <div style={{ display: "flex", gap: 8 }}>
+                    <CopyBtn text={handoff} />
+                    <Btn small variant="ghost" onClick={() => dl(handoff, "idea-clustering-handoff.md")}>↓ .md</Btn>
                   </div>
-                )}
+                </div>
+                <OutputBlock content={handoff} maxH={520} />
+                <div style={{
+                  marginTop: 20, padding: "14px 16px",
+                  background: T.ideateDim, border: `1px solid ${T.ideateBorder}`,
+                  borderRadius: 8,
+                }}>
+                  <span style={{
+                    fontSize: 11, fontFamily: "'JetBrains Mono', monospace",
+                    letterSpacing: "0.08em", textTransform: "uppercase", color: T.ideate,
+                  }}>
+                    ✓ Clustering complete — paste handoff into Concept Critique to continue
+                  </span>
+                </div>
               </div>
             )}
           </div>

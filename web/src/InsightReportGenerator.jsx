@@ -20,20 +20,37 @@ const AUDIENCES = [
   { id: "design", label: "Design Team", desc: "Full debrief — mental models, behavioral detail", icon: "✏️" },
 ];
 
-async function callClaude(system, user, onChunk) {
-  const res = await fetch("/api/claude", {
-    method: "POST", headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ model: "claude-haiku-4-5-20251001", max_tokens: 1000, stream: true, system, messages: [{ role: "user", content: user }] }),
-  });
-  if (!res.ok) { onChunk("⚠️ Error " + res.status + ". Check your API key and try again."); return ""; }
-  const reader = res.body.getReader(); const dec = new TextDecoder(); let full = "";
-  while (true) {
-    const { done, value } = await reader.read(); if (done) break;
-    for (const line of dec.decode(value).split("\n").filter(l => l.startsWith("data: "))) {
-      try { const j = JSON.parse(line.slice(6)); if (j.type === "content_block_delta" && j.delta?.text) { full += j.delta.text; onChunk(full); } } catch {}
-    }
-  }
-  return full;
+function PromptPanel({ promptText, pastedResult, setPastedResult }) {
+  const [copied, setCopied] = useState(false);
+  if (!promptText) return null;
+  return (
+    <div style={{ background: T.surface, border: `1px solid ${T.border}`, borderRadius: 8, padding: "16px 18px", marginTop: 16 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+        <span style={{ fontSize: 11, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.08em", textTransform: "uppercase", color: T.validate }}>
+          Prompt ready — copy and run in Claude
+        </span>
+        <div style={{ display: "flex", gap: 8 }}>
+          <button
+            onClick={() => { navigator.clipboard.writeText(promptText); setCopied(true); setTimeout(() => setCopied(false), 2000); }}
+            style={{ padding: "6px 14px", fontSize: 11, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.06em", textTransform: "uppercase", fontWeight: 600, cursor: "pointer", borderRadius: 6, border: `1.5px solid ${T.validate}`, background: copied ? T.validate : "transparent", color: copied ? "#fff" : T.validate, transition: "all 0.15s" }}
+          >{copied ? "✓ Copied" : "Copy Prompt"}</button>
+          <a href="https://claude.ai" target="_blank" rel="noopener noreferrer"
+            style={{ padding: "6px 14px", fontSize: 11, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.06em", textTransform: "uppercase", fontWeight: 600, borderRadius: 6, border: `1.5px solid ${T.border}`, color: T.muted, textDecoration: "none", display: "inline-block" }}
+          >Open Claude.ai →</a>
+        </div>
+      </div>
+      <pre style={{ whiteSpace: "pre-wrap", fontSize: 12, lineHeight: 1.7, color: T.text, fontFamily: "'DM Sans', sans-serif", margin: 0, maxHeight: 320, overflowY: "auto" }}>{promptText}</pre>
+      <div style={{ marginTop: 16 }}>
+        <div style={{ fontSize: 11, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.08em", textTransform: "uppercase", color: T.muted, marginBottom: 8 }}>Paste Claude's response here</div>
+        <textarea
+          value={pastedResult} onChange={e => setPastedResult(e.target.value)}
+          placeholder="Run the prompt in Claude, then paste the result here to continue…" rows={6}
+          style={{ width: "100%", boxSizing: "border-box", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, padding: "12px 14px", color: T.text, fontSize: 13, lineHeight: 1.6, fontFamily: "'DM Sans', sans-serif", resize: "vertical", outline: "none" }}
+          onFocus={e => e.target.style.borderColor = T.validate} onBlur={e => e.target.style.borderColor = T.border}
+        />
+      </div>
+    </div>
+  );
 }
 
 function Label({ children, sub }) {
@@ -58,11 +75,10 @@ function CopyBtn({ text }) {
   return <Btn small variant="ghost" onClick={() => { navigator.clipboard.writeText(text); setC(true); setTimeout(() => setC(false), 1800); }}>{c ? "✓ Copied" : "Copy"}</Btn>;
 }
 
-function OutputBlock({ content, streaming, maxH = 500 }) {
+function OutputBlock({ content, maxH = 500 }) {
   return (
     <div style={{ background: T.surface, border: `1px solid ${T.border}`, borderRadius: 8, padding: "16px 18px", fontSize: 13, lineHeight: 1.7, color: T.text, fontFamily: "'DM Sans', sans-serif", whiteSpace: "pre-wrap", wordBreak: "break-word", maxHeight: maxH, overflowY: "auto" }}>
       {content || <span style={{ color: T.dim, fontStyle: "italic" }}>Output will appear here…</span>}
-      {streaming && <span style={{ display: "inline-block", width: 6, height: 14, background: T.validate, marginLeft: 2, animation: "blink 0.8s step-end infinite", verticalAlign: "middle" }} />}
     </div>
   );
 }
@@ -101,10 +117,10 @@ function StepIndicator({ current, completed }) {
 export default function InsightReportGenerator() {
   const [step, setStep] = useState(1);
   const [completed, setCompleted] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [stream, setStream] = useState("");
+  const [promptText, setPromptText] = useState("");
+  const [pastedResult, setPastedResult] = useState("");
   const [activeAudience, setActiveAudience] = useState(null);
-  const [streamingAudience, setStreamingAudience] = useState(null);
+  const [pendingAudience, setPendingAudience] = useState(null);
 
   const [prototype, setPrototype] = useState("");
   const [participants, setParticipants] = useState("5");
@@ -125,11 +141,9 @@ export default function InsightReportGenerator() {
     URL.revokeObjectURL(url);
   }
 
-  async function handleReport() {
-    setLoading(true); setStream("");
-    const result = await callClaude(
-      "You are a senior UX researcher writing a usability test findings report. Every finding must be specific and observable — no vague generalities. Every Critical and Major finding needs a participant count and a direct quote. Separate findings (what happened) from recommendations (what to do about it). This report must be specific enough to act on.",
-      `Generate a complete usability test findings report.
+  function handleReport() {
+    const sys = "You are a senior UX researcher writing a usability test findings report. Every finding must be specific and observable — no vague generalities. Every Critical and Major finding needs a participant count and a direct quote. Separate findings (what happened) from recommendations (what to do about it). This report must be specific enough to act on.";
+    const msg = `Generate a complete usability test findings report.
 
 Prototype: ${prototype}
 Participants: ${participants}
@@ -181,22 +195,28 @@ For each success:
 ## Recommended Next Steps (ordered by priority)
 1. [Specific action — who owns it]
 2. [Action]
-3. [Action]`,
-      setStream
-    );
-    setReport(result); setLoading(false); mark(2);
+3. [Action]`;
+    setPromptText(sys + "\n\n" + msg);
+    setPastedResult("");
   }
 
-  async function handleAudience(audienceId) {
+  function acceptReport() {
+    setReport(pastedResult);
+    setPromptText("");
+    setPastedResult("");
+    mark(2);
+  }
+
+  function handleAudience(audienceId) {
     setActiveAudience(audienceId);
-    setStreamingAudience(audienceId);
+    setPendingAudience(audienceId);
 
     const prompts = {
       exec: `Reframe this findings report as a 1-page executive summary.
 
 Format:
 **The test:** [one sentence — what and with whom]
-**Key finding:** [one sentence — the most important thing learned]  
+**Key finding:** [one sentence — the most important thing learned]
 **Business implication:** [one sentence — what this means for product success or timeline]
 **Decision:** [Proceed / Iterate / Return to ideation]
 **What we need:** [one sentence — the specific approval or input required]
@@ -254,25 +274,21 @@ For each: what we observed → why it happened (mental model / IA / copy / inter
 Report:`,
     };
 
-    const result = await callClaude(
-      "You are a senior UX researcher translating findings for different stakeholder audiences. Match the depth, format, and terminology to the audience. Engineering gets components. Executives get decisions and risk. Design teams get behavioral detail.",
-      `${prompts[audienceId]}
-${report}
-
-Prototype questions: ${protoQuestions}`,
-      (chunk) => {
-        setAudienceVersions(prev => ({ ...prev, [audienceId]: chunk }));
-      }
-    );
-    setAudienceVersions(prev => ({ ...prev, [audienceId]: result }));
-    setStreamingAudience(null);
+    const sys = "You are a senior UX researcher translating findings for different stakeholder audiences. Match the depth, format, and terminology to the audience. Engineering gets components. Executives get decisions and risk. Design teams get behavioral detail.";
+    setPromptText(sys + "\n\n" + prompts[audienceId] + "\n" + report + "\n\nPrototype questions: " + protoQuestions);
+    setPastedResult("");
   }
 
-  async function handleIterationBrief() {
-    setLoading(true); setStream("");
-    const result = await callClaude(
-      "You are a senior product designer converting test findings into a precise iteration brief. Be specific enough that a wireframer can start without asking questions. Explicitly protect what worked — over-iteration wastes as much time as under-iteration.",
-      `Generate an iteration brief from these usability test findings.
+  function acceptAudience(audienceId) {
+    setAudienceVersions(prev => ({ ...prev, [audienceId]: pastedResult }));
+    setPromptText("");
+    setPastedResult("");
+    setPendingAudience(null);
+  }
+
+  function handleIterationBrief() {
+    const sys = "You are a senior product designer converting test findings into a precise iteration brief. Be specific enough that a wireframer can start without asking questions. Explicitly protect what worked — over-iteration wastes as much time as under-iteration.";
+    const msg = `Generate an iteration brief from these usability test findings.
 
 Report:
 ${report}
@@ -318,10 +334,16 @@ ${decision}
 [Elements validated in this round]
 
 ### Estimated iteration effort
-Tier 1: [N hours] | Tier 2: [N hours] | Target date: [N days from now]`,
-      setStream
-    );
-    setIterationBrief(result); setLoading(false); mark(4);
+Tier 1: [N hours] | Tier 2: [N hours] | Target date: [N days from now]`;
+    setPromptText(sys + "\n\n" + msg);
+    setPastedResult("");
+  }
+
+  function acceptIterationBrief() {
+    setIterationBrief(pastedResult);
+    setPromptText("");
+    setPastedResult("");
+    mark(4);
   }
 
   return (
@@ -329,7 +351,6 @@ Tier 1: [N hours] | Tier 2: [N hours] | Target date: [N days from now]`,
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;600;700&display=swap');
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
         ::-webkit-scrollbar { width: 4px; } ::-webkit-scrollbar-thumb { background: #2a2a2a; border-radius: 2px; }
         :focus-visible { outline: 2px solid #999; outline-offset: 2px; border-radius: 4px; }
       `}</style>
@@ -390,25 +411,27 @@ Tier 1: [N hours] | Tier 2: [N hours] | Target date: [N days from now]`,
           <div>
             <SectionHeader step={2} title="Full Findings Report"
               desc="Complete report with executive summary, prototype question answers, critical and major findings (each with participant count + direct quote + specific recommendation), and what worked." />
-            {!report && <div style={{ display: "flex", justifyContent: "flex-end" }}><Btn onClick={handleReport} disabled={loading}>{loading ? "Generating…" : "Generate Full Report"}</Btn></div>}
-            {(stream || report) && (
+            {!report && <div style={{ display: "flex", justifyContent: "flex-end" }}><Btn onClick={handleReport}>Generate Full Report</Btn></div>}
+            <PromptPanel promptText={promptText} pastedResult={pastedResult} setPastedResult={setPastedResult} />
+            {promptText && (
+              <div style={{ display: "flex", gap: 10, marginTop: 12, justifyContent: "flex-end" }}>
+                <Btn small disabled={!pastedResult.trim()} onClick={acceptReport}>Accept Report →</Btn>
+              </div>
+            )}
+            {report && !promptText && (
               <div>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
                   <Label sub>Complete findings report</Label>
-                  {report && !loading && (
-                    <div style={{ display: "flex", gap: 8 }}>
-                      <CopyBtn text={report} />
-                      <Btn small variant="ghost" onClick={() => dl(report, "findings-report.md")}>↓ .md</Btn>
-                    </div>
-                  )}
-                </div>
-                <OutputBlock content={loading ? stream : report} streaming={loading} maxH={560} />
-                {report && !loading && (
-                  <div style={{ display: "flex", gap: 10, marginTop: 12, justifyContent: "flex-end" }}>
-                    <Btn variant="ghost" small onClick={() => { setReport(""); setStream(""); }}>Re-generate</Btn>
-                    <Btn small onClick={() => { mark(2); setStep(3); }}>Audience Versions →</Btn>
+                  <div style={{ display: "flex", gap: 8 }}>
+                    <CopyBtn text={report} />
+                    <Btn small variant="ghost" onClick={() => dl(report, "findings-report.md")}>↓ .md</Btn>
                   </div>
-                )}
+                </div>
+                <OutputBlock content={report} maxH={560} />
+                <div style={{ display: "flex", gap: 10, marginTop: 12, justifyContent: "flex-end" }}>
+                  <Btn variant="ghost" small onClick={() => setReport("")}>Re-generate</Btn>
+                  <Btn small onClick={() => { mark(2); setStep(3); }}>Audience Versions →</Btn>
+                </div>
               </div>
             )}
           </div>
@@ -423,7 +446,7 @@ Tier 1: [N hours] | Tier 2: [N hours] | Target date: [N days from now]`,
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 10, marginBottom: 24 }}>
               {AUDIENCES.map(a => {
                 const hasResult = !!audienceVersions[a.id];
-                const isRunning = streamingAudience === a.id;
+                const isPending = pendingAudience === a.id && !!promptText;
                 return (
                   <div key={a.id} style={{ background: hasResult ? T.validateDim : T.surface, border: `1px solid ${hasResult ? T.validateBorder : T.border}`, borderRadius: 10, padding: "16px 18px", transition: "all 0.15s" }}>
                     <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 8 }}>
@@ -437,8 +460,8 @@ Tier 1: [N hours] | Tier 2: [N hours] | Target date: [N days from now]`,
                     </div>
                     <p style={{ fontSize: 12, color: T.muted, lineHeight: 1.5, marginBottom: 12 }}>{a.desc}</p>
                     <div style={{ display: "flex", gap: 6 }}>
-                      <Btn small disabled={streamingAudience !== null} onClick={() => handleAudience(a.id)}>
-                        {isRunning ? "Generating…" : hasResult ? "Re-generate" : "Generate"}
+                      <Btn small onClick={() => handleAudience(a.id)}>
+                        {isPending ? "Prompt Ready" : hasResult ? "Re-generate" : "Generate"}
                       </Btn>
                       {hasResult && <CopyBtn text={audienceVersions[a.id]} />}
                     </div>
@@ -447,11 +470,25 @@ Tier 1: [N hours] | Tier 2: [N hours] | Target date: [N days from now]`,
               })}
             </div>
 
-            {/* Active audience output */}
-            {activeAudience && audienceVersions[activeAudience] && (
+            {/* PromptPanel for active audience */}
+            {pendingAudience && promptText && (
+              <div style={{ marginBottom: 20 }}>
+                <Label sub>{AUDIENCES.find(a => a.id === pendingAudience)?.label} version prompt</Label>
+                <PromptPanel promptText={promptText} pastedResult={pastedResult} setPastedResult={setPastedResult} />
+                <div style={{ display: "flex", gap: 10, marginTop: 12, justifyContent: "flex-end" }}>
+                  <Btn variant="ghost" small onClick={() => { setPromptText(""); setPastedResult(""); setPendingAudience(null); }}>Cancel</Btn>
+                  <Btn small disabled={!pastedResult.trim()} onClick={() => acceptAudience(pendingAudience)}>
+                    Accept {AUDIENCES.find(a => a.id === pendingAudience)?.label} Version →
+                  </Btn>
+                </div>
+              </div>
+            )}
+
+            {/* Active audience output (no pending prompt) */}
+            {activeAudience && audienceVersions[activeAudience] && !promptText && (
               <div style={{ marginBottom: 20 }}>
                 <Label sub>{AUDIENCES.find(a => a.id === activeAudience)?.label} version</Label>
-                <OutputBlock content={audienceVersions[activeAudience]} streaming={streamingAudience === activeAudience} maxH={400} />
+                <OutputBlock content={audienceVersions[activeAudience]} maxH={400} />
               </div>
             )}
 
@@ -467,29 +504,31 @@ Tier 1: [N hours] | Tier 2: [N hours] | Target date: [N days from now]`,
           <div>
             <SectionHeader step={4} title="Iteration Brief"
               desc="What to change, what to preserve, and what the next prototype must answer — so the next design cycle starts with a scope, not a blank page." />
-            {!iterationBrief && <div style={{ display: "flex", justifyContent: "flex-end" }}><Btn onClick={handleIterationBrief} disabled={loading}>{loading ? "Building…" : "Generate Iteration Brief"}</Btn></div>}
-            {(stream || iterationBrief) && (
+            {!iterationBrief && <div style={{ display: "flex", justifyContent: "flex-end" }}><Btn onClick={handleIterationBrief}>Generate Iteration Brief</Btn></div>}
+            <PromptPanel promptText={promptText} pastedResult={pastedResult} setPastedResult={setPastedResult} />
+            {promptText && (
+              <div style={{ display: "flex", gap: 10, marginTop: 12, justifyContent: "flex-end" }}>
+                <Btn small disabled={!pastedResult.trim()} onClick={acceptIterationBrief}>Accept Iteration Brief →</Btn>
+              </div>
+            )}
+            {iterationBrief && !promptText && (
               <div>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
                   <Label sub>PRESERVE · CHANGE tiers · next prototype questions</Label>
-                  {iterationBrief && !loading && (
-                    <div style={{ display: "flex", gap: 8 }}>
-                      <CopyBtn text={iterationBrief} />
-                      <Btn small variant="ghost" onClick={() => {
-                        const all = [report, ...Object.values(audienceVersions), iterationBrief].filter(Boolean).join("\n\n---\n\n");
-                        dl(all, "validate-complete.md");
-                      }}>↓ Full package .md</Btn>
-                    </div>
-                  )}
-                </div>
-                <OutputBlock content={loading ? stream : iterationBrief} streaming={loading} maxH={520} />
-                {iterationBrief && !loading && (
-                  <div style={{ marginTop: 20, padding: "14px 16px", background: T.validateDim, border: `1px solid ${T.validateBorder}`, borderRadius: 8 }}>
-                    <span style={{ fontSize: 11, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.08em", textTransform: "uppercase", color: T.validate }}>
-                      ✓ Validate phase complete — share report with stakeholders, then start next Prototype cycle with the iteration brief
-                    </span>
+                  <div style={{ display: "flex", gap: 8 }}>
+                    <CopyBtn text={iterationBrief} />
+                    <Btn small variant="ghost" onClick={() => {
+                      const all = [report, ...Object.values(audienceVersions), iterationBrief].filter(Boolean).join("\n\n---\n\n");
+                      dl(all, "validate-complete.md");
+                    }}>↓ Full package .md</Btn>
                   </div>
-                )}
+                </div>
+                <OutputBlock content={iterationBrief} maxH={520} />
+                <div style={{ marginTop: 20, padding: "14px 16px", background: T.validateDim, border: `1px solid ${T.validateBorder}`, borderRadius: 8 }}>
+                  <span style={{ fontSize: 11, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.08em", textTransform: "uppercase", color: T.validate }}>
+                    ✓ Validate phase complete — share report with stakeholders, then start next Prototype cycle with the iteration brief
+                  </span>
+                </div>
               </div>
             )}
           </div>
