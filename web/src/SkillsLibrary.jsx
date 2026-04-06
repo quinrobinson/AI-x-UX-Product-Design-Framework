@@ -219,6 +219,7 @@ export default function SkillsLibrary({ onBack }) {
             <button
               onClick={downloadAllSkills}
               disabled={allDisabled}
+              aria-label="Download all skills as zip files"
               style={{
                 background: allState === "done" ? "#22C55E18" : allState === "error" ? "#EF444418" : "#0B1120",
                 border: `1px solid ${allState === "done" ? "#22C55E55" : allState === "error" ? "#EF444455" : "#1E293B"}`,
@@ -305,6 +306,7 @@ export default function SkillsLibrary({ onBack }) {
                           <button
                             onClick={() => downloadSingleSkill(file, row.dir)}
                             disabled={sState === "loading"}
+                            aria-label={`Download ${file.replace(".md", "")} as zip`}
                             title={`Download ${file.replace(".md", "")}.zip`}
                             style={{
                               display: "inline-flex", alignItems: "center", gap: 5,
@@ -321,7 +323,7 @@ export default function SkillsLibrary({ onBack }) {
                             {sState === "loading" ? "⟳" : sState === "done" ? "✓" : sState === "error" ? "✕" : "↓"} .zip
                           </button>
                           {meta?.leverage && (
-                            <span style={{ fontSize: 10, fontFamily: "'JetBrains Mono', monospace", color: DS.bodyDark, opacity: 0.35 }}>
+                            <span style={{ fontSize: 10, fontFamily: "'JetBrains Mono', monospace", color: DS.bodyDark, opacity: 0.6 }}>
                               {meta.leverage === "high" ? "AI accelerated" : "AI assisted"}
                             </span>
                           )}
@@ -349,6 +351,40 @@ export default function SkillsLibrary({ onBack }) {
             );
           })}
         </div>
+
+        {/* Figma Community Skills */}
+        <div style={{ marginTop: 48, borderTop: `1px dashed ${DS.lightBorder}`, paddingTop: 40 }}>
+          <div style={{ fontSize: 10, fontFamily: "'JetBrains Mono', monospace", letterSpacing: 3, textTransform: "uppercase", color: DS.bodyDark, marginBottom: 16 }}>More skills from the community</div>
+          <div style={{ background: DS.white, border: `1px dashed ${DS.lightBorder}`, borderRadius: 16, padding: "28px 32px", display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 24, flexWrap: "wrap" }}>
+            <div style={{ flex: "1 1 400px" }}>
+              <div style={{ fontSize: 14, fontWeight: 700, color: "#0F172A", marginBottom: 8 }}>Figma Community Skills</div>
+              <p style={{ fontSize: 13, color: DS.bodyDark, lineHeight: 1.7, margin: "0 0 10px" }}>
+                Additional AI-agent actions built and approved by the Figma community. These skills extend what Claude Code can do directly on the Figma canvas — beyond what's included in this framework.
+              </p>
+              <p style={{ fontSize: 11, fontFamily: "'JetBrains Mono', monospace", color: DS.bodyDark, opacity: 0.5, margin: 0 }}>
+                Note: Figma Community Skills are Figma-native — they install in Figma, not as .md files.
+              </p>
+            </div>
+            <a
+              href="https://www.figma.com/community/skills"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                display: "inline-flex", alignItems: "center", gap: 8,
+                padding: "12px 22px", borderRadius: 10,
+                background: "#9B59F712", border: "1px solid #9B59F740",
+                color: "#9B59F7", fontSize: 13, fontWeight: 600,
+                textDecoration: "none", whiteSpace: "nowrap", flexShrink: 0,
+                transition: "background 0.15s, border-color 0.15s",
+              }}
+              onMouseEnter={e => { e.currentTarget.style.background = "#9B59F720"; e.currentTarget.style.borderColor = "#9B59F780"; }}
+              onMouseLeave={e => { e.currentTarget.style.background = "#9B59F712"; e.currentTarget.style.borderColor = "#9B59F740"; }}
+            >
+              Browse Figma Skills ↗
+            </a>
+          </div>
+        </div>
+
       </div>
     </div>
   );

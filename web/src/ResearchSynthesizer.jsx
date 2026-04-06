@@ -29,7 +29,7 @@ const STEPS = [
 
 // ─── API call ─────────────────────────────────────────────────────────────────
 async function callClaude(systemPrompt, userMessage, onChunk) {
-  const response = await fetch("https://api.anthropic.com/v1/messages", {
+  const response = await fetch("/api/claude", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
@@ -41,6 +41,7 @@ async function callClaude(systemPrompt, userMessage, onChunk) {
     }),
   });
 
+  if (!response.ok) { onChunk("⚠️ Error " + response.status + ". Check your API key and try again."); return ""; }
   const reader = response.body.getReader();
   const decoder = new TextDecoder();
   let fullText = "";

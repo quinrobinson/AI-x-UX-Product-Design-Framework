@@ -30,7 +30,7 @@ const T = {
   borderHover: "#404040",
   text: "#F2F2F2",
   muted: "#999999",
-  dim: "#666666",
+  dim: "#787878",
   white: "#FFFFFF",
   phases: {
     "01": { color: "#22C55E", label: "Discover" },
@@ -1476,7 +1476,9 @@ function PathCard({ title, desc, active, onClick }) {
 
 // ── Setup block ───────────────────────────────────────────────────────────────
 function SetupBlock({ onOpenFigmaGuide }) {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(() => {
+    try { return localStorage.getItem("apdf-setup-done") !== "true"; } catch { return true; }
+  });
   const [done, setDone] = useState(() => {
     try { return localStorage.getItem("apdf-setup-done") === "true"; } catch { return false; }
   });
@@ -1497,6 +1499,8 @@ function SetupBlock({ onOpenFigmaGuide }) {
     }}>
       <button
         onClick={() => setOpen(!open)}
+        aria-expanded={open}
+        aria-label="Setup checklist"
         style={{
           width: "100%", display: "flex", alignItems: "center",
           justifyContent: "space-between", padding: "14px 20px",
@@ -1535,6 +1539,7 @@ function SetupBlock({ onOpenFigmaGuide }) {
                   <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                     <code style={{ fontSize: 11, color: T.muted, fontFamily: "'JetBrains Mono', monospace", background: T.card, padding: "3px 8px", borderRadius: 4 }}>{cloneCmd}</code>
                     <button onClick={() => { navigator.clipboard.writeText(cloneCmd); setCopied(true); setTimeout(() => setCopied(false), 1800); }}
+                      aria-label="Copy clone command"
                       style={{ fontSize: 10, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.06em", textTransform: "uppercase", color: copied ? "#22C55E" : T.dim, background: "none", border: "none", cursor: "pointer", padding: 0 }}>
                       {copied ? "✓" : "Copy"}
                     </button>
@@ -2660,14 +2665,17 @@ function ToolShell({ tool, onHome }) {
         borderBottom: `1px solid ${T.border}`,
         padding: "0 28px", display: "flex", alignItems: "center", gap: 12, height: 52,
       }}>
-        <button onClick={onHome} style={{
-          display: "inline-flex", alignItems: "center", gap: 6,
-          background: "transparent", border: `1px solid ${T.border}`,
-          borderRadius: 6, padding: "5px 12px", cursor: "pointer",
-          fontSize: 11, fontFamily: "'JetBrains Mono', monospace",
-          letterSpacing: "0.06em", textTransform: "uppercase",
-          color: T.muted, transition: "all 0.15s",
-        }}>← Home</button>
+        <button onClick={onHome}
+          onMouseEnter={e => { e.currentTarget.style.borderColor = T.borderHover; e.currentTarget.style.color = T.text; }}
+          onMouseLeave={e => { e.currentTarget.style.borderColor = T.border; e.currentTarget.style.color = T.muted; }}
+          style={{
+            display: "inline-flex", alignItems: "center", gap: 6,
+            background: "transparent", border: `1px solid ${T.border}`,
+            borderRadius: 6, padding: "5px 12px", cursor: "pointer",
+            fontSize: 11, fontFamily: "'JetBrains Mono', monospace",
+            letterSpacing: "0.06em", textTransform: "uppercase",
+            color: T.muted, transition: "all 0.15s",
+          }}>← Home</button>
         <div style={{ width: 1, height: 16, background: T.border }} />
         <PhaseTag phaseId={tool.phase} small />
         <span style={{ fontSize: 13, fontWeight: 500, color: T.text, fontFamily: "'DM Sans', sans-serif" }}>{tool.name}</span>
@@ -3376,8 +3384,10 @@ export default function App() {
         ::-webkit-scrollbar-thumb { background: #2a2a2a; border-radius: 2px; }
         a { color: inherit; }
         img, video { max-width: 100%; height: auto; }
-        :focus-visible { outline: 2px solid #999999; outline-offset: 2px; border-radius: 4px; }
+        :focus-visible { outline: 2px solid #F2F2F2; outline-offset: 2px; border-radius: 4px; }
         button:focus:not(:focus-visible), a:focus:not(:focus-visible) { outline: none; }
+        .path-grid-item:focus-visible { outline: 2px solid #F2F2F2; outline-offset: -2px; z-index: 1; }
+        .setup-path-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
         .path-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; }
         .path-grid-item { border-right: 1px solid #2C2C2C; }
         .path-grid-item:last-child { border-right: none; }
@@ -3395,7 +3405,13 @@ export default function App() {
         .tool-row { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; }
         .how-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
         .how-figma { display: flex; gap: 10px; align-items: flex-start; }
+        @media (max-width: 768px) {
+          .how-grid { grid-template-columns: 1fr; }
+          .ways-explainer-grid { grid-template-columns: 1fr 1fr; }
+          .setup-path-grid { grid-template-columns: 1fr; }
+        }
         @media (max-width: 600px) {
+          .setup-path-grid { grid-template-columns: 1fr; }
           .path-grid { grid-template-columns: 1fr !important; }
           .path-grid-item { border-right: none !important; border-bottom: 1px solid #2C2C2C; }
           .path-grid-item:last-child { border-bottom: none; }
@@ -3481,16 +3497,22 @@ export default function App() {
             <div style={{ marginBottom: 20 }}>
               <Mono color={T.dim} size={13}>Framework</Mono>
             </div>
+            {/* Claude × Figma brand mark */}
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 20 }}>
+              <span style={{ fontSize: 11, fontFamily: "'JetBrains Mono', monospace", fontWeight: 700, letterSpacing: 3, color: "#D97706" }}>CLAUDE</span>
+              <span style={{ fontSize: 11, fontFamily: "'JetBrains Mono', monospace", color: T.dim }}>×</span>
+              <span style={{ fontSize: 11, fontFamily: "'JetBrains Mono', monospace", fontWeight: 700, letterSpacing: 3, color: "#9B59F7" }}>FIGMA</span>
+            </div>
             <h1 style={{
               fontFamily: "'DM Serif Display', serif",
               fontSize: "clamp(40px, 5vw, 72px)", fontWeight: 400, lineHeight: 1.05,
               color: T.text, marginBottom: 16, letterSpacing: "-0.3px",
             }}>
-              A system for using Claude<br />
+              A system for using Claude and Figma<br />
               <em style={{ fontStyle: "italic", color: T.muted }}>across every phase of product design.</em>
             </h1>
             <p style={{ fontSize: 16, color: T.muted, lineHeight: 1.7, maxWidth: 600, marginBottom: 0 }}>
-              From research through delivery — skills, tools, and prompts that integrate Claude into how your team already works.
+              From research through delivery — skills, tools, and prompts built around Claude and Figma working together.
             </p>
           </div>
         )}
@@ -3544,23 +3566,24 @@ export default function App() {
                   border: "none",
                   padding: "20px 20px 18px", textAlign: "left",
                   cursor: "pointer", transition: "background 0.15s",
-                  borderBottom: isActive ? `2px solid ${T.text}` : "2px solid transparent",
-                  outline: "none",
+                  borderBottom: isActive ? `2px solid ${item.color}` : "2px solid transparent",
                   display: "flex", flexDirection: "column",
                 }}
+                aria-expanded={isActive}
+                aria-label={item.label}
                 onMouseEnter={e => { if (!isActive) e.currentTarget.style.background = T.card; }}
                 onMouseLeave={e => { if (!isActive) e.currentTarget.style.background = T.surface; }}
               >
                 <div style={{ display: "inline-flex", alignItems: "center", gap: 6, marginBottom: 10 }}>
                   <div style={{
                     width: 6, height: 6, borderRadius: "50%",
-                    background: isActive ? T.text : T.dim,
+                    background: isActive ? item.color : T.dim,
                     transition: "background 0.15s",
                   }} />
                   <span style={{
                     fontSize: 11, fontFamily: "'JetBrains Mono', monospace",
                     letterSpacing: "0.08em", textTransform: "uppercase",
-                    color: isActive ? T.text : T.muted,
+                    color: isActive ? item.color : T.muted,
                     transition: "color 0.15s",
                   }}>{item.label}</span>
                 </div>
@@ -3570,7 +3593,7 @@ export default function App() {
                 <span style={{
                   fontSize: 10, fontFamily: "'JetBrains Mono', monospace",
                   letterSpacing: "0.07em", textTransform: "uppercase",
-                  color: isActive ? T.muted : T.dim,
+                  color: isActive ? item.color : T.dim,
                   transition: "color 0.15s",
                   marginTop: 14, display: "block",
                 }}>{isActive ? "▲ Active" : item.cta}</span>

@@ -184,11 +184,11 @@ export default function FigmaSetupGuide({ onBack }) {
             Connect Claude to Figma
           </h1>
           <p style={{ fontSize: 15, color: DS.bodyDark, lineHeight: 1.75, margin: "0 0 32px", maxWidth: 580 }}>
-            There are two ways to use this framework. Pick the path that fits where you are — you can always upgrade from Path B to Path A later.
+            Claude runs across multiple surfaces. This guide covers the ones that matter for design work right now. Pick the path that fits where you are — you can always upgrade from Path B to Path A later.
           </p>
 
           {/* Path selector */}
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+          <div className="setup-path-grid">
             {[
               {
                 id: "a", color: pathAColor,
@@ -258,6 +258,27 @@ export default function FigmaSetupGuide({ onBack }) {
                 ? "Once the connection is confirmed, open the Design Process System tool, pick your phase, and copy the Figma Playbook prompt. Paste it into your Claude Code session with your Figma file open — Claude will start executing."
                 : "Open a new conversation — your uploaded skills are already active. Describe your project and the phase you're working in. Claude will follow the framework's structured workflow and generate content you can bring into Figma."}
             </div>
+          </div>
+        </div>
+
+        {/* Figma Community Skills callout */}
+        <div style={{ background: DS.white, border: `1px dashed #E2E8F0`, borderRadius: 14, padding: "22px 26px", marginBottom: 48, display: "flex", gap: 18, alignItems: "flex-start" }}>
+          <div style={{ width: 36, height: 36, borderRadius: 9, background: "#9B59F712", border: "1px solid #9B59F740", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+            <span style={{ color: "#9B59F7", fontSize: 16 }}>✦</span>
+          </div>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: 13, fontWeight: 700, color: "#0F172A", marginBottom: 5 }}>Extend Claude's Figma capabilities</div>
+            <div style={{ fontSize: 12, color: DS.bodyDark, lineHeight: 1.65, marginBottom: 12 }}>
+              Once you're connected, browse Figma Community Skills for additional Claude-compatible actions built and approved by the community. These are Figma-native skills — they install in Figma and give Claude Code more ways to act directly on the canvas.
+            </div>
+            <a
+              href="https://www.figma.com/community/skills"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ fontSize: 12, fontWeight: 600, color: "#9B59F7", textDecoration: "none" }}
+            >
+              Browse Figma Community Skills ↗
+            </a>
           </div>
         </div>
 

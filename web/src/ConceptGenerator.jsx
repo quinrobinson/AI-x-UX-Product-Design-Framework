@@ -69,7 +69,7 @@ const ANGLES = [
 
 // ─── API ──────────────────────────────────────────────────────────────────────
 async function callClaude(system, user, onChunk) {
-  const res = await fetch("https://api.anthropic.com/v1/messages", {
+  const res = await fetch("/api/claude", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
@@ -80,6 +80,7 @@ async function callClaude(system, user, onChunk) {
       messages: [{ role: "user", content: user }],
     }),
   });
+  if (!res.ok) { onChunk("⚠️ Error " + res.status + ". Check your API key and try again."); return ""; }
   const reader = res.body.getReader();
   const dec = new TextDecoder();
   let full = "";

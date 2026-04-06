@@ -21,10 +21,11 @@ const SEVERITY_COLORS = {
 };
 
 async function callClaude(system, user, onChunk) {
-  const res = await fetch("https://api.anthropic.com/v1/messages", {
+  const res = await fetch("/api/claude", {
     method: "POST", headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ model: "claude-sonnet-4-20250514", max_tokens: 1000, stream: true, system, messages: [{ role: "user", content: user }] }),
   });
+  if (!res.ok) { onChunk("⚠️ Error " + res.status + ". Check your API key and try again."); return ""; }
   const reader = res.body.getReader(); const dec = new TextDecoder(); let full = "";
   while (true) {
     const { done, value } = await reader.read(); if (done) break;
