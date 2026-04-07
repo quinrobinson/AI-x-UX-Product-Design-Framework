@@ -1716,9 +1716,7 @@ function PathCard({ title, desc, active, onClick }) {
 
 // ── Setup block ───────────────────────────────────────────────────────────────
 function SetupBlock({ onOpenFigmaGuide }) {
-  const [open, setOpen] = useState(() => {
-    try { return localStorage.getItem("apdf-setup-done") !== "true"; } catch { return true; }
-  });
+  const [open, setOpen] = useState(false);
   const [done, setDone] = useState(() => {
     try { return localStorage.getItem("apdf-setup-done") === "true"; } catch { return false; }
   });
@@ -1978,23 +1976,12 @@ function PhasePath({ onOpenTool }) {
       {/* Detail panel */}
       <div style={{ overflow: "hidden", minHeight: 280 }}>
         {!selected ? (
-          /* ── Default: How to Use ── */
-          <div style={{ padding: "28px 0 32px" }}>
-            <p style={{ fontSize: 13, fontWeight: 600, color: T.text, lineHeight: 1, marginBottom: 6, whiteSpace: "nowrap" }}>Six phases. Three artifact types. One continuous workflow.</p>
-            <p style={{ fontSize: 12, color: T.muted, lineHeight: 1.6, margin: "0 0 20px" }}>Each phase produces artifacts that feed the next. Select any phase above to see its tools, skills, prompts, and how to use it.</p>
-            <div style={{ fontSize: 10, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.1em", textTransform: "uppercase", color: T.dim, marginBottom: 10 }}>Two ways to work with Claude</div>
-            <div className="ways-explainer-grid" style={{ gridTemplateColumns: "1fr 1fr" }}>
-              {[
-                { label: "Prompts", badge: "Copy + Paste", desc: "Phase-specific prompts for Claude Chat or Code. Paste and go — Claude guides the session, asks follow-up questions, and reviews your uploads." },
-                { label: "Skills", badge: "Attach to Claude", desc: "Attach .md files to a Claude project or conversation. Claude follows the methodology automatically across every session." },
-              ].map(item => (
-                <div key={item.label} style={{ border: `1px solid ${T.border}`, borderRadius: 8, padding: "12px 14px" }}>
-                  <div style={{ fontSize: 9, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.08em", textTransform: "uppercase", color: T.dim, marginBottom: 6 }}>{item.badge}</div>
-                  <div style={{ fontSize: 12, fontWeight: 600, color: T.text, marginBottom: 4 }}>{item.label}</div>
-                  <div style={{ fontSize: 11, color: T.muted, lineHeight: 1.55 }}>{item.desc}</div>
-                </div>
-              ))}
-            </div>
+          /* ── Empty state ── */
+          <div style={{ padding: "64px 0 48px", textAlign: "center" }}>
+            <div style={{ fontSize: 10, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.12em", textTransform: "uppercase", color: "#3A3A3A", marginBottom: 12 }}>Select a phase</div>
+            <p style={{ fontSize: 13, color: "#4A4A4A", lineHeight: 1.65, maxWidth: 340, margin: "0 auto" }}>
+              Choose a phase above to see its prompts, skills, and step-by-step guidance.
+            </p>
           </div>
         ) : (
           /* ── Phase detail panel ── */
@@ -2882,32 +2869,12 @@ function DeliverablePath({ onOpenTool }) {
       {/* Detail panel */}
       <div style={{ overflow: "hidden", minHeight: 200, marginBottom: 12 }}>
         {!selected ? (
-          /* Default state */
-          <div style={{ padding: "28px 0 32px" }}>
-            <p style={{ fontSize: 12, color: T.muted, lineHeight: 1.6, margin: "0 0 16px", maxWidth: 520 }}>
-              Select a phase above to see every deliverable for that stage. Each deliverable is produced by either a Tool or a Prompt.
+          /* Empty state */
+          <div style={{ padding: "64px 0 48px", textAlign: "center" }}>
+            <div style={{ fontSize: 10, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.12em", textTransform: "uppercase", color: "#3A3A3A", marginBottom: 12 }}>Select a phase</div>
+            <p style={{ fontSize: 13, color: "#4A4A4A", lineHeight: 1.65, maxWidth: 340, margin: "0 auto" }}>
+              Choose a phase above to see every deliverable for that stage. Cross-phase deliverables are always visible below.
             </p>
-            <div className="deliverable-info-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-              {[
-                {
-                  badge: "Prompt", headline: "Most deliverables",
-                  desc: "Copy the prompt, open Claude.ai, and paste your context. Claude guides you through the rest — asking questions and producing the output in one session.",
-                  when: "All phase deliverables work this way",
-                },
-                {
-                  badge: "Interactive tool", headline: "Design System Studio",
-                  desc: "The one interactive tool in this section. Build and preview a live design system — customize tokens, preview components, and export CSS. No prompt needed.",
-                  when: "Cross-phase — available any time",
-                },
-              ].map(item => (
-                <div key={item.headline} style={{ border: `1px solid ${T.border}`, borderRadius: 8, padding: "12px 14px" }}>
-                  <div style={{ fontSize: 9, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.08em", textTransform: "uppercase", color: T.dim, marginBottom: 6 }}>{item.badge}</div>
-                  <div style={{ fontSize: 12, fontWeight: 600, color: T.text, marginBottom: 4 }}>{item.headline}</div>
-                  <div style={{ fontSize: 11, color: T.muted, lineHeight: 1.55, marginBottom: 6 }}>{item.desc}</div>
-                  <div style={{ fontSize: 10, color: T.dim, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.04em" }}>{item.when}</div>
-                </div>
-              ))}
-            </div>
           </div>
         ) : (
           /* Phase deliverable cards */
@@ -3252,9 +3219,10 @@ function SkillsLibraryOverlay({ onBack }) {
         {/* Phase detail panel */}
         <div style={{ overflow: "hidden", marginBottom: 20 }}>
           {!selected ? (
-            <div style={{ padding: "28px 0 32px" }}>
-              <p style={{ fontSize: 12, color: T.muted, lineHeight: 1.7, margin: 0, maxWidth: 520 }}>
-                Select a phase above to browse skill files for that stage. Skill files are downloaded and attached to Claude Chat — they give Claude the methodology, templates, and quality standards for that phase automatically.
+            <div style={{ padding: "64px 0 48px", textAlign: "center" }}>
+              <div style={{ fontSize: 10, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.12em", textTransform: "uppercase", color: "#3A3A3A", marginBottom: 12 }}>Select a phase</div>
+              <p style={{ fontSize: 13, color: "#4A4A4A", lineHeight: 1.65, maxWidth: 340, margin: "0 auto" }}>
+                Choose a phase above to browse skill files for that stage.
               </p>
             </div>
           ) : (
@@ -3834,7 +3802,7 @@ export default function App() {
               fontSize: "clamp(40px, 5vw, 72px)", fontWeight: 400, lineHeight: 1.05,
               color: T.text, marginBottom: 16, letterSpacing: "-0.3px",
             }}>
-              A system for using <span style={{ color: "#D97706" }}>Claude</span> + <span style={{ color: "#9B59F7" }}>Figma</span><br />
+              A system for using <span style={{ color: "#D97706" }}>Claude</span> <span style={{ fontSize: "0.45em", verticalAlign: "middle", color: T.dim }}>+</span> <span style={{ color: "#9B59F7" }}>Figma</span><br />
               <em style={{ fontStyle: "italic", color: T.muted }}>across every phase of product design.</em>
             </h1>
             <p style={{ fontSize: 16, color: T.muted, lineHeight: 1.7, maxWidth: 600, marginBottom: 0 }}>
@@ -3906,7 +3874,7 @@ export default function App() {
                   <span style={{
                     fontSize: 10, fontFamily: "'JetBrains Mono', monospace",
                     letterSpacing: "0.07em", textTransform: "uppercase",
-                    color: item.color, marginTop: 14, display: "block",
+                    color: T.muted, marginTop: 14, display: "block",
                   }}>{item.cta}</span>
                 </button>
               ))}
@@ -3917,21 +3885,19 @@ export default function App() {
         {/* Page header — shown when a path is active */}
         {activePath && (() => {
           const pages = {
-            phase:       { color: "#22C55E", title: "Start with a Phase",       desc: "Select a design phase to explore every tool, prompt, and guide for that stage of the project." },
-            ways:        { color: "#8B5CF6", title: "Ways to Work",             desc: "Each scenario maps a full design challenge — from a sprint to a design system build — to a path through the framework." },
-            deliverable: { color: "#F59E0B", title: "Start with a Deliverable", desc: "Know what you need to produce. Find the right prompt for that deliverable — or open the Design System Studio if that's your output." },
+            phase:       { title: "Start with a Phase",       desc: "Six phases. Three artifact types. One continuous workflow. Each phase produces artifacts that feed the next." },
+            ways:        { title: "Ways to Work",             desc: "Each scenario maps a full design challenge — from a design sprint to a complete design system build — to a path through the framework." },
+            deliverable: { title: "Start with a Deliverable", desc: "Know what you need to produce. Find the right prompt for that deliverable — or open the Design System Studio if that's your output." },
           };
           const pg = pages[activePath];
           return (
-            <div style={{ marginBottom: 32 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
-                <div style={{ width: 7, height: 7, borderRadius: "50%", background: pg.color, boxShadow: `0 0 8px ${pg.color}` }} />
-                <span style={{
-                  fontSize: 11, fontFamily: "'JetBrains Mono', monospace",
-                  letterSpacing: "0.1em", textTransform: "uppercase", color: pg.color,
-                }}>{pg.title}</span>
-              </div>
-              <p style={{ fontSize: 14, color: T.muted, lineHeight: 1.6, maxWidth: 560, margin: 0 }}>{pg.desc}</p>
+            <div style={{ marginBottom: 40 }}>
+              <h2 style={{
+                fontFamily: "'DM Serif Display', serif",
+                fontSize: "clamp(28px, 3.5vw, 48px)", fontWeight: 400,
+                color: T.text, lineHeight: 1.1, marginBottom: 14, letterSpacing: "-0.2px",
+              }}>{pg.title}</h2>
+              <p style={{ fontSize: 14, color: T.muted, lineHeight: 1.65, maxWidth: 560, margin: 0 }}>{pg.desc}</p>
             </div>
           );
         })()}
