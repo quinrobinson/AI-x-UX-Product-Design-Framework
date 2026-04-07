@@ -2686,6 +2686,7 @@ Based on my answers, recommend the most appropriate deliverable and tell me:
 
 // ── Deliverable card ──────────────────────────────────────────────────────────
 function DeliverableCard({ d, borderColor, hoverColor, onOpenTool, getDelivPrompt }) {
+  const [open, setOpen] = useState(false);
   const [copied, setCopied] = useState(false);
   const isStudio = d.ref === "design-system";
 
@@ -2697,62 +2698,85 @@ function DeliverableCard({ d, borderColor, hoverColor, onOpenTool, getDelivPromp
 
   return (
     <div style={{
-      background: T.surface, border: `1px solid ${borderColor}`, borderRadius: 8,
-      padding: "14px 16px", display: "flex", flexDirection: "column", gap: 8,
-      transition: "border-color 0.12s",
+      background: T.surface,
+      border: `1px solid ${open ? hoverColor : borderColor}`,
+      borderRadius: 8, overflow: "hidden", transition: "border-color 0.12s",
     }}
-      onMouseEnter={e => e.currentTarget.style.borderColor = hoverColor}
-      onMouseLeave={e => e.currentTarget.style.borderColor = borderColor}
+      onMouseEnter={e => { if (!open) e.currentTarget.style.borderColor = hoverColor; }}
+      onMouseLeave={e => { if (!open) e.currentTarget.style.borderColor = borderColor; }}
     >
-      {/* Name */}
-      <span style={{ fontSize: 13, fontWeight: 600, color: T.text, lineHeight: 1.3 }}>{d.name}</span>
+      {/* Card header */}
+      <div style={{ padding: "14px 16px", display: "flex", flexDirection: "column", gap: 8 }}>
+        {/* Name */}
+        <span style={{ fontSize: 13, fontWeight: 600, color: T.text, lineHeight: 1.3 }}>{d.name}</span>
 
-      {/* Description */}
-      <p style={{ fontSize: 12, color: T.muted, lineHeight: 1.55, margin: 0 }}>{d.desc}</p>
+        {/* Description */}
+        <p style={{ fontSize: 12, color: T.muted, lineHeight: 1.55, margin: 0 }}>{d.desc}</p>
 
-      {/* Output pill */}
-      <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-        <span style={{ fontSize: 10, color: T.dim, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.06em", textTransform: "uppercase", flexShrink: 0 }}>Output</span>
-        <span style={{ fontSize: 11, color: T.muted, background: T.card, border: `1px solid ${T.border}`, borderRadius: 20, padding: "2px 9px" }}>{d.output}</span>
-      </div>
+        {/* Output — inline text, no pill */}
+        <div style={{ display: "flex", gap: 6, alignItems: "baseline" }}>
+          <span style={{
+            fontSize: 9, fontFamily: "'JetBrains Mono', monospace",
+            letterSpacing: "0.08em", textTransform: "uppercase",
+            color: T.dim, flexShrink: 0,
+          }}>Output</span>
+          <span style={{ fontSize: 11, color: T.muted, lineHeight: 1.45 }}>{d.output}</span>
+        </div>
 
-      {/* Action row */}
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 2, gap: 8 }}>
-        <span style={{ fontSize: 11, color: T.dim, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{d.label}</span>
-        {isStudio ? (
-          <button onClick={() => onOpenTool(d.ref)} style={{
-            padding: "5px 14px", borderRadius: 5, flexShrink: 0,
-            fontSize: 11, fontFamily: "'JetBrains Mono', monospace",
-            letterSpacing: "0.06em", textTransform: "uppercase",
-            background: "transparent", border: `1px solid ${T.border}`,
-            color: T.muted, cursor: "pointer", transition: "all 0.12s",
-          }}
-            onMouseEnter={e => { e.currentTarget.style.borderColor = T.borderHover; e.currentTarget.style.color = T.text; }}
-            onMouseLeave={e => { e.currentTarget.style.borderColor = T.border; e.currentTarget.style.color = T.muted; }}
-          >Open tool</button>
-        ) : (
-          <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
-            <button onClick={handleCopy} style={{
-              padding: "5px 12px", borderRadius: 5,
-              fontSize: 11, fontFamily: "'JetBrains Mono', monospace",
-              letterSpacing: "0.06em", textTransform: "uppercase",
-              background: "transparent", border: `1.5px solid ${copied ? "#22C55E" : T.border}`,
-              color: copied ? "#22C55E" : T.muted, cursor: "pointer", transition: "all 0.15s",
-            }}>{copied ? "✓ Copied" : "Copy prompt"}</button>
-            <a href="https://claude.ai" target="_blank" rel="noopener noreferrer" style={{
-              padding: "5px 10px", borderRadius: 5,
+        {/* Action row */}
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 2, gap: 8 }}>
+          <span style={{ fontSize: 11, color: T.dim, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{d.label}</span>
+          {isStudio ? (
+            <button onClick={() => onOpenTool(d.ref)} style={{
+              padding: "5px 14px", borderRadius: 5, flexShrink: 0,
               fontSize: 11, fontFamily: "'JetBrains Mono', monospace",
               letterSpacing: "0.06em", textTransform: "uppercase",
               background: "transparent", border: `1px solid ${T.border}`,
-              color: T.dim, cursor: "pointer", textDecoration: "none",
-              transition: "all 0.12s", display: "inline-flex", alignItems: "center",
+              color: T.muted, cursor: "pointer", transition: "all 0.12s",
             }}
               onMouseEnter={e => { e.currentTarget.style.borderColor = T.borderHover; e.currentTarget.style.color = T.text; }}
-              onMouseLeave={e => { e.currentTarget.style.borderColor = T.border; e.currentTarget.style.color = T.dim; }}
-            >↗</a>
-          </div>
-        )}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = T.border; e.currentTarget.style.color = T.muted; }}
+            >Open tool</button>
+          ) : (
+            <button onClick={() => setOpen(!open)} style={{
+              padding: "5px 12px", borderRadius: 5, flexShrink: 0,
+              fontSize: 11, fontFamily: "'JetBrains Mono', monospace",
+              letterSpacing: "0.06em", textTransform: "uppercase",
+              background: "transparent", border: `1px solid ${T.border}`,
+              color: T.muted, cursor: "pointer", transition: "all 0.12s",
+              display: "flex", alignItems: "center", gap: 5,
+            }}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = T.borderHover; e.currentTarget.style.color = T.text; }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = T.border; e.currentTarget.style.color = T.muted; }}
+            >
+              View prompt
+              <span style={{ fontSize: 9, display: "inline-block", transform: open ? "rotate(180deg)" : "none", transition: "transform 0.2s" }}>▾</span>
+            </button>
+          )}
+        </div>
       </div>
+
+      {/* Prompt drawer */}
+      {!isStudio && open && (
+        <div style={{ borderTop: `1px solid ${T.border}`, padding: "14px 16px 16px", display: "flex", flexDirection: "column", gap: 12 }}>
+          <pre style={{
+            fontFamily: "'JetBrains Mono', monospace", fontSize: 11,
+            color: T.muted, lineHeight: 1.7, whiteSpace: "pre-wrap",
+            background: T.card, border: `1px solid ${T.border}`,
+            borderRadius: 6, padding: "12px 14px", margin: 0,
+            maxHeight: 320, overflowY: "auto",
+          }}>{getDelivPrompt(d)}</pre>
+          <button onClick={handleCopy} style={{
+            alignSelf: "flex-start",
+            padding: "7px 16px", borderRadius: 6,
+            fontSize: 11, fontFamily: "'JetBrains Mono', monospace",
+            letterSpacing: "0.06em", textTransform: "uppercase", fontWeight: 600,
+            cursor: "pointer", border: `1.5px solid ${copied ? "#22C55E" : T.border}`,
+            background: "transparent", color: copied ? "#22C55E" : T.muted,
+            transition: "all 0.15s",
+          }}>{copied ? "✓ Copied" : "Copy prompt"}</button>
+        </div>
+      )}
     </div>
   );
 }
