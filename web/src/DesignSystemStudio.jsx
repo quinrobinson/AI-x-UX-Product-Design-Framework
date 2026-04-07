@@ -1,4 +1,10 @@
 import { useState, useCallback, useMemo, useEffect } from "react";
+import {
+  IconChevronDown, IconChevronRight, IconChevronLeft,
+  IconArrowRight, IconCornerDownRight,
+  IconCheck, IconX, IconInfoCircle, IconAlertTriangle,
+  IconMinus,
+} from "@tabler/icons-react";
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 function typeScale(base, ratio, step) {
@@ -520,7 +526,7 @@ function PreviewSelect({ t }) {
             boxShadow: state === "Open" ? `0 0 0 2px ${alpha(t.primary, 0.15)}` : "none",
           }}>
             <span style={{ color: t.placeholder || "#999" }}>Select option</span>
-            <span style={{ color: t.textTertiary, fontSize: 10 }}>▼</span>
+            <IconChevronDown size={13} stroke={1.5} style={{ color: t.textTertiary, flexShrink: 0 }} />
           </div>
           {state === "Open" && (
             <div style={{ border: `1px solid ${t.border}`, borderRadius: t.radiusMd, marginTop: 4, boxShadow: t.shadowMd, background: t.surface, overflow: "hidden" }}>
@@ -544,8 +550,8 @@ function PreviewCheckbox({ t }) {
         border: checked || indeterminate ? "none" : `2px solid ${t.border}`,
         background: checked || indeterminate ? t.primary : t.surface,
       }}>
-        {checked && <span style={{ color: contrastOn(t.primary), fontSize: 12, lineHeight: 1 }}>✓</span>}
-        {indeterminate && <span style={{ color: contrastOn(t.primary), fontSize: 14, lineHeight: 1 }}>–</span>}
+        {checked && <IconCheck size={13} stroke={2.5} style={{ color: contrastOn(t.primary) }} />}
+        {indeterminate && <IconMinus size={13} stroke={2.5} style={{ color: contrastOn(t.primary) }} />}
       </div>
       <span style={{ color: disabled ? t.textTertiary : t.textPrimary }}>{label}</span>
     </label>
@@ -619,9 +625,9 @@ function PreviewToast({ t }) {
         borderRadius: t.radiusMd, background: t.surface, border: `1px solid ${t.border}`,
         borderLeft: `3px solid ${c}`, boxShadow: t.shadowMd, fontFamily: t.fontBody, fontSize: t.baseSize - 1,
       }}>
-        <span style={{ color: c, fontWeight: 600, fontSize: 14 }}>{severity === "info" ? "ℹ" : severity === "success" ? "✓" : severity === "warning" ? "⚠" : "✕"}</span>
+        <span style={{ color: c, flexShrink: 0, display: "flex" }}>{{ info: <IconInfoCircle size={16} stroke={1.5} />, success: <IconCheck size={16} stroke={2} />, warning: <IconAlertTriangle size={16} stroke={1.5} />, error: <IconX size={16} stroke={2} /> }[severity]}</span>
         <span style={{ color: t.textPrimary, flex: 1 }}>{msg}</span>
-        <span style={{ color: t.textTertiary, cursor: "pointer", fontSize: 12 }}>✕</span>
+        <IconX size={14} stroke={1.5} style={{ color: t.textTertiary, cursor: "pointer", flexShrink: 0 }} />
       </div>
     );
   };
@@ -639,7 +645,7 @@ function PreviewAlert({ t }) {
         fontFamily: t.fontBody, fontSize: t.baseSize - 1, color: t.textPrimary,
         display: "flex", alignItems: "flex-start", gap: 8,
       }}>
-        <span style={{ fontWeight: 600, fontSize: 14, flexShrink: 0 }}>{severity === "info" ? "ℹ" : severity === "success" ? "✓" : severity === "warning" ? "⚠" : "✕"}</span>
+        <span style={{ flexShrink: 0, display: "flex", marginTop: 1 }}>{{ info: <IconInfoCircle size={16} stroke={1.5} />, success: <IconCheck size={16} stroke={2} />, warning: <IconAlertTriangle size={16} stroke={1.5} />, error: <IconX size={16} stroke={2} /> }[severity]}</span>
         <div>
           <div style={{ fontWeight: 600, marginBottom: 2, textTransform: "capitalize" }}>{severity}</div>
           <div style={{ opacity: 0.85 }}>{msg}</div>
@@ -690,7 +696,7 @@ function PreviewTag({ t }) {
         fontSize: t.baseSize - 2, fontFamily: t.fontBody, fontWeight: 500, ...styles[variant],
       }}>
         {label}
-        {variant === "dismissible" && <span style={{ cursor: "pointer", opacity: 0.5, fontSize: 10, marginLeft: 2 }}>✕</span>}
+        {variant === "dismissible" && <IconX size={11} stroke={2} style={{ cursor: "pointer", opacity: 0.5, marginLeft: 2, flexShrink: 0 }} />}
       </span>
     );
   };
@@ -786,7 +792,7 @@ function PreviewAccordion({ t }) {
         <div key={i} style={{ borderTop: i > 0 ? `1px solid ${t.border}` : "none" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: `${t.spaceUnit * 3}px ${t.spaceUnit * 4}px`, cursor: "pointer", background: t.surface, fontFamily: t.fontBody, fontSize: t.baseSize, fontWeight: 500, color: t.textPrimary }}>
             {item.title}
-            <span style={{ fontSize: 12, color: t.textTertiary, transition: `transform ${t.motionFast}`, transform: item.open ? "rotate(180deg)" : "none" }}>▼</span>
+            <IconChevronDown size={14} stroke={1.5} style={{ color: t.textTertiary, transition: `transform ${t.motionFast}`, transform: item.open ? "rotate(180deg)" : "none", flexShrink: 0 }} />
           </div>
           {item.open && <div style={{ padding: `0 ${t.spaceUnit * 4}px ${t.spaceUnit * 4}px`, fontSize: t.baseSize - 1, color: t.textSecondary, fontFamily: t.fontBody, lineHeight: 1.5, background: t.surface }}>{item.content}</div>}
         </div>
@@ -947,7 +953,7 @@ function PreviewList({ t }) {
             <div style={{ fontSize: t.baseSize - 1, fontWeight: 500, color: t.textPrimary, fontFamily: t.fontBody }}>{item.title}</div>
             <div style={{ fontSize: t.baseSize - 2, color: t.textSecondary, fontFamily: t.fontBody }}>{item.desc}</div>
           </div>
-          <span style={{ color: t.textTertiary, fontSize: 12 }}>›</span>
+          <IconChevronRight size={14} stroke={1.5} style={{ color: t.textTertiary, flexShrink: 0 }} />
         </div>
       ))}
     </div>
@@ -1237,7 +1243,7 @@ export default function DesignSystemStudio() {
             style={{ width: "100%", display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 16px", background: "transparent", border: "none", cursor: "pointer", textAlign: "left" }}
           >
             <span style={{ fontSize: 11, fontFamily: APP.mono, fontWeight: 600, textTransform: "uppercase", letterSpacing: 1.3, color: textCol }}>{title}</span>
-            <span style={{ fontSize: 10, color: labelCol, transition: "transform 0.15s", display: "inline-block", transform: isOpen ? "rotate(180deg)" : "none" }}>▼</span>
+            <IconChevronDown size={14} stroke={1.5} style={{ color: labelCol, transition: "transform 0.15s", transform: isOpen ? "rotate(180deg)" : "none", flexShrink: 0 }} />
           </button>
           {isOpen && (
             <div style={{ padding: "4px 16px 16px" }}>
@@ -1268,7 +1274,7 @@ export default function DesignSystemStudio() {
     if (tokenPanelCollapsed) {
       return (
         <div style={{ width: 36, borderLeft: `1px solid ${panelBorder}`, background: panelBg, flexShrink: 0, display: "flex", flexDirection: "column", alignItems: "center", paddingTop: 12 }}>
-          <button onClick={() => setTokenPanelCollapsed(false)} title="Expand token panel" style={{ background: "none", border: "none", cursor: "pointer", color: labelCol, fontSize: 14, padding: "6px 0", lineHeight: 1 }}>‹</button>
+          <button onClick={() => setTokenPanelCollapsed(false)} title="Expand token panel" style={{ background: "none", border: "none", cursor: "pointer", color: labelCol, padding: "6px 0", display: "flex" }}><IconChevronLeft size={16} stroke={1.5} /></button>
           <div style={{ marginTop: 12, writingMode: "vertical-rl", textOrientation: "mixed", fontSize: 9, fontFamily: APP.mono, fontWeight: 600, textTransform: "uppercase", letterSpacing: 2, color: "#A1A1AA", userSelect: "none" }}>Tokens</div>
         </div>
       );
@@ -1280,14 +1286,14 @@ export default function DesignSystemStudio() {
         <div style={{ padding: "14px 16px 12px", borderBottom: `1px solid ${panelBorder}`, flexShrink: 0 }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
             <div style={{ fontSize: 11, fontWeight: 700, fontFamily: APP.mono, color: textCol, textTransform: "uppercase", letterSpacing: 1.5 }}>Tokens</div>
-            <button onClick={() => setTokenPanelCollapsed(true)} title="Collapse token panel" style={{ background: "none", border: "none", cursor: "pointer", color: labelCol, fontSize: 14, padding: "0 2px", lineHeight: 1 }}>›</button>
+            <button onClick={() => setTokenPanelCollapsed(true)} title="Collapse token panel" style={{ background: "none", border: "none", cursor: "pointer", color: labelCol, padding: "0 2px", display: "flex" }}><IconChevronRight size={16} stroke={1.5} /></button>
           </div>
           <button onClick={() => go("themes")} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", background: "#E4E4E7", border: "none", borderRadius: 6, padding: "8px 10px", cursor: "pointer", width: "100%", marginBottom: 10 }}>
             <div>
               <div style={{ fontSize: 13, fontWeight: 600, color: textCol, fontFamily: APP.sans, textAlign: "left", lineHeight: 1.2 }}>{tokens.name}</div>
               <div style={{ fontSize: 11, color: labelCol, fontFamily: APP.mono, textAlign: "left", marginTop: 2 }}>{THEMES[activeTheme]?.archetype}</div>
             </div>
-            <span style={{ fontSize: 12, color: labelCol }}>→</span>
+            <IconArrowRight size={14} stroke={1.5} style={{ color: labelCol, flexShrink: 0 }} />
           </button>
           <p style={{ fontSize: 11, color: labelCol, lineHeight: 1.55, margin: 0 }}>
             Edit tokens below to customize your theme. Changes update all component previews live.
@@ -1423,7 +1429,7 @@ export default function DesignSystemStudio() {
                   <div style={{ fontSize: 9, fontWeight: 600, color: "#555", fontFamily: APP.mono, marginBottom: 8 }}>{s.step}</div>
                   <div style={{ fontSize: 13, fontWeight: 600, color: "#F5F5F5", marginBottom: 4 }}>{s.label}</div>
                   <div style={{ fontSize: 11, color: "#777", lineHeight: 1.3 }}>{s.desc}</div>
-                  {i < 5 && <div style={{ position: "absolute", right: -12, top: "50%", transform: "translateY(-50%)", fontSize: 10, color: "#444" }}>›</div>}
+                  {i < 5 && <div style={{ position: "absolute", right: -12, top: "50%", transform: "translateY(-50%)", color: "#444", display: "flex" }}><IconChevronRight size={12} stroke={1.5} /></div>}
                 </div>
               ))}
             </div>
@@ -1689,7 +1695,7 @@ export default function DesignSystemStudio() {
             <ul style={{ margin: 0, padding: 0, listStyle: "none" }}>
               {activeComp.use.map((item, i) => (
                 <li key={i} style={{ display: "flex", gap: 8, alignItems: "flex-start", marginBottom: 10, fontSize: 14, color: C.sub, lineHeight: 1.6 }}>
-                  <span style={{ color: tokens.primary, flexShrink: 0, marginTop: 3, fontSize: 10 }}>↳</span>{item}
+                  <IconCornerDownRight size={13} stroke={1.5} style={{ color: tokens.primary, flexShrink: 0, marginTop: 2 }} />{item}
                 </li>
               ))}
             </ul>
@@ -1725,7 +1731,7 @@ export default function DesignSystemStudio() {
         {/* Token reference */}
         <div style={{ display: "inline-flex", alignItems: "center", gap: 8, background: C.bgSub, borderRadius: 7, padding: "10px 14px", border: `1px solid ${C.border}`, fontSize: 11, fontFamily: APP.mono }}>
           <span style={{ color: C.sub }}>--apdf-comp-{activeComp.id}-*</span>
-          <span style={{ color: C.dim }}>→</span>
+          <IconArrowRight size={13} stroke={1.5} style={{ color: C.dim }} />
           <span style={{ color: tokens.primary }}>--apdf-sys-*</span>
         </div>
       </div>
@@ -1905,9 +1911,9 @@ export default function DesignSystemStudio() {
               <div style={{ padding: sp(5), flex: 1 }}>
                 <div style={{ background: alpha(t.success, 0.06), border: `1px solid ${alpha(t.success, 0.15)}`, borderRadius: t.radiusMd, padding: `${sp(2.5)}px ${sp(4)}px`, marginBottom: sp(4), display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                   <div style={{ display: "flex", alignItems: "center", gap: sp(2), fontSize: t.baseSize - 1, fontFamily: t.fontBody, color: t.textPrimary }}>
-                    <span style={{ color: t.success, fontWeight: 600 }}>✓</span> Design system exported — 94 variables, 11 text styles created
+                    <IconCheck size={14} stroke={2} style={{ color: t.success }} /> Design system exported — 94 variables, 11 text styles created
                   </div>
-                  <span style={{ color: t.textTertiary, cursor: "pointer", fontSize: 12 }}>✕</span>
+                  <IconX size={14} stroke={1.5} style={{ color: t.textTertiary, cursor: "pointer", flexShrink: 0 }} />
                 </div>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: sp(3), marginBottom: sp(5) }}>
                   {[
@@ -2041,7 +2047,7 @@ export default function DesignSystemStudio() {
         </div>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
           <div style={{ fontSize: 12, color: C.dim, fontFamily: APP.mono }}>Theme: {tokens.name}</div>
-          <button onClick={copyCSS} style={{ padding: "8px 20px", borderRadius: 8, border: `1px solid ${C.border}`, background: copied ? alpha("#22C55E", 0.08) : "transparent", color: copied ? "#22C55E" : C.text, fontSize: 12, cursor: "pointer", fontFamily: APP.mono, transition: "all 0.15s" }}>{copied ? "Copied ✓" : "Copy CSS"}</button>
+          <button onClick={copyCSS} style={{ padding: "8px 20px", borderRadius: 8, border: `1px solid ${C.border}`, background: copied ? alpha("#22C55E", 0.08) : "transparent", color: copied ? "#22C55E" : C.text, fontSize: 12, cursor: "pointer", fontFamily: APP.mono, transition: "all 0.15s", display: "inline-flex", alignItems: "center", gap: 6 }}>{copied ? <><IconCheck size={13} stroke={2} />Copied</> : "Copy CSS"}</button>
         </div>
         <pre style={{ background: C.bgSub, borderRadius: 10, padding: 20, border: `1px solid ${C.border}`, fontSize: 11, fontFamily: APP.mono, color: C.sub, overflow: "auto", maxHeight: 600, lineHeight: 1.6, whiteSpace: "pre-wrap", margin: 0 }}>{cssOutput}</pre>
       </div>
@@ -2102,7 +2108,7 @@ and a copy-paste remediation prompt for each finding.`;
             <div style={{ display: "flex", flexWrap: "wrap", gap: 12 }}>
               {["Claude Code installed", "Figma desktop app open", "Figma MCP connected", "Edit access to your file"].map(l => (
                 <div key={l} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: C.sub }}>
-                  <span style={{ width: 18, height: 18, borderRadius: 4, border: `1.5px solid ${C.border}`, display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: 10, color: C.dim }}>✓</span>{l}
+                  <span style={{ width: 18, height: 18, borderRadius: 4, border: `1.5px solid ${C.border}`, display: "inline-flex", alignItems: "center", justifyContent: "center", color: C.dim }}><IconCheck size={11} stroke={2} /></span>{l}
                 </div>
               ))}
             </div>
@@ -2153,7 +2159,7 @@ and a copy-paste remediation prompt for each finding.`;
               <div style={{ background: C.bg, borderRadius: 10, border: `1px solid ${C.border}`, overflow: "hidden" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 16px", borderBottom: `1px solid ${C.border}` }}>
                   <div style={{ fontSize: 13, fontWeight: 500, color: C.text }}>Export prompt — {tokens.name} theme</div>
-                  <button onClick={() => copyPrompt("export", exportPrompt)} style={{ padding: "5px 14px", borderRadius: 6, border: `1px solid ${C.border}`, background: promptCopied === "export" ? alpha("#22C55E", 0.08) : "transparent", color: promptCopied === "export" ? "#22C55E" : C.text, fontSize: 11, cursor: "pointer", fontFamily: APP.mono, transition: "all 0.15s" }}>{promptCopied === "export" ? "Copied ✓" : "Copy prompt"}</button>
+                  <button onClick={() => copyPrompt("export", exportPrompt)} style={{ padding: "5px 14px", borderRadius: 6, border: `1px solid ${C.border}`, background: promptCopied === "export" ? alpha("#22C55E", 0.08) : "transparent", color: promptCopied === "export" ? "#22C55E" : C.text, fontSize: 11, cursor: "pointer", fontFamily: APP.mono, transition: "all 0.15s", display: "inline-flex", alignItems: "center", gap: 5 }}>{promptCopied === "export" ? <><IconCheck size={12} stroke={2} />Copied</> : "Copy prompt"}</button>
                 </div>
                 <pre style={{ padding: 16, fontSize: 11, fontFamily: APP.mono, color: C.sub, lineHeight: 1.6, whiteSpace: "pre-wrap", maxHeight: 260, overflow: "auto", margin: 0 }}>{exportPrompt}</pre>
               </div>
@@ -2167,7 +2173,7 @@ and a copy-paste remediation prompt for each finding.`;
               <div style={{ background: C.bg, borderRadius: 10, border: `1px solid ${C.border}`, overflow: "hidden" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 16px", borderBottom: `1px solid ${C.border}` }}>
                   <div style={{ fontSize: 13, fontWeight: 500, color: C.text }}>Audit prompt</div>
-                  <button onClick={() => copyPrompt("audit", auditPrompt)} style={{ padding: "5px 14px", borderRadius: 6, border: `1px solid ${C.border}`, background: promptCopied === "audit" ? alpha("#22C55E", 0.08) : "transparent", color: promptCopied === "audit" ? "#22C55E" : C.text, fontSize: 11, cursor: "pointer", fontFamily: APP.mono, transition: "all 0.15s" }}>{promptCopied === "audit" ? "Copied ✓" : "Copy prompt"}</button>
+                  <button onClick={() => copyPrompt("audit", auditPrompt)} style={{ padding: "5px 14px", borderRadius: 6, border: `1px solid ${C.border}`, background: promptCopied === "audit" ? alpha("#22C55E", 0.08) : "transparent", color: promptCopied === "audit" ? "#22C55E" : C.text, fontSize: 11, cursor: "pointer", fontFamily: APP.mono, transition: "all 0.15s" }}>{promptCopied === "audit" ? <><IconCheck size={12} stroke={2} />Copied</> : "Copy prompt"}</button>
                 </div>
                 <pre style={{ padding: 16, fontSize: 11, fontFamily: APP.mono, color: C.sub, lineHeight: 1.6, whiteSpace: "pre-wrap", maxHeight: 260, overflow: "auto", margin: 0 }}>{auditPrompt}</pre>
               </div>
