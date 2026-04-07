@@ -1681,7 +1681,7 @@ function HomePill({ onClick }) {
         marginBottom: 32,
       }}
     >
-      ← Framework Home
+      ← Home
     </button>
   );
 }
@@ -3829,18 +3829,12 @@ export default function App() {
             <div style={{ marginBottom: 20 }}>
               <Mono color={T.dim} size={13}>Framework</Mono>
             </div>
-            {/* Claude × Figma brand mark */}
-            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 20 }}>
-              <span style={{ fontSize: 11, fontFamily: "'JetBrains Mono', monospace", fontWeight: 700, letterSpacing: 3, color: "#D97706" }}>CLAUDE</span>
-              <span style={{ fontSize: 11, fontFamily: "'JetBrains Mono', monospace", color: T.dim }}>×</span>
-              <span style={{ fontSize: 11, fontFamily: "'JetBrains Mono', monospace", fontWeight: 700, letterSpacing: 3, color: "#9B59F7" }}>FIGMA</span>
-            </div>
             <h1 style={{
               fontFamily: "'DM Serif Display', serif",
               fontSize: "clamp(40px, 5vw, 72px)", fontWeight: 400, lineHeight: 1.05,
               color: T.text, marginBottom: 16, letterSpacing: "-0.3px",
             }}>
-              A system for using Claude and Figma<br />
+              A system for using <span style={{ color: "#D97706" }}>Claude</span> + <span style={{ color: "#9B59F7" }}>Figma</span><br />
               <em style={{ fontStyle: "italic", color: T.muted }}>across every phase of product design.</em>
             </h1>
             <p style={{ fontSize: 16, color: T.muted, lineHeight: 1.7, maxWidth: 600, marginBottom: 0 }}>
@@ -3852,87 +3846,95 @@ export default function App() {
         {/* Setup block — always visible on home, hidden once a path is chosen */}
         {!activePath && <SetupBlock onOpenFigmaGuide={() => setShowFigmaGuide(true)} />}
 
-        {/* Path chooser — styled strip, doubles as entry point */}
+        {/* Path chooser — home only */}
         {!activePath && (
-          <div style={{ marginBottom: 20 }}>
-            <Mono color={T.dim} size={12}>How do you want to start?</Mono>
-          </div>
+          <>
+            <div style={{ marginBottom: 20 }}>
+              <Mono color={T.dim} size={12}>How do you want to start?</Mono>
+            </div>
+            <div className="path-grid" style={{
+              marginBottom: 0,
+              border: `1px solid ${T.border}`,
+              borderRadius: 10, overflow: "hidden",
+            }}>
+              {[
+                {
+                  id: "phase",
+                  label: "Start with a Phase",
+                  color: "#22C55E",
+                  desc: "I know where I am in the project. Show me tools and guides for that phase.",
+                  cta: "Choose a phase →",
+                },
+                {
+                  id: "ways",
+                  label: "Ways to Work",
+                  color: "#8B5CF6",
+                  desc: "I have a mission — a project or challenge I need to run. Show me a path through the framework.",
+                  cta: "Browse scenarios →",
+                },
+                {
+                  id: "deliverable",
+                  label: "Start with a Deliverable",
+                  color: "#F59E0B",
+                  desc: "I know what I need to hand off. Find the fastest path to that output.",
+                  cta: "Find a deliverable →",
+                },
+              ].map((item) => (
+                <button
+                  key={item.id}
+                  className="path-grid-item"
+                  onClick={() => setActivePath(item.id)}
+                  style={{
+                    background: T.surface, border: "none",
+                    padding: "20px 20px 18px", textAlign: "left",
+                    cursor: "pointer", transition: "background 0.15s",
+                    borderBottom: "2px solid transparent",
+                    display: "flex", flexDirection: "column",
+                  }}
+                  aria-label={item.label}
+                  onMouseEnter={e => e.currentTarget.style.background = T.card}
+                  onMouseLeave={e => e.currentTarget.style.background = T.surface}
+                >
+                  <div style={{ display: "inline-flex", alignItems: "center", gap: 6, marginBottom: 10 }}>
+                    <div style={{ width: 6, height: 6, borderRadius: "50%", background: T.dim }} />
+                    <span style={{
+                      fontSize: 11, fontFamily: "'JetBrains Mono', monospace",
+                      letterSpacing: "0.08em", textTransform: "uppercase", color: T.muted,
+                    }}>{item.label}</span>
+                  </div>
+                  <p style={{ fontSize: 12, color: T.dim, lineHeight: 1.6, margin: 0, flex: 1 }}>{item.desc}</p>
+                  <span style={{
+                    fontSize: 10, fontFamily: "'JetBrains Mono', monospace",
+                    letterSpacing: "0.07em", textTransform: "uppercase",
+                    color: item.color, marginTop: 14, display: "block",
+                  }}>{item.cta}</span>
+                </button>
+              ))}
+            </div>
+          </>
         )}
 
-        <div className="path-grid" style={{
-          marginBottom: activePath ? 32 : 0,
-          border: `1px solid ${T.border}`,
-          borderRadius: 10, overflow: "hidden",
-        }}>
-          {[
-            {
-              id: "phase",
-              label: "Start with a Phase",
-              color: "#22C55E",
-              desc: "I know where I am in the project. Show me tools and guides for that phase.",
-              cta: "Choose a phase →",
-            },
-            {
-              id: "ways",
-              label: "Ways to Work",
-              color: "#8B5CF6",
-              desc: "I have a mission — a project or challenge I need to run. Show me a path through the framework.",
-              cta: "Browse scenarios →",
-            },
-            {
-              id: "deliverable",
-              label: "Start with a Deliverable",
-              color: "#F59E0B",
-              desc: "I know what I need to hand off. Find the fastest path to that output.",
-              cta: "Find a deliverable →",
-            },
-          ].map((item, i) => {
-            const isActive = activePath === item.id;
-            return (
-              <button
-                key={item.id}
-                className="path-grid-item"
-                onClick={() => setActivePath(activePath === item.id ? null : item.id)}
-                style={{
-                  background: T.surface,
-                  border: "none",
-                  padding: "20px 20px 18px", textAlign: "left",
-                  cursor: "pointer", transition: "background 0.15s",
-                  borderBottom: isActive ? `2px solid ${item.color}` : "2px solid transparent",
-                  display: "flex", flexDirection: "column",
-                }}
-                aria-expanded={isActive}
-                aria-label={item.label}
-                onMouseEnter={e => { if (!isActive) e.currentTarget.style.background = T.card; }}
-                onMouseLeave={e => { if (!isActive) e.currentTarget.style.background = T.surface; }}
-              >
-                <div style={{ display: "inline-flex", alignItems: "center", gap: 6, marginBottom: 10 }}>
-                  <div style={{
-                    width: 6, height: 6, borderRadius: "50%",
-                    background: isActive ? item.color : T.dim,
-                    transition: "background 0.15s",
-                  }} />
-                  <span style={{
-                    fontSize: 11, fontFamily: "'JetBrains Mono', monospace",
-                    letterSpacing: "0.08em", textTransform: "uppercase",
-                    color: isActive ? item.color : T.muted,
-                    transition: "color 0.15s",
-                  }}>{item.label}</span>
-                </div>
-                <p style={{ fontSize: 12, color: isActive ? T.muted : T.dim, lineHeight: 1.6, margin: 0, flex: 1, transition: "color 0.15s" }}>
-                  {item.desc}
-                </p>
+        {/* Page header — shown when a path is active */}
+        {activePath && (() => {
+          const pages = {
+            phase:       { color: "#22C55E", title: "Start with a Phase",       desc: "Select a design phase to explore every tool, prompt, and guide for that stage of the project." },
+            ways:        { color: "#8B5CF6", title: "Ways to Work",             desc: "Each scenario maps a full design challenge — from a sprint to a design system build — to a path through the framework." },
+            deliverable: { color: "#F59E0B", title: "Start with a Deliverable", desc: "Know what you need to produce. Find the right prompt for that deliverable — or open the Design System Studio if that's your output." },
+          };
+          const pg = pages[activePath];
+          return (
+            <div style={{ marginBottom: 32 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
+                <div style={{ width: 7, height: 7, borderRadius: "50%", background: pg.color, boxShadow: `0 0 8px ${pg.color}` }} />
                 <span style={{
-                  fontSize: 10, fontFamily: "'JetBrains Mono', monospace",
-                  letterSpacing: "0.07em", textTransform: "uppercase",
-                  color: isActive ? item.color : T.dim,
-                  transition: "color 0.15s",
-                  marginTop: 14, display: "block",
-                }}>{isActive ? "▲ Active" : item.cta}</span>
-              </button>
-            );
-          })}
-        </div>
+                  fontSize: 11, fontFamily: "'JetBrains Mono', monospace",
+                  letterSpacing: "0.1em", textTransform: "uppercase", color: pg.color,
+                }}>{pg.title}</span>
+              </div>
+              <p style={{ fontSize: 14, color: T.muted, lineHeight: 1.6, maxWidth: 560, margin: 0 }}>{pg.desc}</p>
+            </div>
+          );
+        })()}
 
         {/* Path content */}
         {activePath === "phase" && (
