@@ -3167,11 +3167,6 @@ function SkillsLibraryOverlay({ onBack }) {
       <div style={{ borderBottom: `1px solid ${T.border}`, padding: "0 clamp(24px, 5vw, 80px)", height: 60, display: "flex", alignItems: "center", justifyContent: "space-between", position: "sticky", top: 0, zIndex: 50, background: `${T.bg}f0`, backdropFilter: "blur(12px)" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <button onClick={onBack} style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "transparent", border: `1px solid ${T.border}`, borderRadius: 6, padding: "5px 12px", cursor: "pointer", fontSize: 11, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.06em", textTransform: "uppercase", color: T.muted, transition: "all 0.15s" }}>← Home</button>
-          <div style={{ width: 1, height: 16, background: T.border }} />
-          <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
-            <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#3B82F6", boxShadow: "0 0 6px #3B82F6" }} />
-            <span style={{ fontSize: 13, fontWeight: 500, color: T.text, fontFamily: "'DM Sans', sans-serif" }}>Skills Library</span>
-          </div>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <span style={{ fontSize: 10, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.08em", textTransform: "uppercase", color: T.dim }}>
@@ -3182,6 +3177,12 @@ function SkillsLibraryOverlay({ onBack }) {
       </div>
 
       <div style={{ maxWidth: 1440, margin: "0 auto", padding: "40px clamp(24px, 5vw, 80px) 80px" }}>
+
+        {/* Page header */}
+        <div style={{ marginBottom: 20 }}>
+          <Mono color={T.dim} size={13}>Framework</Mono>
+        </div>
+        <h1 style={{ fontFamily: "'Inter', sans-serif", fontSize: "clamp(40px, 5vw, 72px)", fontWeight: 600, lineHeight: 1.05, color: T.text, marginBottom: 40, letterSpacing: "-0.3px" }}>Skills Library</h1>
 
         {/* What is a Skill */}
         <div style={{ background: "rgba(59,130,246,0.06)", border: "1px solid rgba(59,130,246,0.2)", borderRadius: 10, padding: "20px 24px", marginBottom: 28 }}>
