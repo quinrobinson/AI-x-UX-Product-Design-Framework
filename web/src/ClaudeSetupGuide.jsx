@@ -256,7 +256,7 @@ export default function ClaudeSetupGuide({ onBack }) {
 
   return (
     <div style={{ minHeight: "100vh", background: DS.light, fontFamily: "'DM Sans', sans-serif" }}>
-      <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;700&family=DM+Serif+Display&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+      <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
 
       {/* Top bar */}
       <div style={{ background: DS.dark, borderBottom: `1px solid ${DS.darkBorder}`, padding: "0 40px", display: "flex", alignItems: "center", gap: 16, height: 56, position: "sticky", top: 0, zIndex: 100 }}>
@@ -271,7 +271,7 @@ export default function ClaudeSetupGuide({ onBack }) {
         {/* Header */}
         <div style={{ marginBottom: 48 }}>
           <div style={{ fontSize: 10, fontFamily: "'JetBrains Mono', monospace", letterSpacing: 4, textTransform: "uppercase", color: DS.bodyDark, marginBottom: 14 }}>Get started</div>
-          <h1 style={{ fontFamily: "'DM Serif Display', serif", fontSize: 40, fontWeight: 400, color: "#0F172A", margin: "0 0 16px", lineHeight: 1.05 }}>
+          <h1 style={{ fontFamily: "'Inter', sans-serif", fontSize: 40, fontWeight: 600, color: "#0F172A", margin: "0 0 16px", lineHeight: 1.05 }}>
             Set up Claude
           </h1>
           <p style={{ fontSize: 15, color: DS.bodyDark, lineHeight: 1.75, margin: "0 0 32px", maxWidth: 580 }}>

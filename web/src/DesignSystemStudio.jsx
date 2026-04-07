@@ -224,12 +224,12 @@ const THEMES = {
     success: "#46D369", warning: "#F5C518", error: "#E50914", info: "#54B3D6",
     surface: "#141414", surfaceSecondary: "#1F1F1F", border: "#333333",
     textPrimary: "#FFFFFF", textSecondary: "#AAAAAA", textTertiary: "#666666",
-    fontHeading: "'DM Serif Display', serif", fontBody: "'DM Sans', sans-serif", fontMono: "'JetBrains Mono', monospace",
+    fontHeading: "'Inter', sans-serif", fontBody: "'DM Sans', sans-serif", fontMono: "'JetBrains Mono', monospace",
     headingWeight: 700, baseSize: 16, scaleRatio: 1.333, spaceUnit: 4,
     radiusSm: 2, radiusMd: 4, radiusLg: 6, radiusFull: 9999,
     shadowSm: "0 2px 8px rgba(0,0,0,0.5)", shadowMd: "0 4px 24px rgba(0,0,0,0.7)", shadowLg: "0 8px 40px rgba(0,0,0,0.8)",
     motionFast: "200ms", motionNormal: "350ms",
-    fonts: "DM+Serif+Display:ital@0;1&family=DM+Sans:wght@400;500;700&family=JetBrains+Mono:wght@400",
+    fonts: "Inter:wght@400;500;600;700&family=DM+Sans:wght@400;500;700&family=JetBrains+Mono:wght@400",
   },
 };
 
@@ -1381,7 +1381,7 @@ export default function DesignSystemStudio() {
         <div style={{ maxWidth: 880, margin: "0 auto" }}>
           <div style={{ marginBottom: 44 }}>
             <div style={{ fontSize: 10, fontFamily: APP.mono, color: "#555", textTransform: "uppercase", letterSpacing: 3, marginBottom: 14 }}>Agentic Product Design Framework</div>
-            <h1 style={{ fontFamily: "'DM Serif Display', serif", fontSize: 38, fontWeight: 400, margin: "0 0 14px", color: "#F5F5F5", lineHeight: 1.15 }}>Design System Studio</h1>
+            <h1 style={{ fontFamily: "'Inter', sans-serif", fontSize: 38, fontWeight: 600, margin: "0 0 14px", color: "#F5F5F5", lineHeight: 1.15 }}>Design System Studio</h1>
             <p style={{ fontSize: 15, color: "#888", lineHeight: 1.65, margin: 0, maxWidth: 540 }}>Build a token-based design system with live component previews. Choose a theme, customize every token, and export to CSS or Figma.</p>
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 44 }}>
@@ -2169,7 +2169,7 @@ and a copy-paste remediation prompt for each finding.`;
   return (
     <div style={{ position: "fixed", inset: 0, display: "flex", flexDirection: "column", overflow: "hidden", fontFamily: APP.sans }}>
       <link href={fontsUrl} rel="stylesheet" />
-      <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=DM+Serif+Display&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+      <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=DM+Sans:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
       {renderTopbar()}
       {renderNavbar()}
       <div style={{ flex: 1, display: "flex", overflow: "hidden" }}>

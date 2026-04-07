@@ -518,14 +518,14 @@ export default function DesignProcessSystem() {
 
   return (
     <div style={{ fontFamily: "'DM Sans', 'Helvetica Neue', sans-serif", background: "#FAFAF8", minHeight: "100vh", color: "#1a1a1a" }}>
-      <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,700&family=DM+Serif+Display&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+      <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
 
       {/* Header */}
       <div style={{ padding: "48px 32px 32px", maxWidth: 1100, margin: "0 auto" }}>
         <div style={{ display: "flex", alignItems: "baseline", gap: 12, marginBottom: 8 }}>
-          <span style={{ fontFamily: "'DM Serif Display', serif", fontSize: 11, letterSpacing: 3, textTransform: "uppercase", color: "#999", fontWeight: 400 }}>Living System</span>
+          <span style={{ fontFamily: "'Inter', sans-serif", fontSize: 11, letterSpacing: 3, textTransform: "uppercase", color: "#999", fontWeight: 500 }}>Living System</span>
         </div>
-        <h1 style={{ fontFamily: "'DM Serif Display', serif", fontSize: 42, fontWeight: 400, margin: "0 0 12px", lineHeight: 1.1, color: "#111" }}>
+        <h1 style={{ fontFamily: "'Inter', sans-serif", fontSize: 42, fontWeight: 600, margin: "0 0 12px", lineHeight: 1.1, color: "#111" }}>
           Agentic Design Process
         </h1>
         <p style={{ fontSize: 16, color: "#666", maxWidth: 600, lineHeight: 1.6, margin: 0 }}>
@@ -966,7 +966,7 @@ export default function DesignProcessSystem() {
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 24 }}>
               <div>
                 <div style={{ fontSize: 11, fontFamily: "'JetBrains Mono', monospace", textTransform: "uppercase", letterSpacing: 2, color: "#6366F1", marginBottom: 8 }}>Skill Chaining — Phase Handoff System</div>
-                <div style={{ fontFamily: "'DM Serif Display', serif", fontSize: 22, color: "#111", marginBottom: 6 }}>One continuous thread, not six separate conversations</div>
+                <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 22, fontWeight: 600, color: "#111", marginBottom: 6 }}>One continuous thread, not six separate conversations</div>
                 <p style={{ fontSize: 13, color: "#888", margin: 0, lineHeight: 1.5, maxWidth: 520 }}>
                   Each phase closes with a handoff block Claude generates from the session. Paste it as the first message of the next phase — Claude picks up with full context.
                 </p>

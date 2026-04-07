@@ -1733,7 +1733,7 @@ function PathCard({ title, desc, active, onClick }) {
     >
       <div style={{
         fontSize: 14, fontWeight: 600,
-        fontFamily: "'DM Serif Display', serif",
+        fontFamily: "'Inter', sans-serif",
         color: isActive ? T.text : hovered ? T.text : T.muted,
         marginBottom: 6, transition: "color 0.15s",
       }}>{title}</div>
@@ -2613,7 +2613,7 @@ function ScenarioDrawer({ scenario: s, onClose }) {
                   <span style={{ fontSize: 9, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.07em", textTransform: "uppercase", padding: "2px 7px", borderRadius: 3, background: T.card, border: `1px solid ${T.border}`, color: T.muted }}>AI — specific</span>
                 )}
               </div>
-              <h2 style={{ fontSize: 20, fontFamily: "'DM Serif Display', serif", fontWeight: 400, color: T.text, marginBottom: 6, lineHeight: 1.2 }}>{s.title}</h2>
+              <h2 style={{ fontSize: 20, fontFamily: "'Inter', sans-serif", fontWeight: 600, color: T.text, marginBottom: 6, lineHeight: 1.2 }}>{s.title}</h2>
               <p style={{ fontSize: 13, color: T.muted, lineHeight: 1.6, margin: 0 }}>{s.mission}</p>
             </div>
             <button onClick={onClose} style={{ background: "none", border: "none", color: T.dim, cursor: "pointer", fontSize: 18, padding: "2px 4px", flexShrink: 0, lineHeight: 1 }}>✕</button>
@@ -3205,7 +3205,7 @@ function SkillsLibraryOverlay({ onBack }) {
   return (
     <div style={{ minHeight: "100vh", background: T.bg, fontFamily: "'DM Sans', sans-serif", color: T.text }}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=DM+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;600;700&display=swap');
         * { box-sizing: border-box; margin: 0; padding: 0; }
         ::-webkit-scrollbar { width: 4px; }
         ::-webkit-scrollbar-thumb { background: #2a2a2a; border-radius: 2px; }
@@ -3637,7 +3637,7 @@ function renderMarkdown(text) {
 
     // H1
     if (line.startsWith("# ")) {
-      elements.push(<h1 key={`h1-${i}`} style={{ fontFamily: "'DM Serif Display', serif", fontSize: "clamp(28px, 3vw, 40px)", fontWeight: 400, color: "#F2F2F2", marginBottom: 10, marginTop: 8, lineHeight: 1.15 }} dangerouslySetInnerHTML={{ __html: inlineFormat(line.slice(2)) }} />);
+      elements.push(<h1 key={`h1-${i}`} style={{ fontFamily: "'Inter', sans-serif", fontSize: "clamp(28px, 3vw, 40px)", fontWeight: 600, color: "#F2F2F2", marginBottom: 10, marginTop: 8, lineHeight: 1.15 }} dangerouslySetInnerHTML={{ __html: inlineFormat(line.slice(2)) }} />);
       i++; continue;
     }
     // H2
@@ -3756,7 +3756,7 @@ function SkillDetailPage({ skill, onBack }) {
   return (
     <div style={{ minHeight: "100vh", background: T.bg, fontFamily: "'DM Sans', sans-serif", color: T.text }}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=DM+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;600;700&display=swap');
         * { box-sizing: border-box; margin: 0; padding: 0; }
         ::-webkit-scrollbar { width: 4px; }
         ::-webkit-scrollbar-thumb { background: #2a2a2a; border-radius: 2px; }
@@ -3859,7 +3859,7 @@ export default function App() {
       opacity: mounted ? 1 : 0, transition: "opacity 0.3s ease",
     }}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=DM+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;600;700&display=swap');
         * { box-sizing: border-box; margin: 0; padding: 0; }
         ::-webkit-scrollbar { width: 4px; }
         ::-webkit-scrollbar-thumb { background: #2a2a2a; border-radius: 2px; }
@@ -3979,8 +3979,8 @@ export default function App() {
               <Mono color={T.dim} size={13}>Framework</Mono>
             </div>
             <h1 style={{
-              fontFamily: "'DM Serif Display', serif",
-              fontSize: "clamp(40px, 5vw, 72px)", fontWeight: 400, lineHeight: 1.05,
+              fontFamily: "'Inter', sans-serif",
+              fontSize: "clamp(40px, 5vw, 72px)", fontWeight: 600, lineHeight: 1.05,
               color: T.text, marginBottom: 16, letterSpacing: "-0.3px",
             }}>
               A system for using <span style={{ color: "#D97706" }}>Claude</span> <span style={{ fontSize: "0.45em", verticalAlign: "middle", color: T.dim }}>+</span> <span style={{ color: "#9B59F7" }}>Figma</span><br />
@@ -4102,8 +4102,8 @@ export default function App() {
           return (
             <div style={{ marginBottom: 40 }}>
               <h2 style={{
-                fontFamily: "'DM Serif Display', serif",
-                fontSize: "clamp(28px, 3.5vw, 48px)", fontWeight: 400,
+                fontFamily: "'Inter', sans-serif",
+                fontSize: "clamp(28px, 3.5vw, 48px)", fontWeight: 600,
                 color: T.text, lineHeight: 1.1, marginBottom: 14, letterSpacing: "-0.2px",
               }}>{pg.title}</h2>
               <p style={{ fontSize: 14, color: T.muted, lineHeight: 1.65, maxWidth: 560, margin: 0 }}>{pg.desc}</p>
