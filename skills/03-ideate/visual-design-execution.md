@@ -397,6 +397,55 @@ Fix any issues in the token set before moving to Prototype. The Prototype phase 
 
 ---
 
+## Step 9 — Generate DESIGN.md
+
+After the visual system is validated, generate a DESIGN.md file — a portable, AI-agent-readable document that captures the complete design system in a standardized format. This file can be dropped into any project root for use with Claude Code, Cursor, Figma Make, or any AI builder that reads design context.
+
+> **How this works:** Claude has your full visual system from this session — tokens, typography, components, shadow philosophy, spacing, and motion. No re-pasting required. Ask Claude to synthesize it into a DESIGN.md.
+
+**Claude prompt:**
+> "Using the visual design system we've built in this session, generate a DESIGN.md file with these nine sections:
+>
+> 1. **Visual Theme & Atmosphere** — the mood, personality, and 5–7 key characteristics that define this system
+> 2. **Color Palette & Roles** — every token with its hex value and semantic role (surface, text, brand, status, border)
+> 3. **Typography Rules** — the full hierarchy table (role / font / size / weight / line-height / letter-spacing) plus 3–4 typographic principles
+> 4. **Component Styling** — exact values for buttons (all variants), cards, inputs, and navigation
+> 5. **Layout Principles** — spacing scale, grid, whitespace philosophy, and border radius scale
+> 6. **Depth & Elevation** — shadow table (level / treatment / use case) and the shadow philosophy in one sentence
+> 7. **Do's and Don'ts** — 6–8 rules each, specific to this system (not generic advice)
+> 8. **Responsive Behavior** — breakpoints, collapsing strategy for type and layout, touch target minimums
+> 9. **Agent Prompt Guide** — a quick color reference table + 3–5 copy-pasteable component prompts an AI builder can use immediately
+>
+> Write it as a markdown file ready to save as DESIGN.md in the project root. Use exact hex values, exact px/weight values — no approximations."
+
+**What to do with the output:**
+- Save as `DESIGN.md` in the project root
+- Reference it in Claude Code sessions: *"Read DESIGN.md before generating any UI"*
+- Paste it into Cursor, Figma Make, or any AI builder as design context
+- Include the DESIGN.md URL in the Phase Handoff Block below
+
+---
+
+## Pre-Delivery Visual QA
+
+- [ ] One style system applied throughout (no mixing)
+- [ ] All colors reference semantic tokens — no raw hex in components
+- [ ] Light and dark mode both tested (not assumed from one mode)
+- [ ] Body text ≥ 4.5:1 contrast in both modes
+- [ ] Secondary text meets minimum contrast in dark mode
+- [ ] Body text ≥ 16px web / 14sp Android
+- [ ] All spacing is a multiple of 4
+- [ ] No horizontal scroll at 375px (mobile breakpoint)
+- [ ] Fixed elements respect safe areas (notch, gesture bar)
+- [ ] Animations ≤ 300ms, transform/opacity only
+- [ ] `prefers-reduced-motion` handled
+- [ ] Single icon library, consistent stroke width
+- [ ] Touch targets ≥ 44pt / 48dp
+- [ ] No emoji as icons
+- [ ] DESIGN.md generated and saved to project root
+
+---
+
 ## Phase Handoff Block
 
 At the close of Visual Design Execution, generate this block. Combine it with the Concept Generation handoff, or use standalone when the visual system is defined separately before prototyping.
@@ -446,6 +495,11 @@ At the close of Visual Design Execution, generate this block. Combine it with th
 - **Components validated:** [button / input / card / nav / badge / alert — or "pending"]
 - **Figma Variables pushed:** [yes / no / partial]
 - **Issues resolved:** [list any token adjustments made after reference page review — or "none"]
+
+### DESIGN.md
+- **File location:** [project root path — or "not generated"]
+- **Sections complete:** [list completed sections — or "all 9"]
+- **For AI builders:** Drop `DESIGN.md` into Claude Code, Cursor, or Figma Make and reference it as design context before generating any UI
 
 ### What Prototype Should Enforce
 [1–2 sentences on the most important visual rules to get right in the prototype]
