@@ -152,30 +152,198 @@ const THEMES = {
 // ── Component Categories ─────────────────────────────────────────────────────
 const COMPONENTS = [
   // Tier 1 — Core
-  { id: "button", name: "Button", cat: "Action", tier: 1 },
-  { id: "textinput", name: "Text input", cat: "Input", tier: 1 },
-  { id: "select", name: "Select", cat: "Input", tier: 1 },
-  { id: "checkbox", name: "Checkbox", cat: "Input", tier: 1 },
-  { id: "radio", name: "Radio", cat: "Input", tier: 1 },
-  { id: "toggle", name: "Toggle", cat: "Input", tier: 1 },
-  { id: "textarea", name: "Textarea", cat: "Input", tier: 2 },
-  { id: "slider", name: "Slider", cat: "Input", tier: 2 },
-  { id: "card", name: "Card", cat: "Containment", tier: 1 },
-  { id: "accordion", name: "Accordion", cat: "Containment", tier: 2 },
-  { id: "tabs", name: "Tabs", cat: "Navigation", tier: 2 },
-  { id: "breadcrumb", name: "Breadcrumb", cat: "Navigation", tier: 2 },
-  { id: "pagination", name: "Pagination", cat: "Navigation", tier: 2 },
-  { id: "modal", name: "Modal", cat: "Overlay", tier: 1 },
-  { id: "tooltip", name: "Tooltip", cat: "Overlay", tier: 1 },
-  { id: "toast", name: "Toast", cat: "Feedback", tier: 1 },
-  { id: "alert", name: "Alert", cat: "Feedback", tier: 1 },
-  { id: "progressbar", name: "Progress bar", cat: "Feedback", tier: 2 },
-  { id: "skeleton", name: "Skeleton", cat: "Feedback", tier: 2 },
-  { id: "badge", name: "Badge", cat: "Data Display", tier: 1 },
-  { id: "tag", name: "Tag / Chip", cat: "Data Display", tier: 1 },
-  { id: "avatar", name: "Avatar", cat: "Data Display", tier: 1 },
-  { id: "table", name: "Table", cat: "Data Display", tier: 2 },
-  { id: "list", name: "List", cat: "Data Display", tier: 2 },
+  {
+    id: "button", name: "Button", cat: "Action", tier: 1,
+    desc: "The primary interactive control for triggering actions — submitting forms, opening dialogs, confirming decisions.",
+    use: ["Triggering a single, clear action", "Use filled for primary actions, outlined for secondary, ghost for tertiary"],
+    avoid: ["Navigation — use a link instead", "More than one primary button per view"],
+    variants: ["Filled", "Outlined", "Ghost", "Danger", "Disabled", "Loading"],
+    a11y: "Use a descriptive label — 'Save changes' not 'Submit'. Disabled buttons should not receive focus.",
+  },
+  {
+    id: "textinput", name: "Text input", cat: "Input", tier: 1,
+    desc: "Single-line field for capturing short-form user input — names, emails, search terms, IDs.",
+    use: ["Short single-line text responses", "Pair with a label above and helper text below when context is needed"],
+    avoid: ["Responses longer than one line — use Textarea", "Selecting from a fixed set — use Select or Radio"],
+    variants: ["Default", "Focus", "Filled", "Disabled", "Error", "With icon"],
+    a11y: "Label is mandatory and must be programmatically associated. Error messages must be linked with aria-describedby.",
+  },
+  {
+    id: "select", name: "Select", cat: "Input", tier: 1,
+    desc: "Dropdown control for choosing one option from a predefined list — used when options are known and finite.",
+    use: ["5 or more options that don't all need to be visible", "When vertical space is limited"],
+    avoid: ["Fewer than 5 options — use Radio instead", "When users need to type or filter — use a combobox"],
+    variants: ["Default", "Open", "Selected", "Disabled", "Error"],
+    a11y: "Custom implementations must support keyboard navigation and ARIA combobox role.",
+  },
+  {
+    id: "checkbox", name: "Checkbox", cat: "Input", tier: 1,
+    desc: "Binary selection control for toggling an independent option on or off, or selecting items from a list.",
+    use: ["Enabling or disabling a setting", "Selecting multiple items from a list", "Confirming agreement (terms of service)"],
+    avoid: ["Mutually exclusive choices — use Radio", "Immediate actions — use Toggle"],
+    variants: ["Unchecked", "Checked", "Indeterminate", "Disabled", "Error"],
+    a11y: "Group related checkboxes with fieldset and legend. Indeterminate state requires aria-checked='mixed' set via JavaScript.",
+  },
+  {
+    id: "radio", name: "Radio", cat: "Input", tier: 1,
+    desc: "Selection control for choosing exactly one option from a mutually exclusive set.",
+    use: ["2–5 options that can't be combined", "When all options need to be visible without interaction"],
+    avoid: ["More than 6 options — use Select", "Independent options that can be toggled — use Checkbox"],
+    variants: ["Unselected", "Selected", "Disabled", "Error", "With description"],
+    a11y: "Always group radios with fieldset and legend. Arrow keys navigate within the group — Tab moves to the next form element.",
+  },
+  {
+    id: "toggle", name: "Toggle", cat: "Input", tier: 1,
+    desc: "Immediately applies a binary state change — on/off, enabled/disabled — without requiring confirmation.",
+    use: ["Settings that take effect immediately without a save action", "Enabling or disabling features"],
+    avoid: ["Multi-step processes that need confirmation — use Checkbox + Submit", "Destructive actions without a warning"],
+    variants: ["Off", "On", "Disabled", "Loading"],
+    a11y: "role='switch', aria-checked reflects current state. Label must describe the feature, not the action ('Notifications' not 'Enable notifications').",
+  },
+  {
+    id: "textarea", name: "Textarea", cat: "Input", tier: 2,
+    desc: "Multi-line text input for longer-form content — descriptions, messages, notes, and feedback.",
+    use: ["Free-form text longer than one line", "Open-ended responses with no character constraint"],
+    avoid: ["Short single-line inputs — use Text input", "Rich text formatting — use a dedicated rich text editor"],
+    variants: ["Default", "Focus", "Filled", "Disabled", "Error", "With character count"],
+    a11y: "If a character limit exists, use aria-describedby to link the count to the field.",
+  },
+  {
+    id: "slider", name: "Slider", cat: "Input", tier: 2,
+    desc: "Range input for selecting a value within a bounded set — volume, price range, opacity, brightness.",
+    use: ["Approximate value selection where precision isn't critical", "Ranges with natural endpoints"],
+    avoid: ["Exact numeric values — use a number input", "Data entry on mobile where precision is required"],
+    variants: ["Default", "Active (dragging)", "Disabled", "Range (two handles)", "With value label"],
+    a11y: "role='slider', aria-valuemin, aria-valuemax, aria-valuenow required. Arrow keys adjust value; keyboard step should be meaningful.",
+  },
+  {
+    id: "card", name: "Card", cat: "Containment", tier: 1,
+    desc: "Surface container for grouping related content and actions into a discrete, scannable unit.",
+    use: ["Displaying collections — search results, product listings, user profiles", "Grouping related details with a clear boundary"],
+    avoid: ["Page-level content areas — use the page layout", "Single fields that don't need visual grouping"],
+    variants: ["Default", "Clickable", "Selected", "Disabled", "With media", "Horizontal"],
+    a11y: "If the entire card is clickable, use a single anchor or button. Avoid nesting interactive elements inside a clickable card.",
+  },
+  {
+    id: "accordion", name: "Accordion", cat: "Containment", tier: 2,
+    desc: "Collapsible content sections that progressively reveal detail on demand, reducing initial cognitive load.",
+    use: ["FAQs and long-form content not all users need", "Settings panels where space is limited"],
+    avoid: ["Critical information users should always see", "Navigation — use Tabs or a sidebar"],
+    variants: ["Collapsed", "Expanded", "Disabled", "Multiple open", "Single open (exclusive)"],
+    a11y: "Use aria-expanded on the trigger button. Panel uses role='region' with aria-labelledby pointing to the trigger.",
+  },
+  {
+    id: "tabs", name: "Tabs", cat: "Navigation", tier: 2,
+    desc: "Horizontal control for switching between related views or content sections within the same context.",
+    use: ["Parallel content categories at the same hierarchy level", "When all tabs need to be visible at once"],
+    avoid: ["Sequential steps — use a stepper", "More than 6 tabs — use a dropdown or sidebar"],
+    variants: ["Default", "Active", "Disabled", "Scrollable", "With count badge"],
+    a11y: "role='tablist', role='tab', role='tabpanel'. Arrow keys navigate between tabs; Tab moves into the active panel.",
+  },
+  {
+    id: "breadcrumb", name: "Breadcrumb", cat: "Navigation", tier: 2,
+    desc: "Path indicator showing the user's location within a hierarchy, enabling navigation back to parent levels.",
+    use: ["Hierarchical structures with 3 or more levels", "When users frequently navigate back to parent pages"],
+    avoid: ["Flat navigation structures", "Mobile — breadcrumbs often collapse and lose utility"],
+    variants: ["Default", "Truncated", "With current page", "With icons"],
+    a11y: "Wrap in nav with aria-label='Breadcrumb'. Current page uses aria-current='page'. Separator is decorative (aria-hidden).",
+  },
+  {
+    id: "pagination", name: "Pagination", cat: "Navigation", tier: 2,
+    desc: "Navigation control for moving through segmented content — data tables, search results, image galleries.",
+    use: ["Large data sets where loading all items at once isn't feasible", "When page position is meaningful to the user"],
+    avoid: ["Small sets under 10 items — show all", "Continuous feeds — use infinite scroll or a Load more button"],
+    variants: ["Default", "Active page", "First page", "Last page", "Condensed"],
+    a11y: "Wrap in nav with aria-label='Pagination'. Current page uses aria-current='page'. Include screen-reader labels on prev/next icons.",
+  },
+  {
+    id: "modal", name: "Modal", cat: "Overlay", tier: 1,
+    desc: "Blocking overlay dialog that requires user acknowledgment before returning to the underlying page.",
+    use: ["Confirming destructive actions", "Focused short workflows that must be completed before continuing"],
+    avoid: ["Non-critical information — use Toast or Alert", "Complex multi-step workflows — use a dedicated page"],
+    variants: ["Default", "Confirmation", "With form", "Danger/destructive", "Full screen (mobile)"],
+    a11y: "Focus must move into modal on open and return to trigger on close. Focus trap required. role='dialog', aria-modal='true', aria-labelledby.",
+  },
+  {
+    id: "tooltip", name: "Tooltip", cat: "Overlay", tier: 1,
+    desc: "Short contextual label that appears on hover or focus to explain an unlabeled element or provide supplemental detail.",
+    use: ["Explaining icon-only buttons", "Surfacing keyboard shortcuts", "Adding context to truncated text"],
+    avoid: ["Essential information — if users need it, put it in the UI", "Touch-only interfaces — hover isn't available"],
+    variants: ["Top", "Right", "Bottom", "Left", "Dark", "Light"],
+    a11y: "Connected via aria-describedby to the trigger element. Must appear on keyboard focus, not only hover.",
+  },
+  {
+    id: "toast", name: "Toast", cat: "Feedback", tier: 1,
+    desc: "Transient notification that confirms an action, surfaces a non-critical status, or alerts about a background process.",
+    use: ["Confirming a save, send, or delete action", "Background process updates like sync or upload"],
+    avoid: ["Critical errors that block the user — use an inline error or Modal", "Information that requires a decision or action"],
+    variants: ["Success", "Error", "Warning", "Info", "With action", "Loading"],
+    a11y: "role='status' (polite) for confirmations, role='alert' (assertive) for errors. Auto-dismiss should pause on hover and focus.",
+  },
+  {
+    id: "alert", name: "Alert", cat: "Feedback", tier: 1,
+    desc: "Persistent inline notification that communicates status, warnings, or errors within the page flow — not as an overlay.",
+    use: ["System status messages affecting a whole page or section", "Errors from a form submission", "Warnings before an irreversible action"],
+    avoid: ["Transient confirmations — use Toast", "Blocking messages that require a decision — use Modal"],
+    variants: ["Info", "Success", "Warning", "Error", "Dismissible", "With action"],
+    a11y: "role='alert' for errors and warnings (announces immediately). role='status' for informational messages (announces when idle).",
+  },
+  {
+    id: "progressbar", name: "Progress bar", cat: "Feedback", tier: 2,
+    desc: "Visual indicator of completion for determinate operations — file uploads, multi-step processes, profile completeness.",
+    use: ["Operations where progress can be measured", "Setting expectations on wait time"],
+    avoid: ["Indeterminate operations — use Skeleton or a spinner", "Very short operations under 2 seconds"],
+    variants: ["Default", "Success", "Error", "Animated", "With label", "Stacked segments"],
+    a11y: "role='progressbar', aria-valuenow, aria-valuemin='0', aria-valuemax='100'. Include aria-label describing what is being measured.",
+  },
+  {
+    id: "skeleton", name: "Skeleton", cat: "Feedback", tier: 2,
+    desc: "Animated placeholder that mimics the shape of loading content — reduces perceived wait time and layout shift.",
+    use: ["Loading states for content-heavy areas — cards, lists, feeds", "When content shape is predictable"],
+    avoid: ["Short loads under 1 second — a skeleton flash is worse than nothing", "Indefinite loads — show an error after timeout instead"],
+    variants: ["Text line", "Heading", "Avatar", "Card", "Table row", "Image placeholder"],
+    a11y: "The loading container should use aria-busy='true'. Skeleton elements are decorative (aria-hidden='true').",
+  },
+  {
+    id: "badge", name: "Badge", cat: "Data Display", tier: 1,
+    desc: "Small count or status indicator overlaid on or adjacent to an element — notification counts, unread markers, status labels.",
+    use: ["Unread notification counts", "Status labels on items", "Highlighting new or updated content"],
+    avoid: ["Large numbers or long text — badges are compact by design", "Primary content — badges are supplementary only"],
+    variants: ["Number", "Dot", "Status (success/warning/error)", "Max count (99+)", "On icon", "Standalone label"],
+    a11y: "Badge counts must be readable by screen readers — use a visually hidden span or aria-label on the parent ('3 unread notifications').",
+  },
+  {
+    id: "tag", name: "Tag / Chip", cat: "Data Display", tier: 1,
+    desc: "Compact label for categorization, filtering, or attribute display — applied to items or used as filter criteria.",
+    use: ["Displaying applied filters", "Category labels on cards", "Multi-select chip input", "Dismissible selections"],
+    avoid: ["Primary actions — use Button", "Status indicators — use Badge"],
+    variants: ["Default", "With icon", "Dismissible", "Selected (filter active)", "Disabled"],
+    a11y: "Dismissible tags need a button with aria-label ('Remove Python tag'). Filter chips use role='checkbox' or aria-pressed.",
+  },
+  {
+    id: "avatar", name: "Avatar", cat: "Data Display", tier: 1,
+    desc: "Visual representation of a user, entity, or organization — using an image, initials, or fallback icon.",
+    use: ["Identifying the current user", "Attribution in comments and activity feeds", "Contact lists"],
+    avoid: ["Decorative purposes where no user is being represented", "Replacing meaningful content like product images"],
+    variants: ["Image", "Initials", "Icon fallback", "SM/MD/LG/XL", "With status dot", "Group (stacked)"],
+    a11y: "Images need alt text with the person's name. Initials-only avatars need an aria-label. Status dots need a visually hidden description.",
+  },
+  {
+    id: "table", name: "Table", cat: "Data Display", tier: 2,
+    desc: "Structured grid for displaying and comparing multi-attribute data — records, settings, pricing tiers, or logs.",
+    use: ["Comparing multiple items across the same attributes", "Displaying structured records where column scanning is needed"],
+    avoid: ["Small sets of 2–3 items — use a list", "Single-attribute data — a list or stack is cleaner"],
+    variants: ["Basic", "With sorting", "With row selection", "With row actions", "Striped", "Compact"],
+    a11y: "Use th with scope='col' or scope='row'. Sortable columns use aria-sort. Interactive rows need keyboard support.",
+  },
+  {
+    id: "list", name: "List", cat: "Data Display", tier: 2,
+    desc: "Structured collection of items in a scannable vertical format — action lists, settings menus, navigation, or content summaries.",
+    use: ["Sequential or categorized items where order matters", "Navigation within a section", "Grouped settings"],
+    avoid: ["Tabular data needing column comparison — use Table", "Unrelated items that aren't a true collection"],
+    variants: ["Unordered", "Ordered", "With icons", "With metadata (secondary line)", "Selectable", "Divided"],
+    a11y: "Use semantic ul/ol/li. Selectable items use role='listbox' and role='option'. Keyboard navigation should support arrow keys.",
+  },
 ];
 
 const SECTIONS = ["overview", "themes", "tokens", "components", "preview", "export", "figma"];
@@ -887,7 +1055,7 @@ export default function DesignSystemStudio() {
       </div>
 
       {/* Content */}
-      <div style={{ maxWidth: 1200, margin: "0 auto", padding: "24px 24px 48px" }}>
+      <div style={{ maxWidth: 1200, margin: "0 auto", padding: section === "components" ? 0 : "24px 24px 48px" }}>
 
         {/* ─── OVERVIEW ─── */}
         {section === "overview" && (
@@ -1090,67 +1258,141 @@ export default function DesignSystemStudio() {
         )}
 
         {/* ─── COMPONENTS ─── */}
-        {section === "components" && (
-          <div style={{ display: "grid", gridTemplateColumns: "180px 1fr", gap: 20 }}>
-            {/* Component List */}
-            <div style={{ background: C.bgSub, borderRadius: 10, border: `1px solid ${C.border}`, padding: "8px 0", alignSelf: "start" }}>
-              {(() => {
-                let lastCat = "";
-                return COMPONENTS.map(c => {
-                  const showCat = c.cat !== lastCat;
-                  lastCat = c.cat;
-                  return (
-                    <div key={c.id}>
-                      {showCat && <div style={{ fontSize: 9, fontFamily: "'JetBrains Mono', monospace", color: C.dim, padding: "10px 14px 4px", textTransform: "uppercase", letterSpacing: 1.5 }}>{c.cat}</div>}
-                      <button onClick={() => setActiveComponent(c.id)} style={{
-                        display: "block", width: "100%", textAlign: "left", padding: "7px 14px", fontSize: 12,
-                        fontFamily: "'DM Sans', sans-serif", color: activeComponent === c.id ? C.text : C.sub,
-                        background: activeComponent === c.id ? alpha(tokens.primary, 0.06) : "transparent",
-                        border: "none", cursor: "pointer", borderLeft: activeComponent === c.id ? `2px solid ${tokens.primary}` : "2px solid transparent",
-                      }}>{c.name}</button>
-                    </div>
-                  );
-                });
-              })()}
-            </div>
+        {section === "components" && (() => {
+          const activeComp = COMPONENTS.find(c => c.id === activeComponent);
+          return (
+            <div style={{ display: "grid", gridTemplateColumns: "200px 1fr 300px", gap: 0 }}>
 
-            {/* Preview */}
-            <div>
-              <div style={{ background: C.card, borderRadius: 10, padding: 20, border: `1px solid ${C.border}`, marginBottom: 12 }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-                  <div>
-                    <div style={{ fontSize: 15, fontWeight: 600, color: C.text }}>{COMPONENTS.find(c => c.id === activeComponent)?.name}</div>
-                    <div style={{ fontSize: 12, color: C.dim }}>{COMPONENTS.find(c => c.id === activeComponent)?.cat} · Tier {COMPONENTS.find(c => c.id === activeComponent)?.tier}</div>
-                  </div>
-                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                    {/* Dark mode toggle */}
-                    <button onClick={() => setDarkMode(!darkMode)} style={{
-                      display: "flex", alignItems: "center", gap: 6, padding: "5px 12px", borderRadius: 99,
-                      border: `1px solid ${C.border}`, background: darkMode ? "#111111" : C.bgSub,
-                      color: darkMode ? "#F5F5F5" : C.sub, fontSize: 11, cursor: "pointer",
-                      fontFamily: "'JetBrains Mono', monospace", transition: "all 0.15s",
-                    }}>
-                      <span style={{ fontSize: 12 }}>{darkMode ? "◐" : "○"}</span>
-                      {darkMode ? "Dark" : "Light"}
-                    </button>
-                    <div style={{ fontSize: 10, fontFamily: "'JetBrains Mono', monospace", color: C.sub, background: alpha(tokens.primary, 0.06), padding: "3px 10px", borderRadius: 99 }}>
-                      {tokens.name}
+              {/* Left nav — flush, full height */}
+              <div style={{ background: C.bgSub, borderRight: `1px solid ${C.border}`, padding: "8px 0", alignSelf: "stretch", minHeight: "calc(100vh - 112px)" }}>
+                {(() => {
+                  let lastCat = "";
+                  return COMPONENTS.map(c => {
+                    const isFirstCat = lastCat === "";
+                    const showCat = c.cat !== lastCat;
+                    lastCat = c.cat;
+                    return (
+                      <div key={c.id}>
+                        {showCat && (
+                          <div style={{
+                            fontSize: 9, fontFamily: "'JetBrains Mono', monospace", color: C.dim,
+                            padding: "12px 14px 4px", textTransform: "uppercase", letterSpacing: 1.5,
+                            borderTop: isFirstCat ? "none" : `1px solid ${C.border}`,
+                            marginTop: isFirstCat ? 0 : 4,
+                          }}>{c.cat}</div>
+                        )}
+                        <button onClick={() => setActiveComponent(c.id)} style={{
+                          display: "block", width: "100%", textAlign: "left", padding: "7px 14px", fontSize: 12,
+                          fontFamily: "'DM Sans', sans-serif", color: activeComponent === c.id ? C.text : C.sub,
+                          background: activeComponent === c.id ? alpha(tokens.primary, 0.06) : "transparent",
+                          border: "none", cursor: "pointer", borderLeft: activeComponent === c.id ? `2px solid ${tokens.primary}` : "2px solid transparent",
+                        }}>{c.name}</button>
+                      </div>
+                    );
+                  });
+                })()}
+              </div>
+
+              {/* Preview column */}
+              <div style={{ padding: 24, borderRight: `1px solid ${C.border}` }}>
+                <div style={{ background: C.card, borderRadius: 10, padding: 20, border: `1px solid ${C.border}`, marginBottom: 0 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+                    <div>
+                      <div style={{ fontSize: 15, fontWeight: 600, color: C.text }}>{activeComp?.name}</div>
+                      <div style={{ fontSize: 12, color: C.dim }}>{activeComp?.cat} · Tier {activeComp?.tier}</div>
+                    </div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                      <button onClick={() => setDarkMode(!darkMode)} style={{
+                        display: "flex", alignItems: "center", gap: 6, padding: "5px 12px", borderRadius: 99,
+                        border: `1px solid ${C.border}`, background: darkMode ? "#111111" : C.bgSub,
+                        color: darkMode ? "#F5F5F5" : C.sub, fontSize: 11, cursor: "pointer",
+                        fontFamily: "'JetBrains Mono', monospace", transition: "all 0.15s",
+                      }}>
+                        <span style={{ fontSize: 12 }}>{darkMode ? "◐" : "○"}</span>
+                        {darkMode ? "Dark" : "Light"}
+                      </button>
+                      <div style={{ fontSize: 10, fontFamily: "'JetBrains Mono', monospace", color: C.sub, background: alpha(tokens.primary, 0.06), padding: "3px 10px", borderRadius: 99 }}>
+                        {tokens.name}
+                      </div>
                     </div>
                   </div>
-                </div>
-                {/* Live preview on surface */}
-                <div style={{ background: darkMode ? "#111111" : tokens.surface, borderRadius: tokens.radiusLg, padding: 24, border: `1px solid ${darkMode ? "#2A2A2A" : tokens.border}`, transition: "all 0.2s" }}>
-                  {PreviewComp && <PreviewComp t={darkMode ? (() => { const dp = adaptPrimaryForDark(tokens.primary, tokens.accent); const ds = adaptPrimaryForDark(tokens.secondary, tokens.accent); return { ...tokens, primary: dp, secondary: ds, surface: "#111111", surfaceSecondary: "#1A1A1A", textPrimary: "#F5F5F5", textSecondary: "#A3A3A3", textTertiary: "#737373", border: "#2A2A2A", disabledBg: "#1A1A1A", disabledText: "#525252", disabledBorder: "#2A2A2A", placeholder: "#737373", toggleOff: "#404040", toggleKnob: "#E5E5E5" }; })() : { ...tokens, disabledBg: "#F3F4F6", disabledText: "#9CA3AF", disabledBorder: "#E5E5E5", placeholder: "#9CA3AF", toggleOff: "#D1D5DB", toggleKnob: "#FFFFFF" }} />}
+                  <div style={{ background: darkMode ? "#111111" : tokens.surface, borderRadius: tokens.radiusLg, padding: 24, border: `1px solid ${darkMode ? "#2A2A2A" : tokens.border}`, transition: "all 0.2s" }}>
+                    {PreviewComp && <PreviewComp t={darkMode ? (() => { const dp = adaptPrimaryForDark(tokens.primary, tokens.accent); const ds = adaptPrimaryForDark(tokens.secondary, tokens.accent); return { ...tokens, primary: dp, secondary: ds, surface: "#111111", surfaceSecondary: "#1A1A1A", textPrimary: "#F5F5F5", textSecondary: "#A3A3A3", textTertiary: "#737373", border: "#2A2A2A", disabledBg: "#1A1A1A", disabledText: "#525252", disabledBorder: "#2A2A2A", placeholder: "#737373", toggleOff: "#404040", toggleKnob: "#E5E5E5" }; })() : { ...tokens, disabledBg: "#F3F4F6", disabledText: "#9CA3AF", disabledBorder: "#E5E5E5", placeholder: "#9CA3AF", toggleOff: "#D1D5DB", toggleKnob: "#FFFFFF" }} />}
+                  </div>
                 </div>
               </div>
 
-              {/* Token usage hint */}
-              <div style={{ background: C.bgSub, borderRadius: 10, padding: 14, border: `1px solid ${C.border}`, fontSize: 11, fontFamily: "'JetBrains Mono', monospace", color: C.dim }}>
-                <span style={{ color: C.sub }}>--apdf-comp-{activeComponent}-*</span> → inherits from <span style={{ color: tokens.primary }}>--apdf-sys-*</span> tokens
+              {/* Docs panel — sticky */}
+              <div style={{ padding: 24, position: "sticky", top: 0, alignSelf: "start", maxHeight: "100vh", overflowY: "auto" }}>
+                {activeComp && (
+                  <>
+                    {/* Header */}
+                    <div style={{ marginBottom: 20 }}>
+                      <div style={{ fontSize: 15, fontWeight: 600, color: C.text, marginBottom: 4 }}>{activeComp.name}</div>
+                      <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                        <span style={{ fontSize: 10, fontFamily: "'JetBrains Mono', monospace", color: C.dim, background: C.bgSub, border: `1px solid ${C.border}`, borderRadius: 4, padding: "2px 7px" }}>{activeComp.cat}</span>
+                        <span style={{ fontSize: 10, fontFamily: "'JetBrains Mono', monospace", color: activeComp.tier === 1 ? tokens.primary : C.dim, background: activeComp.tier === 1 ? alpha(tokens.primary, 0.08) : C.bgSub, border: `1px solid ${activeComp.tier === 1 ? alpha(tokens.primary, 0.2) : C.border}`, borderRadius: 4, padding: "2px 7px" }}>Tier {activeComp.tier}</span>
+                      </div>
+                    </div>
+
+                    {/* Description */}
+                    <p style={{ fontSize: 12, color: C.sub, lineHeight: 1.65, margin: "0 0 20px" }}>{activeComp.desc}</p>
+
+                    {/* Use when */}
+                    <div style={{ marginBottom: 16 }}>
+                      <div style={{ fontSize: 9, fontFamily: "'JetBrains Mono', monospace", textTransform: "uppercase", letterSpacing: 1.2, color: C.dim, marginBottom: 8 }}>Use when</div>
+                      <ul style={{ margin: 0, padding: 0, listStyle: "none" }}>
+                        {activeComp.use.map((item, i) => (
+                          <li key={i} style={{ fontSize: 11, color: C.sub, lineHeight: 1.55, marginBottom: 5, display: "flex", gap: 7, alignItems: "flex-start" }}>
+                            <span style={{ color: tokens.primary, flexShrink: 0, marginTop: 2 }}>↳</span>
+                            {item}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+
+                    {/* Avoid when */}
+                    <div style={{ marginBottom: 16 }}>
+                      <div style={{ fontSize: 9, fontFamily: "'JetBrains Mono', monospace", textTransform: "uppercase", letterSpacing: 1.2, color: C.dim, marginBottom: 8 }}>Avoid when</div>
+                      <ul style={{ margin: 0, padding: 0, listStyle: "none" }}>
+                        {activeComp.avoid.map((item, i) => (
+                          <li key={i} style={{ fontSize: 11, color: C.sub, lineHeight: 1.55, marginBottom: 5, display: "flex", gap: 7, alignItems: "flex-start" }}>
+                            <span style={{ color: C.dim, flexShrink: 0, marginTop: 2 }}>—</span>
+                            {item}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+
+                    {/* Variants */}
+                    <div style={{ marginBottom: 16 }}>
+                      <div style={{ fontSize: 9, fontFamily: "'JetBrains Mono', monospace", textTransform: "uppercase", letterSpacing: 1.2, color: C.dim, marginBottom: 8 }}>Variants</div>
+                      <div style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
+                        {activeComp.variants.map((v, i) => (
+                          <span key={i} style={{ fontSize: 10, color: C.sub, background: C.bgSub, border: `1px solid ${C.border}`, borderRadius: 4, padding: "2px 8px", fontFamily: "'JetBrains Mono', monospace" }}>{v}</span>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Accessibility */}
+                    <div style={{ marginBottom: 20 }}>
+                      <div style={{ fontSize: 9, fontFamily: "'JetBrains Mono', monospace", textTransform: "uppercase", letterSpacing: 1.2, color: C.dim, marginBottom: 8 }}>Accessibility</div>
+                      <p style={{ fontSize: 11, color: C.sub, lineHeight: 1.6, margin: 0 }}>{activeComp.a11y}</p>
+                    </div>
+
+                    {/* Token hint */}
+                    <div style={{ background: C.bgSub, borderRadius: 6, padding: "10px 12px", border: `1px solid ${C.border}`, fontSize: 10, fontFamily: "'JetBrains Mono', monospace", color: C.dim }}>
+                      <span style={{ color: C.sub }}>--apdf-comp-{activeComp.id}-*</span>
+                      <span style={{ margin: "0 6px" }}>→</span>
+                      <span style={{ color: tokens.primary }}>--apdf-sys-*</span>
+                    </div>
+                  </>
+                )}
               </div>
+
             </div>
-          </div>
-        )}
+          );
+        })()}
 
         {/* ─── PREVIEW ─── */}
         {section === "preview" && (() => {
