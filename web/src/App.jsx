@@ -3419,10 +3419,81 @@ function SkillDrawer({ skill, onClose }) {
               <a href={url} download style={{ fontSize: 13, color: T.muted, textDecoration: "underline" }}>Download it instead</a>
             </div>
           )}
-          {content && <div>{renderMarkdown(content)}</div>}
+          {content && (() => {
+            const { intro, sections } = parseSkillSections(content);
+            return (
+              <div>
+                {intro && <div style={{ marginBottom: sections.length ? 8 : 0 }}>{renderMarkdown(intro)}</div>}
+                {sections.map((sec, i) => (
+                  <SkillAccordionSection
+                    key={i}
+                    title={sec.title}
+                    content={sec.content}
+                    defaultOpen={i === 0}
+                  />
+                ))}
+              </div>
+            );
+          })()}
         </div>
       </div>
     </>
+  );
+}
+
+// ── Skill content: parse into intro + H2 accordion sections ──────────────────
+function parseSkillSections(text) {
+  if (!text) return { intro: "", sections: [] };
+  const lines = text.split("\n");
+  const intro = [];
+  const sections = [];
+  let current = null;
+
+  for (const line of lines) {
+    if (line.startsWith("## ")) {
+      if (current) sections.push(current);
+      current = { title: line.slice(3).trim(), lines: [] };
+    } else if (current) {
+      current.lines.push(line);
+    } else {
+      intro.push(line);
+    }
+  }
+  if (current) sections.push(current);
+
+  return {
+    intro: intro.join("\n"),
+    sections: sections.map(s => ({ title: s.title, content: s.lines.join("\n") })),
+  };
+}
+
+function SkillAccordionSection({ title, content, defaultOpen }) {
+  const [open, setOpen] = useState(defaultOpen);
+  return (
+    <div style={{ borderTop: `1px solid ${T.border}` }}>
+      <button
+        onClick={() => setOpen(o => !o)}
+        style={{
+          width: "100%", display: "flex", alignItems: "center",
+          justifyContent: "space-between", gap: 12,
+          padding: "11px 0", background: "none", border: "none",
+          cursor: "pointer", textAlign: "left",
+        }}
+      >
+        <span style={{ fontSize: 13, fontWeight: 600, color: open ? T.text : T.muted, transition: "color 0.15s", lineHeight: 1.3 }}>{title}</span>
+        <span style={{
+          fontSize: 10, color: T.dim, flexShrink: 0,
+          transform: open ? "rotate(180deg)" : "none",
+          transition: "transform 0.2s",
+          display: "inline-block",
+        }}>▾</span>
+      </button>
+      {open && (
+        <div style={{ paddingBottom: 20 }}>
+          {renderMarkdown(content)}
+        </div>
+      )}
+    </div>
   );
 }
 
