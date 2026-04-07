@@ -1171,7 +1171,7 @@ export default function DesignSystemStudio() {
           return (
             <button key={type} onClick={() => go(type)} style={{
               display: "flex", alignItems: "center", gap: 6,
-              padding: "5px 14px", borderRadius: 6, border: "none",
+              padding: "5px 14px", borderRadius: 0, border: "none",
               background: "transparent",
               color: isActive ? "#FFFFFF" : APP.topbarDim,
               fontSize: 12, fontFamily: APP.sans, cursor: "pointer",
