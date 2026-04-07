@@ -1116,11 +1116,6 @@ export default function DesignSystemStudio() {
     return (
       <div style={{ height: APP.topbar, background: APP.topbarBg, borderBottom: `1px solid ${APP.topbarBorder}`, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 20px", flexShrink: 0, zIndex: 10 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <div style={{ display: "flex", gap: 0, borderRadius: 2, overflow: "hidden" }}>
-            {["#2563EB","#8B5CF6","#EC4899","#F97316","#14B8A6","#EF4444"].map((c, i) => (
-              <div key={i} style={{ width: 6, height: 3, background: c }} />
-            ))}
-          </div>
           <button onClick={() => go("overview")} style={{ fontSize: 11, fontFamily: APP.mono, color: APP.topbarDim, background: "none", border: "none", cursor: "pointer", padding: 0 }}>Design System Studio</button>
           {activeNav.type === "component" && activeComp && (
             <>
@@ -1679,9 +1674,10 @@ export default function DesignSystemStudio() {
         </div>
 
         {/* Live preview */}
-        <div style={{ background: darkMode ? "#111111" : tokens.surface, borderRadius: tokens.radiusLg, padding: "32px 36px", border: `1px solid ${darkMode ? "#2A2A2A" : tokens.border}`, transition: "all 0.2s", marginBottom: 40 }}>
+        <div style={{ background: darkMode ? "#111111" : tokens.surface, padding: "32px 36px", transition: "all 0.2s" }}>
           <PreviewComp t={t} />
         </div>
+        <div style={{ height: 1, background: APP.canvasBorder, margin: "0 0 40px" }} />
 
         {/* Description */}
         <p style={{ fontSize: 16, color: C.sub, lineHeight: 1.75, margin: "0 0 40px", maxWidth: 640 }}>{activeComp.desc}</p>
