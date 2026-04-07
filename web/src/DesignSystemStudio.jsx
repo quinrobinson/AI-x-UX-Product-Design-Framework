@@ -1863,7 +1863,7 @@ export default function DesignSystemStudio() {
               <h3 style={{ fontFamily: t.fontHeading, fontWeight: t.headingWeight, fontSize: ts(4), color: contrastOn(t.primary), margin: `0 0 ${sp(3)}px` }}>Ready to build?</h3>
               <div style={{ display: "flex", gap: sp(3), justifyContent: "center" }}>
                 <Btn label="Start free trial" invert />
-                <button style={{ padding: `${sp(2.5)}px ${sp(5)}px`, borderRadius: t.radiusMd, border: `1px solid ${alpha(contrastOn(t.primary), 0.3)}`, background: "transparent", color: contrastOn(t.primary), fontSize: t.baseSize - 1, fontFamily: t.fontBody, cursor: "pointer" }}>Talk to sales</button>
+                <button style={{ padding: `${sp(2.5)}px ${sp(5)}px`, borderRadius: t.radiusMd, border: `1px solid ${alpha(contrastOn(t.primary), 0.3)}`, background: "transparent", color: contrastOn(t.primary), fontSize: t.baseSize - 1, fontFamily: t.fontBody, cursor: "pointer", outline: "none", appearance: "none" }}>Talk to sales</button>
               </div>
             </div>
           </div>
