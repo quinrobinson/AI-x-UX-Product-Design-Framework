@@ -1165,19 +1165,19 @@ export default function DesignSystemStudio() {
       )},
     ];
     return (
-      <div style={{ height: 44, background: APP.topbarBg, borderBottom: `1px solid ${APP.topbarBorder}`, display: "flex", alignItems: "center", padding: "0 20px", gap: 2, flexShrink: 0 }}>
+      <div style={{ height: 44, background: APP.topbarBg, borderBottom: `1px solid ${APP.topbarBorder}`, display: "flex", alignItems: "center", justifyContent: "center", gap: 2, flexShrink: 0 }}>
         {navItems.map(({ type, label, icon }) => {
           const isActive = activeNav.type === type || (type === "overview" && activeNav.type === "overview");
           return (
             <button key={type} onClick={() => go(type)} style={{
               display: "flex", alignItems: "center", gap: 6,
               padding: "5px 14px", borderRadius: 6, border: "none",
-              background: isActive ? "#1E1E1E" : "transparent",
-              color: isActive ? "#F5F5F5" : APP.topbarDim,
+              background: "transparent",
+              color: isActive ? "#FFFFFF" : APP.topbarDim,
               fontSize: 12, fontFamily: APP.sans, cursor: "pointer",
               fontWeight: isActive ? 500 : 400,
-              borderBottom: isActive ? "2px solid #2563EB" : "2px solid transparent",
-              transition: "color 0.1s, background 0.1s",
+              borderBottom: isActive ? "2px solid #FFFFFF" : "2px solid transparent",
+              transition: "color 0.1s",
             }}>
               {icon}
               {label}
