@@ -1155,7 +1155,6 @@ export default function DesignSystemStudio() {
       { type: "overview", label: "Overview", icon: null },
       { type: "themes", label: "Themes", icon: null },
       { type: "preview", label: "Preview", icon: null },
-      { type: "export", label: "Export", icon: null },
       { type: "figma", label: "Figma MCP", icon: (
         <svg width="13" height="13" viewBox="0 0 38 57" fill="none" style={{ display: "block", flexShrink: 0 }}>
           <path d="M19 28.5C19 22.7 23.7 18 29.5 18S40 22.7 40 28.5 35.3 39 29.5 39 19 34.3 19 28.5z" fill="#1ABCFE"/>
@@ -1213,11 +1212,6 @@ export default function DesignSystemStudio() {
     return (
       <div style={{ width: APP.sidebar, background: APP.sidebarBg, borderRight: `1px solid ${APP.sidebarBorder}`, overflowY: "auto", flexShrink: 0 }}>
         <div style={{ padding: "8px 0" }}>
-          {sectionHead("Tokens")}
-          {navBtn("tokens", "color", "Color", true)}
-          {navBtn("tokens", "typography", "Typography", true)}
-          {navBtn("tokens", "spacing", "Spacing & Shape", true)}
-          <div style={{ height: 1, background: APP.sidebarBorder, margin: "6px 0" }} />
           {sectionHead("Components")}
           {cats.map(cat => (
             <div key={cat}>
@@ -1278,8 +1272,16 @@ export default function DesignSystemStudio() {
       <div style={{ width: APP.inspector, borderLeft: `1px solid ${panelBorder}`, background: panelBg, overflowY: "auto", flexShrink: 0, display: "flex", flexDirection: "column" }}>
         {/* Panel header */}
         <div style={{ padding: "14px 16px 10px", borderBottom: `1px solid ${panelBorder}`, flexShrink: 0 }}>
-          <div style={{ fontSize: 11, fontWeight: 700, fontFamily: APP.mono, color: textCol, textTransform: "uppercase", letterSpacing: 1.5 }}>Tokens</div>
-          <div style={{ fontSize: 11, color: labelCol, marginTop: 2 }}>{tokens.name}</div>
+          <div style={{ fontSize: 11, fontWeight: 700, fontFamily: APP.mono, color: textCol, textTransform: "uppercase", letterSpacing: 1.5, marginBottom: 6 }}>Tokens</div>
+          <button onClick={() => go("themes")} style={{ display: "flex", alignItems: "center", gap: 6, background: "#E4E4E7", border: "none", borderRadius: 5, padding: "4px 8px", cursor: "pointer", width: "100%" }}>
+            <div style={{ display: "flex", gap: 3 }}>
+              {[tokens.primary, tokens.secondary, tokens.accent].map((c, i) => (
+                <div key={i} style={{ width: 10, height: 10, borderRadius: 2, background: c }} />
+              ))}
+            </div>
+            <span style={{ fontSize: 11, fontWeight: 500, color: textCol, fontFamily: APP.sans, flex: 1, textAlign: "left" }}>{tokens.name}</span>
+            <span style={{ fontSize: 10, color: labelCol }}>→</span>
+          </button>
         </div>
 
         {/* Color accordion */}
@@ -2185,7 +2187,7 @@ and a copy-paste remediation prompt for each finding.`;
           {activeNav.type === "export" && renderExport()}
           {activeNav.type === "figma" && renderFigma()}
         </main>
-        {activeNav.type !== "overview" && renderTokensPanel()}
+        {activeNav.type !== "overview" && activeNav.type !== "themes" && renderTokensPanel()}
       </div>
     </div>
   );
