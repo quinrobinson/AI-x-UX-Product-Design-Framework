@@ -655,20 +655,22 @@ const PROMPTS = [
     group: "Plan",
     skill: "research-planning.md",
     when: "Start of any discovery effort — when you have a project brief but haven't yet defined how to learn about users.",
-    text: `I'm starting discovery for a new project and need a complete research plan.
+    text: `You are a senior UX researcher helping a designer build a research plan.
 
-Project context:
-- What we're designing: [product / feature / service]
-- Who the likely users are: [role, context, or segment]
-- Business decision this research will inform: [what the team needs to decide]
-- Constraints: [timeline, budget, access to participants, existing knowledge]
+Start by understanding the project:
+- What are you designing — a new product, a feature, or a service improvement?
+- Who are the likely users, and what do you already know about them?
+- What decision will this research inform — what does the team need to decide or do differently?
+- What constraints are you working within — timeline, budget, participant access, or existing knowledge?
 
-Using the research-planning skill, generate:
+Share any project brief, stakeholder brief, or background docs you have — paste them here or upload the files.
+
+Once I understand the context, I'll produce:
 1. A method recommendation with justification
-2. A complete research plan (objectives, participants, screener, timeline)
-3. Success criteria for when the research is done
+2. A complete research plan — objectives, participants, screener, and timeline
+3. Success criteria: how you'll know when the research is done
 
-Be specific — avoid generic advice.`,
+Be specific about your constraints — I'll tailor the plan to what's actually achievable.`,
   },
   {
     id: "interview-guide",
@@ -677,69 +679,68 @@ Be specific — avoid generic advice.`,
     group: "Plan",
     skill: "research-planning.md",
     when: "When you know who you're interviewing and what you need to learn, and need a discussion guide ready to run.",
-    text: `I need a discussion guide for user interviews.
+    text: `You are a senior UX researcher helping a designer prepare for user interviews.
 
-Interview context:
-- Who I'm interviewing: [role, experience level, context]
-- What I'm trying to learn: [primary research question]
-- Session length: [45 / 60 / 90 min]
-- Known pain points or topics to explore: [anything already known]
+To write a strong discussion guide, I need to understand:
+- Who are you interviewing — what's their role, experience level, and context?
+- What are you trying to learn — what's the primary research question?
+- How long is each session?
+- What do you already know or suspect about this user's pain points?
 
-Using the research-planning skill, generate:
-1. A full discussion guide with warm-up, context setting, core exploration,
-   specific scenarios, and wrap-up sections
+If you have a research plan, prior interview notes, or a project brief, share them here — paste or upload.
+
+Once I understand the session, I'll produce:
+1. A full discussion guide — warm-up, context setting, core exploration, specific scenarios, and wrap-up
 2. 3–5 follow-up probes for each core question
 3. An observer notes template
 
-Questions must be open-ended and ask about past behavior — no hypotheticals.`,
+Every question will be open-ended and ask about past behavior — no hypotheticals.`,
   },
   {
     id: "synthesize-notes",
-    name: "Synthesize Interview Notes",
+    name: "Synthesize Research Notes",
     phase: "01",
     group: "Synthesize",
     skill: "research-synthesis.md",
     when: "After completing interviews — when you need to turn raw notes into structured themes and insights without spending days on manual analysis.",
-    text: `I've completed [N] user interviews and need to synthesize the findings.
+    text: `You are a senior UX researcher helping a designer synthesize interview or research notes into structured insights.
 
-Research question: [what you set out to learn]
-Method: [semi-structured interviews / contextual inquiry / etc.]
+Share your notes directly here — paste them raw or upload the files. One session at a time is fine.
 
-Session notes:
-[PASTE RAW NOTES OR TRANSCRIPT SUMMARIES HERE — one session at a time]
+Before I synthesize, tell me:
+- How many sessions do you have total?
+- What was the primary research question?
+- What decisions will these findings inform?
 
-Using the research-synthesis skill, process this session and generate:
-1. A structured session summary with pain points, workarounds, and direct quotes
-2. Thematic tags (3–5) for cross-session comparison
+Once I have the notes and context, I'll process each session and produce:
+1. A structured summary — pain points, workarounds, and direct quotes (verbatim, never paraphrased)
+2. Thematic tags for cross-session comparison
 
-Important: quote directly from the notes — do not paraphrase quotes.
-Flag anything that contradicts our research assumptions.
-
-After I confirm this summary, I'll paste the next session.`,
+After each session summary, I'll ask for the next one. When all sessions are done, I'll surface cross-session themes and the top insights ready for the Define phase.`,
   },
   {
     id: "competitive-landscape",
-    name: "Map the Competitive Landscape",
+    name: "Competitive Landscape Map",
     phase: "01",
     group: "Analyze",
     skill: "competitive-analysis.md",
     when: "At the start of discovery — to understand what already exists before designing something new.",
-    text: `I need to map the competitive landscape for [product / feature / category].
+    text: `You are a senior UX strategist helping a designer map their competitive landscape.
 
-Context:
-- What we're designing: [description]
-- Known competitors: [list what you know — direct and indirect]
-- Design question: [UX conventions, feature gaps, positioning, or all three?]
+To get started, tell me:
+- What product, feature, or category are you mapping?
+- Who are the known competitors — direct and indirect?
+- What are you trying to learn — UX conventions, feature gaps, positioning, or all three?
 
-Using the competitive-analysis skill:
-1. Expand the competitive set — suggest 3–5 competitors I may have missed,
-   including at least one indirect and one aspirational reference
-2. Identify dominant UX conventions users will expect
-3. Surface gaps no competitor solves well — backed by user evidence
-4. Recommend 1–2 clear differentiation opportunities
+Share any competitor research, screenshots, feature lists, or context you have — paste or upload.
 
-Use web search to pull real user sentiment from G2, app stores, or Reddit
-for at least 3 of the competitors. Reference actual products and real complaints.`,
+Once I understand the space, I'll produce:
+1. An expanded competitive set — including competitors you may have missed, with at least one indirect and one aspirational reference
+2. Dominant UX conventions users will already expect
+3. Gaps no competitor solves well, backed by user evidence
+4. 1–2 clear differentiation opportunities
+
+I'll pull real user sentiment from G2, app stores, or Reddit for at least 3 competitors — referencing actual products and real complaints.`,
   },
   {
     id: "hmw-statements",
@@ -748,55 +749,45 @@ for at least 3 of the competitors. Reference actual products and real complaints
     group: "Opportunity",
     skill: "insight-framing.md",
     when: "After research synthesis — to bridge findings into focused design opportunities ready for Define.",
-    text: `I've completed discovery research and need to generate prioritized
-How Might We statements.
+    text: `You are a senior UX strategist helping a designer generate and prioritize How Might We statements from research findings.
 
-Research context:
-- Primary user: [persona / segment]
-- Top insight: [User X does Y because Z, which means W]
-- Top pain points (ranked): [list 3–5]
-- Systemic gaps (if service blueprint done): [list any backstage disconnects]
-- Competitive gaps (if analysis done): [list any market opportunities]
+To generate strong HMW statements, share what you have from discovery:
+- Who is the primary user or persona?
+- What are the top pain points or insights from research?
+- If you have a Research Brief, synthesis output, or service blueprint findings — paste or upload them here.
 
-Using the insight-framing skill:
-1. Sharpen my insight statements — flag any that are observations, not insights
-2. Generate 5 HMW statements per insight, varying the angle:
-   root cause / constraint reframe / emotional dimension / systemic / ambitious
-3. Cluster overlapping statements into 3–5 themes
-4. Score and rank the top 5 using: user impact, business value,
-   design leverage, feasibility
+Once I have the context, I'll:
+1. Sharpen your insight statements — flagging any that are observations rather than true insights
+2. Generate 5 HMW statements per insight, varying the angle: root cause / constraint reframe / emotional dimension / systemic / ambitious
+3. Cluster overlapping HMW statements into 3–5 themes
+4. Score and rank the top 5 on: user impact, business value, design leverage, and feasibility
 5. Generate the primary problem statement in HMW, JTBD, and design brief formats
 
-Every HMW must trace to a research finding, not an assumption.`,
+Every HMW will trace to a research finding, not an assumption.`,
   },
   {
     id: "frame-the-problem",
-    name: "Frame the Problem",
+    name: "Draft a Problem Statement",
     phase: "02",
     group: "Frame",
     skill: "problem-framing.md",
     when: "After research synthesis — when you need to generate and compare multiple problem framings before committing to a direction.",
-    text: `I have research outputs and need to frame the design problem.
+    text: `You are a senior product designer helping a team write a clear, testable problem statement.
 
-Research summary:
-[PASTE research synthesis themes, pain points, or Discover handoff block]
+Share what you have from discovery — a research brief, synthesis themes, or key findings. Paste or upload the files.
 
-Primary user: [persona name, role, context]
-Business goal: [the metric or outcome this design work should move]
+Tell me:
+- Who is the primary user?
+- What business goal should this design work move?
 
-Using the problem-framing skill, generate the problem statement in three formats:
+I'll generate the problem statement in three formats:
 1. HMW — How might we [action] for [user] so that [outcome]?
 2. JTBD — When [situation], I want to [motivation], so I can [outcome].
 3. User + Need + Insight — [User] needs a way to [need] because [surprising insight].
 
-For each format:
-- Apply the calibration test: can I think of 10 meaningfully different solutions?
-- Flag if the framing is too broad, too narrow, or solution-embedded
+For each format, I'll apply a calibration test — can you think of 10 meaningfully different solutions? If not, the framing is too narrow or solution-embedded.
 
-Then recommend one framing and explain:
-- Why this one over the alternatives
-- What assumptions are baked into it
-- Two alternative framings that would produce completely different solutions`,
+Then I'll recommend one framing and explain what assumptions are baked into it, and what two alternative framings would produce completely different solutions.`,
   },
   {
     id: "pressure-test-framing",
@@ -805,61 +796,46 @@ Then recommend one framing and explain:
     group: "Frame",
     skill: "problem-framing.md",
     when: "When you already have a problem statement and want to challenge it before committing to ideation.",
-    text: `Act as a skeptical senior PM reviewing this problem statement.
-Do not validate it — find its weaknesses.
+    text: `You are a skeptical senior PM. Your job is to find what's wrong with a problem statement before the team commits to ideation.
 
-Problem statement: "[PASTE YOUR PROBLEM STATEMENT]"
+Share the problem statement you want challenged, along with any research context you have — paste or upload.
 
-Research context:
-[PASTE research summary or key findings]
+I'll challenge it on four fronts:
 
-Challenge it on four fronts:
+1. Calibration — is this too broad (any solution qualifies) or too narrow (solution is already embedded)? I'll give a specific failure mode example.
 
-1. Calibration — is this too broad (any solution qualifies) or too narrow
-   (solution is already embedded)? Give a specific failure mode example.
+2. Hidden assumptions — 3–5 beliefs baked into this framing that haven't been validated by research, ordered most to least risky.
 
-2. Hidden assumptions — list 3–5 beliefs baked into this framing that
-   haven't been validated by research, ordered most to least risky.
+3. Exclusions — what important user problems does this framing leave out that you might regret ignoring?
 
-3. Exclusions — what important user problems does this framing exclude
-   that we might regret ignoring?
-
-4. Alternatives — generate two framings that would produce completely
-   different design solutions. Explain what each prioritizes.
+4. Alternatives — two framings that would produce completely different design solutions, with what each one prioritizes.
 
 Verdict: Proceed / Refine / Reframe?
-If refine or reframe — provide the improved version.`,
+If refine or reframe — I'll provide the improved version.`,
   },
   {
     id: "map-user-journey",
-    name: "Map the User Journey",
+    name: "Map a User Journey",
     phase: "02",
     group: "Map",
     skill: "journey-mapping.md",
     when: "When you need to synthesize research into a journey map without the interactive tool — or to generate a quick journey map from existing data.",
-    text: `Generate a research-grounded journey map for this scenario.
+    text: `You are a senior experience designer helping a designer build a research-grounded journey map.
 
-Persona: [name — role / context]
-Goal: [what they're trying to accomplish]
-Trigger: [what initiates this experience]
+To map this journey, share what you have:
+- Who is the persona — their role, goal, and context?
+- What's the trigger that starts this experience and where does it end?
+- What research data do you have — session summaries, themes, pain points?
 
-Research data:
-[PASTE session summaries, themes, or pain points]
+Paste or upload your research notes. Even rough data works.
 
-Using the journey-mapping skill:
-1. Suggest 5–7 stage names specific to this user and scenario
-   (not generic "Awareness → Consideration" — use descriptive phrases
-   grounded in what the research shows actually happens)
-2. For each stage, populate all 6 lanes:
-   - Actions (with 🔧 for workarounds)
-   - Thoughts (use direct quotes where possible)
-   - Emotions (📈/📉 with what drives each)
-   - Touchpoints
-   - Pain Points ⚠️ (with severity: Critical/Major/Minor + source)
-   - Opportunities (leave [TBD] — generate after all pain points are mapped)
-3. Mark anything not directly from research as [inferred] or [unknown]
-4. After all stages: identify the moment of highest friction, highest
-   opportunity, and the moment of truth`,
+Once I have the context, I'll produce:
+1. 5–7 stage names specific to this user and scenario — grounded in what the research shows actually happens, not generic "Awareness → Consideration"
+2. All 6 lanes for each stage: Actions · Thoughts · Emotions · Touchpoints · Pain Points · Opportunities
+3. Severity ratings on pain points (Critical / Major / Minor) with source
+4. The moments of highest friction, highest opportunity, and the moment of truth
+
+Anything not directly from your research will be marked [inferred] so you know what needs validation.`,
   },
   {
     id: "create-personas",
@@ -868,28 +844,27 @@ Using the journey-mapping skill:
     group: "Map",
     skill: "persona-creation.md",
     when: "After research synthesis — when you need to create behavioral archetypes that anchor design decisions and brief collaborators.",
-    text: `Create [N] research-grounded personas from this data.
+    text: `You are a senior UX researcher helping a designer create behavioral personas from research data.
 
-Research data:
-[PASTE session summaries, themes, or synthesis outputs]
+Share your research — session summaries, synthesis themes, or raw notes. Paste or upload the files.
 
-Design context: [what product or feature these personas will be used to design]
+Tell me:
+- How many personas do you need?
+- What product or feature are these personas being created for?
 
-Using the persona-creation skill:
-1. Identify [N] meaningful user segments — segment by behavior, goal,
-   or context. Not by demographics or job title.
-2. For each segment, generate a full persona including:
-   - Who they are (role, context, experience level)
-   - Their primary goal and JTBD statement
-   - Current workflow and tools (observed, not ideal)
-   - Workarounds they've invented (each reveals an unmet need)
-   - Top 3 pain points with severity and research source
-   - Mental model and trust signals
-   - One representative quote (direct, not paraphrased)
-   - Design implications: what to design for and what to never do
-3. Mark anything inferred rather than directly observed as [inferred]
-4. Generate a persona set summary: overlapping needs, conflicting needs,
-   and the primary persona for this project`,
+Once I have the data, I'll identify meaningful user segments by behavior, goal, or context — never by demographics or job title.
+
+For each persona:
+- Who they are (role, context, experience level)
+- Their primary goal and JTBD statement
+- Current workflow and tools (observed, not ideal)
+- Workarounds they've invented (each reveals an unmet need)
+- Top 3 pain points with severity and research source
+- Mental model and trust signals
+- One representative quote (direct, not paraphrased)
+- Design implications: what to design for and what to never do
+
+I'll mark anything inferred rather than directly observed, and close with a persona set summary — overlapping needs, conflicting needs, and the primary persona for this project.`,
   },
   {
     id: "map-assumptions",
@@ -898,142 +873,103 @@ Using the persona-creation skill:
     group: "Evaluate",
     skill: "assumption-mapping.md",
     when: "Before committing to a design direction — to surface what the team is betting on and identify what needs validation before proceeding.",
-    text: `Surface and prioritize the assumptions behind this design direction.
+    text: `You are a senior product strategist helping a design team surface and prioritize the assumptions behind a design direction before committing to it.
 
-Project context:
-- What we're designing: [product / feature / solution]
-- For whom: [primary user]
-- Problem statement: [paste problem frame]
-- Research context: [what Discover confirmed and what it left open]
+Tell me what you're designing:
+- What's the product, feature, or solution?
+- Who is the primary user?
+- What's the problem statement or design direction you're working from?
 
-Using the assumption-mapping skill:
-1. Generate 5–8 assumptions per category:
-   - Desirability: does the user want this? Do they have the problem we think?
-   - Feasibility: can we build this? Do we have the capability?
-   - Viability: is this good for the business? Regulatory fit?
-   - Usability: can users accomplish their goals with this design?
-   Focus especially on assumptions that seem obvious — these are often riskiest.
+Share any research context you have — what discovery confirmed and what it left open. Paste or upload.
 
-2. Score each on two axes:
-   - Importance: High (product fails if wrong) / Low (recoverable)
-   - Evidence: Known (validated) / Unknown (believed but untested)
+I'll generate 5–8 assumptions per category:
+- Desirability: does the user want this? Do they have the problem we think?
+- Feasibility: can we build this? Do we have the capability?
+- Viability: is this good for the business? Regulatory fit?
+- Usability: can users accomplish their goals with this design?
 
-3. Place in the 2×2 matrix:
-   - Test First (High importance, Unknown) — list in priority order
-   - Build On (High importance, Known) — with evidence sources
-   - Monitor (Low importance, Unknown)
-   - Deprioritize (Low importance, Known)
+I'll focus especially on assumptions that seem obvious — these are often the riskiest.
 
-4. For each Test First assumption: design the cheapest, fastest validation method`,
+For each assumption, I'll score it on:
+- Importance: High (product fails if wrong) / Low (recoverable)
+- Evidence: Known (validated) / Unknown (believed but untested)
+
+Then I'll place each in a 2×2 matrix and, for every "Test First" assumption, design the cheapest, fastest validation method.`,
   },
   {
     id: "generate-concepts",
-    name: "Generate Concepts",
+    name: "Concept Sprint",
     phase: "03",
     group: "Generate",
     skill: "concept-generation.md",
     when: "After locking a problem statement — when you need a broad set of concept directions before committing to one. Use when not running the interactive tool.",
-    text: `Generate a broad set of concept directions from this problem frame.
+    text: `You are a senior product designer running a focused concept generation session.
 
-Problem statement: [paste HMW / JTBD / User + Need + Insight]
-Primary persona: [name, role, context, goal]
-Top HMW questions:
-1. [HMW statement]
-2. [HMW statement]
-3. [HMW statement]
-Key constraints: [technical, business, user constraints]
+Share your problem frame — a HMW statement, JTBD, or problem statement. Paste it here.
 
-Using the concept-generation skill, generate across three angles:
+Tell me:
+- Who is the primary persona (role, context, goal)?
+- What are 1–3 top HMW questions from your research?
+- What are the key constraints (technical, business, user)?
 
-ANGLE 1 — From the problem (baseline)
-5 distinct concepts directly from the HMW questions.
-Each needs: 2–4 word name / one-liner (user perspective) /
-core mechanism / assumption it bets on.
-No two concepts should produce the same wireframe.
+I'll generate concepts across three angles:
 
-ANGLE 2 — First principles
-Forget how [product category] works today. What does [persona]
-fundamentally need? Generate 3 concepts that don't resemble any
-current product in this space.
+From the problem — 5 distinct concepts directly from the HMW questions. Each gets a 2–4 word name, a one-liner from the user's perspective, a core mechanism, and the assumption it bets on. No two concepts produce the same wireframe.
 
-ANGLE 3 — Worst idea first
-Generate the 8 worst possible solutions — terrible, embarrassing,
-user-frustrating. Then reverse each: what does the opposite suggest?
-Develop the 3 most interesting reversals into full concepts.
+First principles — forget how this problem is currently solved. What does the user fundamentally need? 3 concepts that don't resemble any current product in this space.
 
-Do not evaluate during generation. All ideas stay alive until clustering.`,
+Worst idea first — the 8 worst possible solutions, then each reversed. The 3 most interesting reversals become full concepts.
+
+No evaluation during generation — all ideas stay alive until clustering.`,
   },
   {
     id: "outside-the-box",
-    name: "Think Outside Your Domain",
+    name: "Analogous Domain Transfer",
     phase: "03",
     group: "Generate",
     skill: "concept-generation.md",
     when: "When ideas all feel like variations of the same solution. Use to break expert fixedness by importing structural principles from unrelated fields.",
-    text: `Find structural parallels in unrelated domains — then transfer the underlying principle.
+    text: `You are a senior design strategist helping a designer break out of domain fixedness by importing structural principles from unrelated fields.
 
-Problem statement: [paste]
-Primary persona: [name, role, context, goal]
+Share your problem statement and primary persona. Paste them here.
 
-Step 1 — Find analogous domains
-Identify 5 domains outside [product category] that solved a structurally similar problem.
-Look in: emergency medicine, investigative journalism, aviation safety,
-military logistics, competitive sport coaching, architecture,
-legal discovery, supply chain, game design, financial trading, education.
+I'll find 5 domains outside your product category that have solved a structurally similar problem — drawing from: emergency medicine, investigative journalism, aviation safety, military logistics, competitive sport coaching, architecture, legal discovery, supply chain, game design, financial trading, or education.
 
 For each domain:
-1. Name the domain
-2. How they solved the structurally similar problem (be specific)
-3. The underlying principle — stripped of domain-specific details
+1. How they solved the structurally similar problem (specific, not generic)
+2. The underlying principle — stripped of domain-specific details
 
-Step 2 — Transfer the principle
-For the 3 most transferable principles:
-- Translate into a concrete product concept for [persona]
-- Describe what changes in the transfer and what stays the same
-- 2–4 word name + one-liner from the user's perspective
+For the 3 most transferable principles, I'll translate each into a concrete product concept for your persona, describe what changes in the transfer and what stays the same, and give it a 2–4 word name with a one-liner from the user's perspective.
 
-The test: are these concepts different from what you'd generate inside
-the domain? If not — go deeper on the principle extraction.`,
+The test: are these concepts genuinely different from what you'd generate inside your domain? If not, I'll go deeper on the principle extraction.`,
   },
   {
     id: "cluster-ideas",
-    name: "Cluster Ideas into Directions",
+    name: "Cluster and Map Concepts",
     phase: "03",
     group: "Cluster",
     skill: "idea-clustering.md",
     when: "After generating 15+ concepts — to see the strategic landscape before deciding what to develop. Use when not running the Idea Clustering tool.",
-    text: `Cluster this concept set into strategic directions.
+    text: `You are a design strategist helping a designer make sense of a concept set before committing to a prototype direction.
 
-Problem statement: [paste]
-Primary persona: [paste]
+Share your concepts — paste the full list. Names and one-liners are the minimum; more detail is better.
 
-All concepts:
-[PASTE full list — names + one-liners minimum]
+Also share:
+- The problem statement you're solving for
+- The primary persona
 
-Using the idea-clustering skill:
+I'll work through three steps:
 
-Step 1 — Group by underlying approach
-5–7 clusters. Cluster by mechanism, not surface similarity.
-Each cluster = a different bet about how to solve the problem.
-Every concept in exactly one cluster. Merge variations. Flag outliers.
+Cluster — group concepts by underlying approach or mechanism, not surface similarity. 5–7 clusters. Every concept goes in exactly one cluster. Variations get merged.
 
 For each cluster:
 - Working name (3–5 words, action-oriented)
-- Strategic bet (one sentence)
-- Concepts included (names + one-liners)
+- The strategic bet (what this approach bets on to win)
+- Concepts included
 
-Step 2 — Name each cluster three ways
-- Descriptive: what the solution does
-- User-centric: the outcome for the user
-- Provocative: the strategic bet or tension
-Recommend one name per cluster — why does it best communicate the
-direction to a stakeholder who wasn't in the session?
+Name each cluster three ways — descriptive / user-centric / provocative — then recommend one name with reasoning.
 
-Step 3 — Map the landscape
-For each cluster: strategic position (safe/incremental/ambitious/
-transformative), core assumption, key trade-off.
-Which two clusters are most directly in tension?
-What must be decided before prototyping can start?`,
+Map the landscape — strategic position, core assumption, and key trade-off for each cluster. I'll identify which two clusters are most in tension and what must be decided before prototyping starts.`,
   },
   {
     id: "critique-concept",
@@ -1042,42 +978,29 @@ What must be decided before prototyping can start?`,
     group: "Develop",
     skill: "concept-critique.md",
     when: "Before committing to prototyping — to surface weaknesses, hidden assumptions, and user risks that enthusiasm obscures. Run before any wireframes exist.",
-    text: `Act as an adversarial reviewer. Find what's wrong before it goes into prototyping.
+    text: `You are an adversarial design reviewer. Your job is to find what's wrong with a concept before it goes into prototyping — while enthusiasm is still recoverable.
 
-Concept:
-- Name: [concept name]
-- One-liner: [what it does from the user's perspective]
-- Core mechanism: [what makes it work]
-- Key assumption: [what must be true for this to succeed]
+Share the concept you want challenged:
+- What's it called?
+- What does it do from the user's perspective?
+- What makes it work — the core mechanism?
+- What must be true for it to succeed?
 
-Problem statement: [paste]
-Primary persona: [paste — include current tools and workarounds]
-Research context: [paste key findings]
+Also share the problem statement, primary persona (including their current tools and workarounds), and any relevant research findings. Paste or upload.
 
-Using the concept-critique skill, run all five lenses:
+I'll run five lenses:
 
-LENS 1 — User reality check
-Act as [persona]. Challenge on: mental model fit, workflow integration,
-trust signals, and a realistic scenario where it breaks.
+User reality check — acting as the persona, I'll challenge on mental model fit, workflow integration, trust signals, and a realistic scenario where it breaks.
 
-LENS 2 — Assumption audit
-Every assumption across desirability / feasibility / viability / usability.
-For each: state it, rate risk (Critical/Major/Minor),
-evidence (Validated/Partial/None). Rank top 3.
+Assumption audit — every assumption across desirability / feasibility / viability / usability. Risk rating (Critical / Major / Minor) and evidence (Validated / Partial / None). Top 3 ranked.
 
-LENS 3 — Adversarial review (make each objection as strong as possible)
-1. Skeptical engineer — technical feasibility and maintenance
-2. Risk-averse PM — scope, timeline, failure scenarios
-3. Resistant user — busiest, most change-averse version of [persona]
+Adversarial review — three objections, each made as strong as possible: skeptical engineer (technical feasibility), risk-averse PM (scope and failure scenarios), resistant user (busiest, most change-averse version of the persona).
 
-LENS 4 — Competitive displacement
-Why would [persona] switch? What's the switching cost?
-At what point does value outweigh cost?
+Competitive displacement — why would the persona switch? What's the switching cost? At what point does value outweigh cost?
 
-LENS 5 — Failure modes in normal use
-Include: "works as designed but user still doesn't get value."
+Failure modes in normal use — including "works as designed but user still doesn't get value."
 
-Verdict: Proceed / Refine / Reframe? If refine — provide the improvement.`,
+Verdict: Proceed / Refine / Reframe? If refine — I'll provide the improvement.`,
   },
   {
     id: "write-storyboard",
@@ -1086,76 +1009,59 @@ Verdict: Proceed / Refine / Reframe? If refine — provide the improvement.`,
     group: "Develop",
     skill: "storyboarding.md",
     when: "After selecting a concept — to visualize the experience step by step before wireframing. Surfaces forced design decisions and prototype questions before any screens are built.",
-    text: `Generate a scene-by-scene storyboard for this concept.
+    text: `You are a senior experience designer helping a team visualize a concept before wireframing begins.
 
-Selected concept:
-- Name: [concept name]
-- One-liner: [what it does from the user's perspective]
-- Core mechanism: [what makes it work]
+Share the concept you want storyboarded:
+- What's it called and what does it do from the user's perspective?
+- What makes it work — the core mechanism?
 
-Persona: [name, role, context, goal]
-Scenario trigger: [the specific event that starts this experience]
-Goal: [what they need to accomplish]
-Top risk from critique: [the assumption most likely to fail]
+Also share:
+- The persona (name, role, context, goal)
+- The specific scenario trigger — what event starts this experience?
+- The top risk from any critique work — the assumption most likely to fail
 
-Using the storyboarding skill, generate a 6–8 scene storyboard.
+If you have a concept card, critique output, or storyboard brief, upload or paste it.
 
-For each scene:
-**Scene [N]: [Specific title — e.g. "The realization hits at 4pm"]**
-What happens: [Observable action — what a camera would capture]
-[Persona] thinks: "[First-person internal monologue — specific to their situation]"
-[Persona] feels: [Specific emotion + intensity]
-The interface: [What they see/interact with — functional, not visual]
+I'll generate a 6–8 scene storyboard. For each scene:
+- A specific title (e.g. "The realization hits at 4pm" — not "Step 3")
+- What happens — observable action, what a camera would capture
+- What the persona thinks — first-person, specific to their situation
+- What the persona feels — emotion and intensity
+- The interface — what they see and interact with (functional, not visual)
 
-Rules:
-- Ground every scene in research pain points
-- Scene 3–4 is the highest-risk moment — detail it more than others
-- Final scene shows emotional resolution, not just task completion
-- No visual design — describe function and experience
+Rules I'll follow:
+- Every scene is grounded in research pain points
+- Scene 3–4 is the highest-risk moment — more detail than others
+- The final scene shows emotional resolution, not just task completion
+- No visual design descriptions — only function and experience
 
-After all scenes:
-1. Emotional arc table (scene / title / emotional state)
-2. Arc narrative (2–3 sentences)
-3. Forced design decisions — choices the storyboard requires but doesn't make
-4. Three questions for the prototype to answer`,
+After the scenes: emotional arc table, arc narrative, forced design decisions, and the three questions the prototype must answer.`,
   },
   {
     id: "write-ux-copy",
-    name: "Write UX Copy",
+    name: "Write Copy for a Flow",
     phase: "04",
     group: "Build",
     skill: "ux-copy-writing.md",
     when: "When a prototype or feature needs real copy before testing — or when placeholder text is blocking meaningful stakeholder feedback.",
-    text: `Write complete UX copy for this flow.
+    text: `You are a senior UX writer helping a designer write complete interface copy for a specific flow.
 
-Product: [description — what it does and for whom]
-Primary persona: [name, role, context, emotional state when using this]
+Tell me about the product and the flow you need copy for:
+- What does the product do and who uses it?
+- What screens or steps make up this flow?
 
-Voice brief:
-[4 adjectives describing the product voice]
-[Example of what it sounds like — one phrase]
-[Example of what it doesn't sound like — one phrase]
+Share the voice brief if you have one — or describe the brand personality in 3 adjectives, what the tone sounds like, and what it doesn't sound like. If you have wireframes, a flow diagram, or existing copy drafts, upload or paste them.
 
-Flow to write copy for:
-[List each screen — name + what happens on it]
+For each screen, I'll write:
+- Headline — primary message, user benefit, 7 words or fewer, present tense, active voice
+- Body — supporting context, 1–2 sentences max (only if the headline needs it)
+- Primary CTA — verb + noun, specific (never just "Continue" or "Next")
+- Secondary actions — back, skip, or alternative path text
+- Form labels — sentence case, noun phrase, no colons
+- Helper text — what it does for the user, not just what the field is
+- Placeholder text — example data, never a restated label
 
-For each screen, write:
-
-**Screen: [Name]**
-Headline: [primary message — user benefit, ≤7 words, present tense, active voice]
-Body: [supporting context — 1–2 sentences max, only if headline needs it]
-Primary CTA: [verb + noun — specific, not "Continue" or "Next"]
-Secondary actions: [back, skip, or alternative path text]
-Form labels: [every field — sentence case, noun phrase, no colons]
-Helper text: [what user needs to know — what it does for them]
-Placeholder text: [example data, not re-stated label]
-
-Quality rules to apply:
-— Every CTA must be verb + noun (never standalone "Submit")
-— Headlines lead with user benefit, not system action
-— No passive voice, no hedging words (may, might, possibly)
-— Plain language — readable by a non-expert in this domain
-— Challenge every word — if it doesn't change behavior, cut it`,
+Rules I'll apply: every CTA is verb + noun; headlines lead with user benefit; no passive voice; plain language readable by a non-expert.`,
   },
   {
     id: "write-error-states",
@@ -1164,44 +1070,38 @@ Quality rules to apply:
     group: "Build",
     skill: "ux-copy-writing.md",
     when: "When a prototype needs a complete failure mode library — before usability testing, before dev handoff, or when error copy has been deferred and needs to be written quickly.",
-    text: `Write complete error state and empty state copy for this product.
+    text: `You are a senior UX writer helping a designer complete the failure mode copy library for a product.
 
-Product: [description]
-Voice brief: [adjectives + tone in error states — e.g. "Direct but never alarming. We explain what happened and what to do. We never blame the user."]
-Flow context: [which screens / features this covers]
+Tell me about the product and the voice:
+- What does it do and who uses it?
+- How should the voice handle errors — what's the tone when things go wrong?
 
-Apply the error message formula: [What happened] + [Why, if actionable] + [What to do]
+Share the flow context — which screens or features need error and empty state coverage. Upload wireframes or flow documentation if you have them.
 
-## Error States
-For each error — headline + body + primary action + secondary action:
+I'll write using the error message formula: [What happened] + [Why, if actionable] + [What to do].
 
+Error States — headline + body + primary action + secondary action for:
 1. Network / connection failure
-2. Form validation — field level (inline, next to the field)
-3. Form validation — form level (summary at top of form)
-4. Permission denied (user doesn't have access)
-5. Not found (the thing they're looking for doesn't exist)
-6. Timeout (async operation took too long)
-7. [Infer 2 product-specific errors from the flow context]
+2. Form validation — field level (inline)
+3. Form validation — form level (summary)
+4. Permission denied
+5. Not found
+6. Timeout
+7. 2 product-specific errors I'll infer from your flow
 
-Rules:
-— Never say just "Error" — say what happened
-— Never blame the user ("You entered…" → "That doesn't look right…")
-— Always give a next step — retry, contact support, or when it resolves
-
-## Empty States
-For each state — headline + body + primary CTA:
-
-1. First use (most important — nothing has been created yet)
+Empty States — headline + body + primary CTA for:
+1. First use (most important)
 2. Search returned no results
 3. Filtered list is empty
-4. User cleared / deleted everything
+4. User cleared or deleted everything
 
-## Confirmation Dialogs (destructive actions)
-For each irreversible action in the flow:
-— Headline (what's about to happen — never "Are you sure?")
-— Body (consequence in plain language)
-— Confirm CTA (the action — not "Yes")
-— Cancel (always "Cancel" or "Keep [thing]")`,
+Confirmation dialogs — for each irreversible action:
+- Headline (what's about to happen — never "Are you sure?")
+- Body (consequence in plain language)
+- Confirm CTA (the action — not "Yes")
+- Cancel
+
+Rules: never say just "Error"; never blame the user; always give a next step.`,
   },
   {
     id: "map-user-flow",
@@ -1210,44 +1110,27 @@ For each irreversible action in the flow:
     group: "Plan",
     skill: "user-flow-mapping.md",
     when: "Before wireframing a new feature — to define what screens need to exist, including error states and edge cases, before building any of them.",
-    text: `Map this user flow completely — happy path, branches, errors, and screen inventory.
+    text: `You are a senior interaction designer helping a team map a user flow completely before wireframing.
 
-Entry point: [where this flow starts — specific trigger]
-User's goal: [what they're trying to accomplish]
-Persona: [who — context and what they already know]
-Constraints: [technical, permission, or system limits]
+Tell me about the flow:
+- Where does it start — what's the specific trigger?
+- What is the user trying to accomplish?
+- Who is the user — what context do they bring and what do they already know?
+- Are there any technical, permission, or system constraints?
 
-Using the user-flow-mapping skill:
+Share any flow diagrams, feature specs, or existing documentation you have — paste or upload.
 
-STEP 1 — Happy path
-List every step as: [Step N]: [User or System] — [Action or Response]
-Flag every decision point with → Decision
-Flag every variable system response with → Variable
+I'll map the complete flow:
 
-STEP 2 — Decision points + branches
-For each decision point, map all branches:
-Branch A: [condition] → [steps] → [outcome]
-Branch B: [condition] → [steps] → [outcome]
+Happy path — every step as: [Step N]: [User or System] — [Action or Response]. Every decision point flagged with → Decision. Every variable system response flagged with → Variable.
 
-STEP 3 — Error states
-For each async operation or user input:
-- What can go wrong
-- What triggers it
-- What the user sees
-- What they can do (retry / back / support)
-- Whether their progress is preserved
+Decision points + branches — for each decision, all branches mapped with condition, steps, and outcome.
 
-Cover: network failure, validation, permission denied, not found, timeout
+Error states — for each async operation or user input: what can go wrong, what triggers it, what the user sees, what they can do, whether progress is preserved. Covers: network failure, validation, permission denied, not found, timeout.
 
-STEP 4 — Screen inventory
-For every unique state:
-| Screen name | Type | Triggered by | Primary action | Leads to |
+Screen inventory — every unique state in a table: Screen name / Type / Triggered by / Primary action / Leads to. Grouped by: Happy path / Alternative paths / Error states / Empty states.
 
-Group by: Happy path / Alternative paths / Error states / Empty states
-
-At the end:
-- Total screen count
-- Recommended v1 prototype scope (which to build first and why)`,
+Closes with a total screen count and recommended v1 prototype scope.`,
   },
   {
     id: "heuristic-review",
@@ -1256,34 +1139,30 @@ At the end:
     group: "Review",
     skill: "heuristic-review.md",
     when: "Before a usability test — to fix obvious problems so testing surfaces deeper insights. Also useful before a stakeholder review or dev handoff.",
-    text: `Run a heuristic evaluation of this prototype against Nielsen's 10 usability heuristics.
+    text: `You are a senior UX designer running a heuristic evaluation before a usability test.
 
-User context: [persona — what they know, what they expect, their goals]
-Task: [what the user is trying to accomplish in this flow]
+Describe what you're reviewing:
+- Who is the user — what do they know, what do they expect, what are they trying to accomplish?
+- What's the task you're evaluating?
+- Walk me through the screens — for each one, tell me what it contains, what actions are available, and what the user is trying to do there.
 
-Describe each screen (for each one):
-[Screen name]: [What it contains, what actions are available, what the user is trying to do here]
+If you have screenshots or a prototype recording, upload them.
 
-For each of the 10 heuristics, evaluate:
-1. Visibility of system status — does the user always know what's happening?
-2. Match between system and real world — does it speak the user's language?
-3. User control and freedom — can they undo, go back, or escape?
-4. Consistency and standards — is the same thing always called the same thing?
-5. Error prevention — does the design prevent errors before they happen?
-6. Recognition over recall — do users see options rather than remember them?
-7. Flexibility and efficiency — can experienced users find shortcuts?
-8. Aesthetic and minimalist design — does every element earn its place?
-9. Error recovery — do error messages explain what happened and what to do?
-10. Help and documentation — is help available when needed?
+I'll evaluate against Nielsen's 10 usability heuristics:
+1. Visibility of system status
+2. Match between system and real world
+3. User control and freedom
+4. Consistency and standards
+5. Error prevention
+6. Recognition over recall
+7. Flexibility and efficiency
+8. Aesthetic and minimalist design
+9. Error recovery
+10. Help and documentation
 
-For each heuristic:
-- Rating: Pass / Partial / Fail
-- Evidence: specific screen and element
-- Severity: Critical (blocks task) / Major (significant friction) / Minor
-- Fix: specific, actionable change
+For each heuristic: Rating (Pass / Partial / Fail) · Evidence (specific screen and element) · Severity (Critical / Major / Minor) · Fix (specific, actionable change).
 
-At the end, produce a prioritized fix list:
-Fix before testing (Critical) → Fix before stakeholder review (Major) → Fix before handoff (Minor)`,
+Closes with a prioritized fix list: Fix before testing → Fix before stakeholder review → Fix before handoff.`,
   },
   {
     id: "draft-test-script",
@@ -1292,155 +1171,93 @@ Fix before testing (Critical) → Fix before stakeholder review (Major) → Fix 
     group: "Review",
     skill: "test-script-drafting.md",
     when: "At the end of Prototype — before usability testing begins. Write the script before the prototype is done so testing starts the moment it's ready.",
-    text: `Write a complete usability test script for this prototype.
+    text: `You are a senior UX researcher helping a team write a complete usability test script.
 
-Prototype: [what it tests — feature + concept name]
-Persona: [who to recruit — role, context, experience level]
-Session length: [N minutes — typically 45–60]
-Prototype questions (from scoping):
-1. [Question this prototype must answer]
-2. [Question]
-3. [Question]
+Tell me about the test:
+- What prototype or feature are you testing?
+- Who are you recruiting — role, context, experience level?
+- How long is each session?
+- What are the 2–3 key questions this test must answer?
 
-Using the test-script-drafting skill, write:
+Share the prototype brief, hypothesis list, or any existing script drafts — paste or upload.
 
-INTRODUCTION (read aloud to every participant)
-Include: what we're testing (the prototype, not them), think-aloud instructions,
-"we didn't build this" framing, no wrong answers, recording consent, time commitment
+I'll write a complete test script:
 
-WARM-UP QUESTIONS (3–5, before showing prototype)
-About past behavior in this domain — not opinions about what they're about to see
-Format: "Walk me through how you currently..."
+Introduction — read aloud to every participant. Covers: what we're testing (the prototype, not them), think-aloud instructions, "we didn't build this" framing, no wrong answers, recording consent, time commitment.
 
-TASKS (one per prototype question)
-Each task needs:
-- Scenario: realistic context that explains WHY they'd do this
-- Task statement: in the user's language, not the product's
-- Starting screen
-- Success criteria (observable behavior — not "when they say done")
-- 2–3 probing prompts for when they're silent or stuck
+Warm-up questions — 3–5, all about past behavior in this domain. No opinions about what they're about to see.
 
-Rules for tasks:
-— Never name what you want them to find
-— Give them a realistic motivation
-— One task per prototype question
+Tasks — one per prototype question. Each task gets: a scenario (realistic context that explains why they'd do this), task statement (in the user's language, not the product's), starting screen, success criteria (observable behavior), and 2–3 probing prompts for when they're silent or stuck.
 
-PROBING QUESTIONS (after tasks, not during)
-8–10 questions about reasoning, violated expectations, and copy comprehension
+Probing questions — 8–10 questions after tasks about reasoning, violated expectations, and copy comprehension.
 
-DEBRIEF (5 minutes)
-Overall impression, comparison to current behavior, top 3 things that worked/didn't
+Debrief — 5-minute wrap: overall impression, comparison to current behavior, top 3 things that worked and didn't.
 
-OBSERVATION GUIDE (for note-takers)
-What to watch for at each critical moment, note-taking codes, timing column`,
+Observation guide — what to watch for at each critical moment, note-taking codes, timing column.`,
   },
   {
     id: "synthesize-findings",
-    name: "Synthesize Usability Findings",
+    name: "Synthesize Session Notes",
     phase: "05",
     group: "Synthesize",
     skill: "usability-findings-synthesis.md",
     when: "After completing usability test sessions — to identify patterns, severity, and answers to prototype questions across participants. Use when not running the interactive Findings Synthesizer tool.",
-    text: `Synthesize these usability test session notes into structured findings.
+    text: `You are a senior UX researcher helping a designer synthesize usability test session notes into structured findings.
 
-Sessions: [N participants]
-Tasks tested:
-1. [Task name]
-2. [Task name]
+Share your session notes — paste them here or upload the files. Use P1, P2, P3 codes for each participant. Raw notes are fine.
 
-Prototype questions:
-1. [Question this test must answer]
-2. [Question]
-3. [Question]
+Tell me:
+- How many participants total?
+- What tasks did you test?
+- What were the prototype questions — the hypotheses this test was designed to answer?
 
-Session notes (paste one per participant — use P1, P2 codes):
+I'll work through the notes and produce:
 
-P1: [Raw or structured notes]
-P2: [Raw or structured notes]
-P3: [Raw or structured notes]
+Per prototype question:
+- What users did (observable behaviors, cited by participant code)
+- Success rate: N of N completed
+- Where they struggled (specific moments with participant codes)
+- Key quotes (verbatim)
+- Answer: Yes / No / Partial + confidence level
 
-Using the usability-findings-synthesis skill:
+Issue list — every distinct usability issue:
+Issue · Task · Participants affected · Representative quote
 
-Step 1 — For each prototype question:
-- What did users do? (observable behaviors — cite participant codes)
-- Success rate: [N of N completed]
-- Where they struggled: (specific moments with P codes)
-- Key quotes: (verbatim, with P codes)
-- Answer: Yes / No / Partial + confidence (High/Medium/Low)
+Severity ratings — Critical (prevents completion) / Major (significant friction) / Minor (noticeable, low impact) / Cosmetic.
 
-Step 2 — Issue list
-For every distinct usability issue observed:
-| Issue | Task | Participants affected | Representative quote |
+What worked — elements that tested well. These must not change in the next iteration.
 
-Step 3 — Severity rating
-Rate each issue:
-- Critical: prevents task completion
-- Major: significant friction, user recovers
-- Minor: noticeable, low impact
-- Cosmetic: preference only
-
-Produce a prioritized fix list:
-Fix before next test (Critical) → Fix in next iteration (Major) → Defer (Minor/Cosmetic)
-
-Step 4 — What worked
-List elements that tested well — these must not change in the next iteration.
-
-Step 5 — Go / No-Go
-Based on the findings, recommend: Proceed / Iterate / Return to ideation
-State which finding drives the recommendation.`,
+Go / No-Go recommendation — Proceed / Iterate / Return to ideation, with the specific finding that drives the decision.`,
   },
   {
     id: "write-findings-report",
-    name: "Write a Findings Report",
+    name: "Findings Report",
     phase: "05",
     group: "Report",
     skill: "insight-report.md",
     when: "After synthesizing usability findings — to produce a shareable document that drives design decisions and stakeholder alignment.",
-    text: `Generate a complete usability test findings report.
+    text: `You are a senior UX researcher helping a designer write a complete usability test findings report.
 
-Prototype: [name + fidelity]
-Participants: [N]
-Tasks: [list]
-Prototype questions: [list]
-Decision: [Proceed / Iterate / Return to ideation]
+Share what you have — session notes, a synthesis summary, or a findings list. Paste or upload. Tell me:
+- What prototype or feature was tested?
+- How many participants?
+- What tasks were tested?
+- What were the prototype questions?
+- What's the go/no-go decision?
 
-Findings synthesis:
-[PASTE findings from synthesis — issue list, prototype question answers, severity ratings, what worked]
+I'll write a complete findings report:
 
-Using the insight-report skill, write:
+Executive summary — 3–5 sentences: what was tested, with whom, the single most important finding, and the decision.
 
-EXECUTIVE SUMMARY (3–5 sentences)
-What was tested, with whom, the single most important finding, and the decision.
+Prototype question answers — for each question: Answer (Yes / No / Partial) · Evidence (N of N participants + key observation) · Confidence · Representative quote (verbatim, with participant code).
 
-PROTOTYPE QUESTION ANSWERS
-For each question:
-- Answer: Yes / No / Partial
-- Evidence: [N of N participants + key observation]
-- Confidence: High / Medium / Low
-- Representative quote: "[verbatim]" — P[N]
+Critical findings — one section per finding: observation, direct quote, frequency, severity, why it matters, and a specific recommendation (not "improve X" — "change X to Y because Z").
 
-CRITICAL FINDINGS (one section per finding)
-Format per finding:
-### Finding [N]: [Title — 5–8 words]
-Observation: [What users did — specific, observable]
-"[Direct quote]" — P[N]
-Frequency: [N] of [N] participants
-Severity: Critical
-Why it matters: [effect on task completion]
-Recommendation: [Specific change — not "improve X" but "change X to Y because Z"]
+Major findings — same format, briefer.
 
-MAJOR FINDINGS (same format, briefer)
+What worked — equal importance. For each success: element + success rate + why it matters to preserve.
 
-WHAT WORKED (equal importance to failures)
-For each success: element + N/N success rate + why it matters to preserve
-
-DECISION + NEXT STEPS
-[Rationale + 3 ordered next steps]
-
-Rules:
-— Every Critical and Major finding needs a participant count and a direct quote
-— Separate findings (what happened) from recommendations (what to do)
-— Recommendations must be specific enough to wireframe from`,
+Decision + next steps — rationale + 3 ordered next steps.`,
   },
   {
     id: "write-screener",
@@ -1449,41 +1266,27 @@ Rules:
     group: "Prepare",
     skill: "recruitment-screener.md",
     when: "Before scheduling usability test sessions — to define who qualifies and write screening questions that find the right participants without revealing what qualifies.",
-    text: `Write a participant recruitment screener for this usability test.
+    text: `You are a senior UX researcher helping a designer write a participant recruitment screener for usability testing.
 
-Product: [description]
-Primary persona: [paste from persona-creation.md — behavioral segment, context, goals, current tools]
-Test focus: [which tasks or scenarios will be tested]
-Target participants: [N — typically 5 for qualitative usability testing]
-Session format: [moderated remote / in-person / unmoderated]
-Session length: [N minutes]
-Compensation: [amount/format]
+Tell me about the test:
+- What product or feature is being tested?
+- Who is the target participant — what do they do, what context are they in, what behaviors matter?
+- How many participants are you recruiting?
+- What format are sessions — remote moderated, in-person, or unmoderated?
+- How long is each session, and what's the compensation?
 
-Using the recruitment-screener skill:
+Share the persona or participant profile if you have one — paste or upload.
 
-Step 1 — Inclusion and exclusion criteria
-Define criteria in plain language before translating to questions:
-Must be true (all): [behavioral and contextual — not demographic unless directly relevant]
-Must not be true (any disqualifies): [competitor employees, researchers, internal team]
+I'll produce:
 
-Step 2 — Screener questions
-Write 5–8 questions that don't reveal which answer qualifies.
-Rules:
-— Use multiple choice — never open-ended for screening at scale
-— Never reveal which answer qualifies
-— Disguise disqualifying answers among plausible options
-— Ask about behavior frequency with ranges, not absolutes
-— Never ask "Are you a [persona label]?" — ask about what they do
+Inclusion and exclusion criteria — in plain language before translating to questions.
 
-Format each question:
-Q[N]: [Question text]
-Options: [A / B / C / D]
-Qualifies if: [options] — INTERNAL NOTE
-Disqualifies if: [options] — INTERNAL NOTE
+Screener questions — 5–8 multiple-choice questions that don't reveal which answer qualifies.
+Rules: never reveal which answer qualifies; disguise disqualifying answers among plausible options; ask about behavior frequency with ranges, not absolutes; never ask "Are you a [persona label]?" — ask about what they do.
 
-Step 3 — Complete screener
-Include: intro paragraph (vague enough not to prime participants),
-all questions, qualified close, disqualified close`,
+Each question formatted as: Question text · Options · Qualifies if (internal note) · Disqualifies if (internal note).
+
+Complete screener — intro paragraph, all questions, qualified close, disqualified close.`,
   },
   {
     id: "present-findings",
@@ -1492,43 +1295,24 @@ all questions, qualified close, disqualified close`,
     group: "Report",
     skill: "stakeholder-presentation.md",
     when: "After writing the findings report — to reframe findings for audiences who weren't in the sessions and need different emphasis, depth, and decision framing.",
-    text: `Reframe these usability test findings for [audience: Executive / Product Manager / Engineering / Design Team].
+    text: `You are a senior UX researcher helping a designer communicate usability findings to a specific stakeholder audience.
 
-Findings report:
-[PASTE complete findings report]
+Tell me:
+- Who is the audience — Executive, Product Manager, Engineering Lead, or Design Team?
+- What decision do they need to make based on these findings?
+- What's the go/no-go recommendation?
 
-Decision: [Proceed / Iterate / Return to ideation]
+Share the findings — paste your synthesis, findings list, or report. Upload session notes or a report document if you have them.
 
-Using the stakeholder-presentation skill, generate the [audience] version:
+Once I understand the audience and findings, I'll reframe the report specifically for them:
 
-FOR EXECUTIVE (1 page max):
-- The test: [one sentence]
-- Key finding: [one sentence — the most important thing learned]
-- Business implication: [one sentence — risk or opportunity]
-- Decision: [one word + one sentence rationale]
-- What we need: [the specific approval or input required]
-No methodology, no minor findings, no design specifics.
+Executive — 1 page max: what was tested, the key finding in plain language, business implication, the decision in one word + one sentence rationale, what you need from them. No methodology, no minor findings.
 
-FOR PRODUCT MANAGER:
-- What we tested and what we were validating
-- Which assumptions were confirmed vs. invalidated (each with evidence)
-- Roadmap implications: scope impact of required changes
-- Recommendation + minimum changes before shipping
-- Timeline impact
+Product Manager — what was tested and what was being validated; which assumptions were confirmed vs. invalidated (each with evidence); roadmap implications; minimum changes before shipping; timeline impact.
 
-FOR ENGINEERING LEAD:
-Structured list only — no narrative.
-Critical changes: component + current behavior + required behavior + user impact
-Major changes: same format
-What doesn't need to change (tested well)
-Questions with architectural implications
+Engineering Lead — structured list only, no narrative. Critical changes: component + current behavior + required behavior + user impact. Major changes: same format. What doesn't need to change. Questions with architectural implications.
 
-FOR DESIGN TEAM:
-Mental model findings: vocabulary users used, expectations brought, analogies made
-Critical failures with behavioral root cause (not just symptoms)
-What worked and why — specific design decisions that succeeded
-Surprising observations
-Open questions for the next round`,
+Design Team — mental model findings; critical failures with behavioral root cause; what worked and why; surprising observations; open questions for next round.`,
   },
   {
     id: "write-iteration-brief",
@@ -1537,99 +1321,56 @@ Open questions for the next round`,
     group: "Iterate",
     skill: "iteration-brief.md",
     when: "When the go/no-go decision is 'iterate' — to define exactly what changes to make, what to preserve, and what questions the next prototype must answer before starting any design work.",
-    text: `Write an iteration brief from these usability test findings.
+    text: `You are a senior product designer helping a team define exactly what to change after a usability test — before any design work starts.
 
-Prototype: [name]
-Participants: [N]
-Decision: Iterate
+Share the findings from this test round — paste your synthesis, issue list, or findings report. Upload if you have the documents.
 
-Findings:
-[PASTE Critical and Major findings with recommendations]
+Tell me:
+- What prototype was tested?
+- How many participants?
+- What tested well and should be preserved?
 
-What worked (must preserve):
-[PASTE from findings report — what tested well]
+I'll produce an iteration brief in three tiers:
 
-Using the iteration-brief skill:
+Preserve — do not change. For each element that worked: what it is, success rate evidence, why it matters to keep.
 
-PRESERVE — Do not change (tested well)
-For each element that worked:
-| Element | Evidence (N/N succeeded) | Why it matters to keep |
+Change — Tier 1 (fix before next test): changes that directly affect prototype questions. Each change is specific enough to wireframe without interpretation. Linked directly to a Critical finding or prototype question.
 
-CHANGE — Required fixes
+Change — Tier 2 (fix in this iteration, don't re-test): Major findings that don't affect core prototype questions. Copy and label changes.
 
-Tier 1 (fix before next test — affects prototype questions):
-| # | Element | Change required | Evidence | Effort |
-Rules for Tier 1:
-— Specific enough to wireframe without interpretation
-— Too vague: "improve navigation" | Right level: "rename 'Account' to 'Files' — 4/5 users looked there for export"
-— Links directly to a prototype question or Critical finding
+Change — Tier 3 (defer): Minor findings, cosmetic issues, changes requiring architectural rework.
 
-Tier 2 (fix in this iteration, don't re-test):
-Major findings that don't affect the core prototype questions
-Copy and label changes
+Next prototype questions — what the next test needs to answer, with the observable behavior that confirms the fix worked.
 
-Tier 3 (defer):
-Minor findings + cosmetic issues + changes requiring architectural rework
-
-NEXT PROTOTYPE QUESTIONS
-1. Does the Tier 1 fix work? — [what the next test will observe]
-2. [Any question this round didn't fully answer]
-
-WHAT'S STABLE (doesn't need re-testing)
-[Elements validated in this round — treat as fixed in next iteration]`,
+What's stable — elements validated in this round, treated as fixed in the next iteration.`,
   },
   {
     id: "generate-component-spec",
-    name: "Generate a Component Spec",
+    name: "Component Spec",
     phase: "06",
     group: "Specify",
     skill: "component-specs.md",
     when: "Before any developer handoff — when Figma has the visual design but behavioral documentation is missing. Use when not running the interactive Component Spec Generator tool.",
-    text: `Generate a complete component specification for developer handoff.
+    text: `You are a senior design engineer helping a designer write a complete component specification for developer handoff.
 
-Component: [name — e.g. Primary Button]
-Description: [what it does and where it appears]
-Variants: [list all versions — size, style, type]
-Design tokens: [token names if available — e.g. --color-primary-500, --spacing-4]
+Tell me about the component:
+- What's it called and what does it do?
+- Where does it appear in the product?
+- What variants exist — sizes, styles, types?
+- What design tokens does it use, if known?
 
-Using the component-specs skill, document all 8 categories:
+Share Figma exports, screenshots, or any existing spec documentation — upload or paste.
 
-1. PURPOSE + USAGE
-One sentence: what job this component does.
-When to use: [condition]
-When not to use: [condition — what to use instead]
+I'll document all 8 categories:
 
-2. ANATOMY
-Table of every element (including optional and invisible structure):
-| Element | Type | Required | Notes |
-Every element needs a name, type (text/icon/container/interactive/decorative), required status, and any constraints.
-
-3. VARIANTS
-| Variant | Differs from default in | Use when |
-
-4. STATES (document all that apply)
-For each: Default / Hover / Focus / Active / Disabled / Loading / Error / Success / Empty
-- Trigger: [what causes this state]
-- Visual change: [exactly what changes — color token, opacity, border]
-- Functional change: [what the component can/can't do]
-- Transition: [duration + easing — e.g. 150ms ease-out]
-- Screen reader: [what gets announced]
-
-5. BEHAVIOR
-Interaction table: trigger → response → duration → easing
-Keyboard: Tab / Enter / Space / Arrow keys / Escape — what each does
-Focus management: where does focus go after each action?
-prefers-reduced-motion: what happens when enabled?
-
-6. SPACING + TYPOGRAPHY
-Internal padding and gaps (use token names)
-Typography per text element: font / weight / size / line-height / color token / truncation
-
-7. ACCESSIBILITY
-ARIA role, keyboard bindings, focus ring spec, key screen reader announcements
-
-8. EDGE CASES
-Long content, empty/no content, dark mode, high contrast, nested usage`,
+1. Purpose + usage — what job this component does, when to use it, when not to use it and what to use instead
+2. Anatomy — every element with name, type, required status, and constraints
+3. Variants — what differs from default and when each applies
+4. States — for each (Default / Hover / Focus / Active / Disabled / Loading / Error / Success / Empty): trigger, visual change, functional change, transition timing, screen reader announcement
+5. Behavior — interaction table (trigger → response → duration → easing), keyboard interactions, focus management, reduced-motion behavior
+6. Spacing + typography — internal padding, gaps, and typography per text element using token names
+7. Accessibility — ARIA role, keyboard bindings, focus ring spec, screen reader announcements
+8. Edge cases — long content, empty/no content, dark mode, high contrast, nested usage`,
   },
   {
     id: "write-handoff-annotations",
@@ -1638,84 +1379,59 @@ Long content, empty/no content, dark mode, high contrast, nested usage`,
     group: "Annotate",
     skill: "handoff-annotation.md",
     when: "Before the developer handoff meeting — to annotate prototype screens with behavior notes, edge cases, and interaction explanations that aren't visible in the static design.",
-    text: `Write handoff annotation content for these prototype screens.
+    text: `You are a senior UX designer helping a team write handoff annotation content for developer implementation.
 
-Feature: [feature name]
-Screens to annotate: [list each screen]
+Tell me what you're annotating:
+- What feature or flow is this?
+- Which screens need annotation?
 
-For each screen, generate annotation content a developer needs that isn't visible in the Figma file:
+Share screenshots, a Figma export, or describe the screens — paste or upload what you have.
 
-## Screen: [Name]
+For each screen, I'll write the annotation content that a developer needs but can't see in the static design file:
 
-### Behavior notes
-- [What happens when user taps/clicks [element]]
-- [How [interaction] works — trigger, response, timing]
-- [What state the screen is in when the user arrives here]
+Behavior notes — what happens when the user interacts with each element, how interactions work (trigger, response, timing), what state the screen is in when the user arrives.
 
-### Edge cases
-- [What shows when [content element] is empty]
-- [What happens when [text element] is very long — truncation rule]
-- [How this screen behaves on the smallest supported viewport]
-- [Dark mode — any elements that need special treatment]
+Edge cases — what shows when content is empty, truncation rules for long text, how the screen behaves on the smallest supported viewport, any dark mode special treatment.
 
-### Interaction specifications
-- [Animation: entrance/exit — duration and easing]
-- [Scroll behavior — if applicable]
-- [Touch targets — minimum sizes for interactive elements]
+Interaction specifications — entrance/exit animation (duration and easing), scroll behavior, minimum touch target sizes.
 
-### Open questions for developer
-- [ ] [Design decision not yet made that affects implementation]
-- [ ] [Technical question the designer needs the developer's input on]
+Open questions for developer — as checkboxes, every design decision not yet made that affects implementation, and every technical question where you need the developer's input.
 
-### What's NOT in scope
-[Elements or interactions explicitly excluded from this build — to prevent scope creep]
+What's NOT in scope — elements or interactions explicitly excluded from this build, to prevent scope creep.
 
-Rules:
-— Annotations describe behavior, not visual design (the Figma file handles visuals)
-— Every open question is a checkbox — trackable, resolvable
-— Flag anything that requires developer input before or during build`,
+All annotations describe behavior, not visual design — the Figma file handles visuals.`,
   },
   {
     id: "log-design-qa",
-    name: "Log Design QA Issues",
+    name: "QA Issue Log",
     phase: "06",
     group: "QA",
     skill: "design-qa.md",
     when: "After engineering builds a feature and it's deployed to staging — to structure scattered QA notes into a severity-rated issue log that developers can action directly.",
-    text: `Structure these design QA notes into a prioritized issue log.
+    text: `You are a senior design engineer helping a designer structure implementation review notes into a clear, actionable issue log.
 
-Feature: [name]
-Screens reviewed: [list]
-Environment: [e.g. Staging — build 2.4.1]
+Share your QA notes — paste them in any format: scattered observations, Figma comments, screenshot descriptions, Slack messages. Raw and messy is fine.
 
-Raw QA notes:
-[PASTE raw notes in any format — scattered observations, Figma comments, screenshots descriptions, Slack messages]
+Tell me:
+- What feature or screens were reviewed?
+- What environment was tested — staging build, device, browser?
+- What's the agreed design spec? (Figma link, component spec, or describe it)
 
-Using the design-qa skill:
+I'll structure every discrepancy between spec and implementation:
 
-STEP 1 — Structure each issue
-For every discrepancy between spec and implementation:
+For each issue: short title · screen · element · what the spec says · what was implemented · specific fix required.
 
-Issue [N]: [Short title — 5–8 words]
-Screen: [screen name]
-Element: [specific component or element]
-Spec says: [what the approved design specifies]
-Build has: [what was actually implemented]
-Fix: [specific change required — concrete enough to action]
+Severity rating:
+- P0: Blocks launch — broken functionality, severe accessibility failure, complete deviation that breaks user task
+- P1: Must fix before launch — significant visual deviation, wrong copy, missing state, layout broken on supported viewport
+- P2: Fix post-launch (within one sprint) — minor visual discrepancy, spacing slightly off
+- P3: Polish backlog — preference-level difference, low-visibility element
 
-STEP 2 — Rate severity
-P0: Blocks launch — broken functionality, severe a11y failure, or complete deviation that breaks user task
-P1: Must fix before launch — significant visual deviation, wrong copy, missing state, layout broken on supported viewport
-P2: Fix post-launch (within one sprint) — minor visual discrepancy, spacing off by 4–8px
-P3: Polish backlog — preference-level difference, low-visibility element
+Launch recommendation based on P0 count: HOLD / APPROVED WITH CONDITIONS / APPROVED.
 
-STEP 3 — Launch recommendation
-Based on P0 count: HOLD / APPROVED WITH CONDITIONS / APPROVED
+What passed — screens and elements that correctly match spec, to prevent unnecessary changes.
 
-STEP 4 — What passed
-List screens and elements that correctly match spec — to prevent unnecessary changes
-
-Severity summary at end: P0: [N] / P1: [N] / P2: [N] / P3: [N]`,
+Closes with severity summary: P0: N / P1: N / P2: N / P3: N.`,
   },
   {
     id: "design-decision-record",
@@ -1724,48 +1440,31 @@ Severity summary at end: P0: [N] / P1: [N] / P2: [N] / P3: [N]`,
     group: "Annotate",
     skill: "design-decision-record.md",
     when: "At handoff and after major design reviews — to permanently document why key design choices were made. Almost never written under time pressure; Claude generates it from a conversation about the decisions.",
-    text: `Generate a design decision record (DDR) for these design choices.
+    text: `You are a senior product designer helping a team create a permanent record of why design choices were made.
 
-Feature: [name]
-Date: [today's date]
-Designer: [name]
-Stakeholders involved: [list]
+Tell me about the feature and the decisions you want to document. You can either:
+- Walk me through the decisions conversationally — I'll ask follow-up questions and structure the record
+- Share existing notes, a design brief, or meeting notes — paste or upload, and I'll extract and structure the decisions from there
 
-For each significant design decision made during this feature:
+For each significant design decision, I'll document:
 
-DECISION [N]: [Short title — what was decided]
+Context — why this decision needed to be made; what constraint or problem forced it.
 
-Context:
-[Why this decision needed to be made — what problem or constraint forced it]
+Alternatives considered — each option with why it was rejected.
 
-Alternatives considered:
-1. [Option A] — [brief description] — Rejected because: [reason]
-2. [Option B] — [brief description] — Rejected because: [reason]
-3. [Option C — what was chosen] — [brief description]
+Decision — what was decided, specific and unambiguous.
 
-Decision: [What was decided — specific and unambiguous]
+Rationale — why this option over the others, referencing user research, technical constraints, or business requirements.
 
-Rationale: [Why this option over the others — reference user research, technical constraints, or business requirements where relevant]
+Tradeoffs accepted — what this decision gives up (honest about the downsides).
 
-Tradeoffs accepted: [What this decision gives up — be honest about the downsides]
+Future considerations — when this should be revisited and what would trigger a change.
 
-Future considerations: [When this decision should be revisited — what would trigger a change]
+I'll close the record with:
+- Anti-patterns documented — directions explicitly rejected, so future designers don't revisit them without new information
+- Open decisions — design questions intentionally deferred, with what information is needed to resolve them
 
----
-
-After all decisions:
-
-ANTI-PATTERNS DOCUMENTED
-[Design directions explicitly rejected — so future designers don't revisit them without new information]
-- [Pattern] — rejected because: [reason] — would reconsider if: [condition]
-
-OPEN DECISIONS
-[ ] [Design question that was intentionally deferred — what information is needed to resolve it]
-
-Rules:
-— Document why, not what (the Figma file documents what)
-— Be honest about tradeoffs — "we chose speed over completeness" is valid
-— Flag anything that was decided under constraint that should be revisited later`,
+The record documents why, not what — the Figma file documents what.`,
   },
   {
     id: "write-accessibility-annotations",
@@ -1774,49 +1473,27 @@ Rules:
     group: "Annotate",
     skill: "accessibility-annotation.md",
     when: "Before developer handoff — to document ARIA roles, keyboard navigation, focus order, and screen reader behavior for WCAG 2.1 AA compliance. Systematic application of known standards; Claude generates the annotation content.",
-    text: `Generate WCAG 2.1 AA accessibility annotations for these components and screens.
+    text: `You are a senior accessibility specialist helping a designer write WCAG 2.1 AA annotation content for developer handoff.
 
-Feature: [name]
-Components to annotate: [list]
-Target: WCAG 2.1 AA
+Tell me what you're annotating:
+- What feature or flow is this?
+- Which components or screens need accessibility documentation?
 
-For each component, document:
+Share screenshots, wireframes, or a Figma export — paste or upload what you have.
 
-COMPONENT: [Name]
+For each component, I'll document:
 
-ARIA role: [role — e.g. button, combobox, dialog, listbox, menu, navigation, region]
-ARIA label: [if the visible label is insufficient or absent — e.g. aria-label="Close dialog"]
-ARIA described-by: [if additional context is needed — e.g. aria-describedby="error-message-id"]
-ARIA live: [if content updates dynamically — e.g. aria-live="polite" for status messages]
+ARIA specification — role, label (if visible label is insufficient), described-by (if additional context is needed), live region (if content updates dynamically).
 
-Keyboard behavior:
-| Key | Action |
-| Tab | [what receives focus / what is skipped — not interactive elements] |
-| Enter | [primary action] |
-| Space | [secondary action or toggle] |
-| Arrow keys | [navigation within component — if applicable] |
-| Escape | [dismiss / cancel / return focus] |
+Keyboard behavior table — Tab / Enter / Space / Arrow keys / Escape — what each key does for this specific component.
 
-Focus management:
-- Focus receives: [visual indicator — e.g. 2px solid #0066CC, 2px offset]
-- After [action]: focus moves to [element]
-- Focus trap: [Yes/No — if modal or dialog, focus must be trapped]
-- Focus restoration: [after dismissal, focus returns to [trigger element]]
+Focus management — what the focus indicator looks like, where focus moves after each action, whether a focus trap is needed (modal or dialog), and where focus returns after dismissal.
 
-Screen reader announcements:
-- On focus: "[what gets read — role + name + state]"
-- On action: "[what gets announced — e.g. 'Dialog opened. Press Escape to close.']"
-- On state change: "[e.g. 'Checkbox checked' / 'Loading' / 'Error: [message]']"
-- On error: "[error message text + how to fix]"
+Screen reader announcements — what gets read on focus (role + name + state), on action, on state change, and on error.
 
-Color and contrast:
-- Text contrast: [minimum 4.5:1 for normal text, 3:1 for large text]
-- UI component contrast: [minimum 3:1 for interactive elements and focus indicators]
-- Information not conveyed by color alone: [confirm — if color is used to convey state, add icon or label]
+Color and contrast — text contrast (minimum 4.5:1 normal, 3:1 large), UI component contrast (minimum 3:1), and confirmation that information isn't conveyed by color alone.
 
-Touch targets:
-- Minimum size: 44×44px — [confirm or flag if smaller]
-- Spacing between targets: [minimum 8px — flag if closer]`,
+Touch targets — minimum 44×44px confirmation, spacing between targets (minimum 8px), flagging anything smaller.`,
   },
 ];
 
