@@ -20,6 +20,7 @@ import FindingsSynthesizer from "./FindingsSynthesizer";
 import InsightReportGenerator from "./InsightReportGenerator";
 import ComponentSpecGenerator from "./ComponentSpecGenerator";
 import DesignQALogger from "./DesignQALogger";
+import AgentsPage from "./AgentsPage";
 
 // ── Tokens ──────────────────────────────────────────────────────────────────
 const T = {
@@ -3841,6 +3842,7 @@ export default function App() {
   const [activeTool, setActiveTool] = useState(null);
   const [showFigmaGuide, setShowFigmaGuide] = useState(false);
   const [showSkillsLibrary, setShowSkillsLibrary] = useState(false);
+  const [showAgentsPage, setShowAgentsPage] = useState(false);
   const [activeSkill, setActiveSkill] = useState(null);
 
   useEffect(() => { setTimeout(() => setMounted(true), 60); }, []);
@@ -3851,6 +3853,9 @@ export default function App() {
   // Skills Library overlay
   // Skill detail now handled via SkillDrawer inline
   if (showSkillsLibrary) return <SkillsLibraryOverlay onBack={() => setShowSkillsLibrary(false)} />;
+
+  // Agents page
+  if (showAgentsPage) return <AgentsPage onBack={() => setShowAgentsPage(false)} />;
 
   // Active tool
   if (activeTool) {
@@ -4088,6 +4093,34 @@ export default function App() {
                 onMouseEnter={e => { e.currentTarget.style.borderColor = T.borderHover; e.currentTarget.style.color = T.text; }}
                 onMouseLeave={e => { e.currentTarget.style.borderColor = T.border; e.currentTarget.style.color = T.muted; }}
               >Open Studio →</button>
+            </div>
+
+            {/* Agents callout */}
+            <div style={{
+              marginTop: 10,
+              border: `1px solid ${T.border}`,
+              borderRadius: 10,
+              background: T.surface,
+              padding: "14px 20px",
+              display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, flexWrap: "wrap",
+            }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+                <span style={{ fontSize: 9, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.1em", textTransform: "uppercase", color: T.dim, background: T.card, border: `1px solid ${T.border}`, padding: "2px 8px", borderRadius: 3 }}>New</span>
+                <span style={{ fontSize: 13, fontWeight: 600, color: T.text, fontFamily: "'DM Sans', sans-serif" }}>Agents</span>
+                <span style={{ fontSize: 12, color: T.dim, lineHeight: 1.5 }}>Six role-based Claude agents — Researcher, Strategist, Designer, and more — each pre-configured with skills and MCP tools.</span>
+              </div>
+              <button
+                onClick={() => setShowAgentsPage(true)}
+                style={{
+                  padding: "7px 16px", borderRadius: 7, flexShrink: 0,
+                  fontSize: 11, fontFamily: "'JetBrains Mono', monospace",
+                  letterSpacing: "0.07em", textTransform: "uppercase",
+                  background: "transparent", border: `1px solid ${T.border}`,
+                  color: T.muted, cursor: "pointer", transition: "all 0.15s", whiteSpace: "nowrap",
+                }}
+                onMouseEnter={e => { e.currentTarget.style.borderColor = T.borderHover; e.currentTarget.style.color = T.text; }}
+                onMouseLeave={e => { e.currentTarget.style.borderColor = T.border; e.currentTarget.style.color = T.muted; }}
+              >Meet the team →</button>
             </div>
           </>
         )}
