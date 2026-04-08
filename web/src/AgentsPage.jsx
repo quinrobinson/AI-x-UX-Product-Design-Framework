@@ -170,6 +170,7 @@ const AGENTS = [
     commands: [
       { name: "/handoff-block", desc: "Generate a Phase Handoff Block for the next phase session",                                                inputs: ["current_phase", "summary"] },
       { name: "/route",         desc: "Read project context and recommend which agent and command to run next",                                     inputs: [] },
+      { name: "/transition",    desc: "Read the latest phase handoff block and propose the next phase plan — spawns agents after confirmation",    inputs: [] },
       { name: "/kickoff",       desc: "Read project state and autonomously kick off the current phase",                                            inputs: [] },
       { name: "/discover",      desc: "Run the full Discover phase in parallel — research synthesis, competitive analysis, optional blueprint",    inputs: ["session-notes.md in .apdf/inputs/"] },
       { name: "/deliver",       desc: "Run the full Deliver phase — parallel component architecture, handoff docs, and QA log",                   inputs: ["screen-inventory.md in .apdf/inputs/"] },
@@ -649,6 +650,14 @@ export default function AgentsPage({ onBack }) {
                 settingsNote: "personal — opt-in",
                 script: ".claude/hooks/session-awareness.sh",
                 desc: "When Claude finishes responding, this hook checks whether phase-level work was completed during the session. If yes and no handoff block was generated, it reminds the designer to run /handoff-block before closing. Fires once per session, then clears. Personal preference — opt in by copying settings.local.json.example and removing .example.",
+              },
+              {
+                name: "Phase Routing",
+                event: "Stop",
+                settings: "settings.json",
+                settingsNote: "shared",
+                script: ".claude/hooks/phase-routing.sh",
+                desc: "After every session, checks .apdf/artifacts/ for a newly written Phase Handoff Block. If one is detected, prompts the designer to run /transition to kick off the next phase automatically. Fires only when a real phase handoff block is present — silent on all other sessions.",
               },
             ].map(hook => (
               <div key={hook.name} style={{ background: T.surface, border: `1px solid ${T.border}`, borderRadius: 6, padding: 24, display: "flex", flexDirection: "column", gap: 12 }}>
