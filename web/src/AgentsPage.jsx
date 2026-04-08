@@ -211,34 +211,6 @@ function AgentSurfaceMap({ onAgentClick, onSetupClick }) {
         ))}
       </div>
 
-      {/* Specialist rows */}
-      {specialists.map(agent => {
-        const rc = ROLES[agent.id];
-        return (
-          <div key={agent.id} style={{ display: "grid", gridTemplateColumns: gridCols, gap: 2, marginBottom: 2, minWidth: minW }}>
-            <div
-              onClick={() => onAgentClick(agent)}
-              style={{ background: T.surface, border: `1px solid ${T.border}`, padding: "14px 16px", cursor: "pointer", transition: "border-color 0.15s", position: "relative", overflow: "hidden", display: "flex", flexDirection: "column", justifyContent: "space-between" }}
-              onMouseEnter={e => e.currentTarget.style.borderColor = T.borderHover}
-              onMouseLeave={e => e.currentTarget.style.borderColor = T.border}
-            >
-              <div style={{ position: "absolute", top: 0, left: 0, bottom: 0, width: 2, background: rc }} />
-              <div style={{ paddingLeft: 8 }}>
-                <div style={{ fontSize: 13, fontWeight: 600, color: T.text, lineHeight: 1.3 }}>{agent.name}</div>
-                <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: T.dim, marginTop: 3 }}>{agent.role}</div>
-              </div>
-              <div style={{ paddingLeft: 8, marginTop: 10, fontFamily: "'JetBrains Mono', monospace", fontSize: 9, color: T.dim, opacity: 0.5, letterSpacing: "0.06em" }}>View →</div>
-            </div>
-            {["chat", "code", "cowork"].map(surface => (
-              <MapCell key={surface} cell={agent.mapCells[surface]} />
-            ))}
-          </div>
-        );
-      })}
-
-      {/* Orchestrator divider */}
-      <div style={{ borderTop: `1px solid ${T.border}`, margin: "10px 0 10px", opacity: 0.4 }} />
-
       {/* Orchestrator row */}
       {(() => {
         const rc = ROLES[orchestrator.id];
@@ -263,6 +235,34 @@ function AgentSurfaceMap({ onAgentClick, onSetupClick }) {
           </div>
         );
       })()}
+
+      {/* Specialist divider */}
+      <div style={{ borderTop: `1px solid ${T.border}`, margin: "10px 0 10px", opacity: 0.4 }} />
+
+      {/* Specialist rows */}
+      {specialists.map(agent => {
+        const rc = ROLES[agent.id];
+        return (
+          <div key={agent.id} style={{ display: "grid", gridTemplateColumns: gridCols, gap: 2, marginBottom: 2, minWidth: minW }}>
+            <div
+              onClick={() => onAgentClick(agent)}
+              style={{ background: T.surface, border: `1px solid ${T.border}`, padding: "14px 16px", cursor: "pointer", transition: "border-color 0.15s", position: "relative", overflow: "hidden", display: "flex", flexDirection: "column", justifyContent: "space-between" }}
+              onMouseEnter={e => e.currentTarget.style.borderColor = T.borderHover}
+              onMouseLeave={e => e.currentTarget.style.borderColor = T.border}
+            >
+              <div style={{ position: "absolute", top: 0, left: 0, bottom: 0, width: 2, background: rc }} />
+              <div style={{ paddingLeft: 8 }}>
+                <div style={{ fontSize: 13, fontWeight: 600, color: T.text, lineHeight: 1.3 }}>{agent.name}</div>
+                <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: T.dim, marginTop: 3 }}>{agent.role}</div>
+              </div>
+              <div style={{ paddingLeft: 8, marginTop: 10, fontFamily: "'JetBrains Mono', monospace", fontSize: 9, color: T.dim, opacity: 0.5, letterSpacing: "0.06em" }}>View →</div>
+            </div>
+            {["chat", "code", "cowork"].map(surface => (
+              <MapCell key={surface} cell={agent.mapCells[surface]} />
+            ))}
+          </div>
+        );
+      })}
 
       {/* Map note cards */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 2, marginTop: 32, minWidth: minW }}>
