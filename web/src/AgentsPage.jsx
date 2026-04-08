@@ -237,10 +237,9 @@ function AgentSurfaceMap() {
       </div>
 
       {/* Map notes */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 2, marginTop: 32, minWidth: 700 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 2, marginTop: 32, minWidth: 700 }}>
         {[
           { title: "Primary vs Occasional", body: <><strong style={{ color: T.text, fontWeight: 500 }}>Primary</strong> means the agent lives here — it's where the bulk of its work happens and where it should be invoked first. <strong style={{ color: T.text, fontWeight: 500 }}>Occasional</strong> means the agent can extend into this surface for specific tasks, but it's not the home base.</> },
-          { title: "What's not yet built", body: <>The agents themselves — <strong style={{ color: T.text, fontWeight: 500 }}>.claude/agents/</strong> directory with one <code style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11 }}>.md</code> per role. Each agent's system prompt is largely composed from its existing skill files. The orchestrator is net-new work. MCP tools already exist.</> },
           { title: "The key insight", body: <>Skills tell Claude <strong style={{ color: T.text, fontWeight: 500 }}>what to do</strong>. Tools give Claude <strong style={{ color: T.text, fontWeight: 500 }}>how to act</strong>. Agents define <strong style={{ color: T.text, fontWeight: 500 }}>who Claude is</strong> in a given context. The surface determines <strong style={{ color: T.text, fontWeight: 500 }}>where that work happens</strong>. Four layers, one framework.</> },
         ].map(n => (
           <div key={n.title} style={{ background: T.surface, border: `1px solid ${T.border}`, borderRadius: 6, padding: 24 }}>
