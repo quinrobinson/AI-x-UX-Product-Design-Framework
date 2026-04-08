@@ -4066,7 +4066,7 @@ export default function App() {
                   onMouseEnter={e => e.currentTarget.style.background = T.card}
                   onMouseLeave={e => e.currentTarget.style.background = T.surface}
                 >
-                  <item.Icon size={72} style={{ position: "absolute", bottom: -8, right: -8, color: item.color, opacity: 0.1, pointerEvents: "none" }} />
+                  <item.Icon size={110} strokeWidth={1} style={{ position: "absolute", bottom: -12, right: -12, color: item.color, opacity: 0.12, pointerEvents: "none" }} />
                   <div style={{ display: "inline-flex", alignItems: "center", gap: 6, marginBottom: 10 }}>
                     <div style={{ width: 6, height: 6, borderRadius: "50%", background: T.dim }} />
                     <span style={{
@@ -4074,7 +4074,7 @@ export default function App() {
                       letterSpacing: "0.08em", textTransform: "uppercase", color: T.muted,
                     }}>{item.label}</span>
                   </div>
-                  <p style={{ fontSize: 12, color: T.dim, lineHeight: 1.6, margin: 0, flex: 1 }}>{item.desc}</p>
+                  <p style={{ fontSize: 12, color: T.dim, lineHeight: 1.6, margin: 0, flex: 1, paddingRight: 48 }}>{item.desc}</p>
                   <span style={{
                     fontSize: 10, fontFamily: "'JetBrains Mono', monospace",
                     letterSpacing: "0.07em", textTransform: "uppercase",
