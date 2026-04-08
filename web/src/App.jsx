@@ -21,7 +21,7 @@ import InsightReportGenerator from "./InsightReportGenerator";
 import ComponentSpecGenerator from "./ComponentSpecGenerator";
 import DesignQALogger from "./DesignQALogger";
 import AgentsPage from "./AgentsPage";
-import { IconTimeline, IconRoute, IconPackage } from "@tabler/icons-react";
+import { IconLayoutGrid, IconRoute, IconPackage } from "@tabler/icons-react";
 
 // ── Tokens ──────────────────────────────────────────────────────────────────
 const T = {
@@ -4031,7 +4031,7 @@ export default function App() {
                   color: "#22C55E",
                   desc: "I know where I am in the project. Show me tools and guides for that phase.",
                   cta: "Choose a phase →",
-                  Icon: IconTimeline,
+                  Icon: IconLayoutGrid,
                 },
                 {
                   id: "ways",
@@ -4066,7 +4066,7 @@ export default function App() {
                   onMouseEnter={e => e.currentTarget.style.background = T.card}
                   onMouseLeave={e => e.currentTarget.style.background = T.surface}
                 >
-                  <item.Icon size={150} strokeWidth={0.75} style={{ position: "absolute", bottom: -16, right: -16, color: "#ffffff", opacity: 0.1, pointerEvents: "none" }} />
+                  <item.Icon size={150} strokeWidth={0.3} style={{ position: "absolute", bottom: -16, right: -16, color: "#ffffff", opacity: 0.1, pointerEvents: "none" }} />
                   <div style={{ display: "inline-flex", alignItems: "center", gap: 6, marginBottom: 10 }}>
                     <div style={{ width: 6, height: 6, borderRadius: "50%", background: T.dim }} />
                     <span style={{
