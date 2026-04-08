@@ -4093,6 +4093,7 @@ export default function App() {
               marginBottom: 0,
               border: `1px solid ${T.border}`,
               borderRadius: 10, overflow: "hidden",
+              background: T.border,
             }}>
               {[
                 {
@@ -4101,8 +4102,8 @@ export default function App() {
                   color: "#22C55E",
                   desc: "I know where I am in the project. Show me tools and guides for that phase.",
                   cta: "Choose a phase →",
-                  Icon: IconStack3,
-                  iconSize: 166, iconPos: { bottom: -20, right: -20 },
+                  img: `${import.meta.env.BASE_URL}phases.png`,
+                  imgHeight: "150%", imgRight: -130, imgTop: "calc(25% - 10px)",
                 },
                 {
                   id: "ways",
@@ -4110,8 +4111,8 @@ export default function App() {
                   color: "#8B5CF6",
                   desc: "I have a mission — a project or challenge I need to run. Show me a path through the framework.",
                   cta: "Browse scenarios →",
-                  Icon: IconHexPrisms,
-                  iconSize: 190, iconPos: { bottom: -20, right: -24 },
+                  img: `${import.meta.env.BASE_URL}ways-to-work.png`,
+                  imgHeight: "150%", imgRight: -120, imgTop: "calc(25% - 40px)",
                 },
                 {
                   id: "deliverable",
@@ -4119,8 +4120,8 @@ export default function App() {
                   color: "#F59E0B",
                   desc: "I know what I need to hand off. Find the fastest path to that output.",
                   cta: "Find a deliverable →",
-                  Icon: IconPackage,
-                  iconSize: 190, iconPos: { bottom: -48, right: -24 },
+                  img: `${import.meta.env.BASE_URL}deliverable.png`,
+                  imgHeight: "150%", imgRight: -120, imgTop: "calc(25% - 40px)",
                 },
               ].map((item) => (
                 <button
@@ -4128,7 +4129,7 @@ export default function App() {
                   className="path-grid-item"
                   onClick={() => setActivePath(item.id)}
                   style={{
-                    background: T.surface, border: "none",
+                    background: "#0F0F0F", border: "none",
                     padding: "20px 20px 18px", textAlign: "left",
                     cursor: "pointer", transition: "background 0.15s",
                     borderBottom: "2px solid transparent",
@@ -4136,19 +4137,20 @@ export default function App() {
                     position: "relative", overflow: "hidden",
                   }}
                   aria-label={item.label}
-                  onMouseEnter={e => e.currentTarget.style.background = T.card}
-                  onMouseLeave={e => e.currentTarget.style.background = T.surface}
+                  onMouseEnter={e => e.currentTarget.style.background = "#141414"}
+                  onMouseLeave={e => e.currentTarget.style.background = "#0F0F0F"}
                 >
-                  <item.Icon size={item.iconSize} strokeWidth={0.3} style={{ position: "absolute", ...item.iconPos, color: "#ffffff", opacity: 0.075, pointerEvents: "none" }} />
-                  <div style={{ display: "inline-flex", alignItems: "center", gap: 6, marginBottom: 10 }}>
+                  <img src={item.img} alt="" style={{ position: "absolute", top: item.imgTop, right: item.imgRight, height: item.imgHeight, width: "auto", opacity: 0.5, pointerEvents: "none", userSelect: "none" }} />
+                  <div style={{ position: "relative", zIndex: 1, display: "inline-flex", alignItems: "center", gap: 6, marginBottom: 10 }}>
                     <div style={{ width: 6, height: 6, borderRadius: "50%", background: T.dim }} />
                     <span style={{
                       fontSize: 11, fontFamily: "'JetBrains Mono', monospace",
                       letterSpacing: "0.08em", textTransform: "uppercase", color: T.muted,
                     }}>{item.label}</span>
                   </div>
-                  <p style={{ fontSize: 12, color: T.dim, lineHeight: 1.6, margin: 0, flex: 1, paddingRight: 72 }}>{item.desc}</p>
+                  <p style={{ position: "relative", zIndex: 1, fontSize: 12, color: T.dim, lineHeight: 1.6, margin: 0, flex: 1, paddingRight: 122 }}>{item.desc}</p>
                   <span style={{
+                    position: "relative", zIndex: 1,
                     fontSize: 10, fontFamily: "'JetBrains Mono', monospace",
                     letterSpacing: "0.07em", textTransform: "uppercase",
                     color: T.muted, marginTop: 14, display: "block",
