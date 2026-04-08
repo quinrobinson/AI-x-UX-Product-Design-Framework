@@ -121,14 +121,14 @@ const AGENTS = [
     name: "Orchestrator",
     role: "Project PM Agent",
     file: "orchestrator.md",
-    primarySurfaces: ["code"],
-    occasionalSurfaces: ["chat"],
+    primarySurfaces: ["code", "chat"],
+    occasionalSurfaces: [],
     description: "Orients new projects, routes work to the right specialist agent, manages phase handoff blocks, and tracks what's been decided vs. what's still open. The only agent with a net-new system prompt — no existing skill file as its source. Invoke at the start of a project, when switching phases, or when you're not sure which agent to use.",
     skills: ["which-claude", "skill-chaining", "phase-handoff"],
     mcpTools: ["generate_handoff"],
     activationPrompt: "You are the Orchestrator agent from the Agentic Product Design Framework. Your role is a senior design program manager. You orient new projects, route work to the right specialist agent, manage phase handoff blocks, and track what's been decided vs. what's still open. Ask me what project we're starting and where we are in the process.",
     mapCells: {
-      chat:   { type: "occasional", note: "Kickoff orientation. Deciding which agent and surface to route to. Generating Phase Handoff Blocks for context transfer between sessions.", skills: ["which-claude", "skill-chaining", "phase-handoff"] },
+      chat:   { type: "primary", note: "Kickoff orientation. Deciding which agent and surface to route to. Generating Phase Handoff Blocks for context transfer between sessions.", skills: ["which-claude", "skill-chaining", "phase-handoff"] },
       code:   { type: "primary",    tools: ["generate_handoff"], note: "Spawns subagents. Reads project state from disk. Routes tasks to the right specialist agent. Manages the handoff block as a living project file across the full six-phase lifecycle." },
       cowork: { type: "empty" },
     },
@@ -355,7 +355,7 @@ export default function AgentsPage({ onBack }) {
           onMouseEnter={e => { e.currentTarget.style.borderColor = T.borderHover; e.currentTarget.style.color = T.text; }}
           onMouseLeave={e => { e.currentTarget.style.borderColor = T.border; e.currentTarget.style.color = T.muted; }}
         >← Home</button>
-        <span style={{ fontSize: 10, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.08em", textTransform: "uppercase", color: T.dim }}>6 agents</span>
+        <span style={{ fontSize: 10, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.08em", textTransform: "uppercase", color: T.dim }}>6 specialists + orchestrator</span>
       </div>
 
       <div style={{ maxWidth: 1440, margin: "0 auto", padding: "56px clamp(24px, 5vw, 80px) 100px" }}>
@@ -363,9 +363,9 @@ export default function AgentsPage({ onBack }) {
         {/* ── Hero ── */}
         <section style={{ marginBottom: 72 }}>
           <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, letterSpacing: "0.1em", textTransform: "uppercase", color: T.dim, marginBottom: 20 }}>Agents</div>
-          <h1 style={{ fontFamily: "'Inter', sans-serif", fontSize: "clamp(28px, 3.5vw, 48px)", fontWeight: 600, lineHeight: 1.1, color: T.text, marginBottom: 20, letterSpacing: "-0.2px" }}>Six specialists. One framework.</h1>
+          <h1 style={{ fontFamily: "'Inter', sans-serif", fontSize: "clamp(28px, 3.5vw, 48px)", fontWeight: 600, lineHeight: 1.1, color: T.text, marginBottom: 20, letterSpacing: "-0.2px" }}>Six specialists. One orchestrator. One framework.</h1>
           <p style={{ fontSize: 15, color: T.muted, lineHeight: 1.7, maxWidth: 600 }}>
-            Agents are the orchestration layer that sits above skills, tools, and prompts. Each agent is a named Claude role with a defined scope, a set of skills to load, MCP tools to call, and a surface to work in. A Researcher agent knows which skills matter for synthesis. A Design Engineer knows which tools to run before handoff. The framework's three artifact types stay unchanged — agents compose them.
+            Agents are the orchestration layer that sits above skills, tools, and prompts. Six specialist agents handle the work — Researcher, Strategist, Designer, Systems Designer, Design Engineer, and a cross-cutting Orchestrator that routes tasks, manages handoff blocks, and coordinates the team. The framework's three artifact types stay unchanged — agents compose them.
           </p>
         </section>
 
@@ -385,7 +385,14 @@ export default function AgentsPage({ onBack }) {
             <p style={{ fontSize: 13, color: T.dim, lineHeight: 1.6 }}>Each agent ships as a single <code style={{ fontFamily: "'JetBrains Mono', monospace" }}>.md</code> file. Download and place in <code style={{ fontFamily: "'JetBrains Mono', monospace" }}>.claude/agents/</code> for Claude Code, or paste the activation prompt into Claude Chat.</p>
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(480px, 1fr))", gap: 12 }}>
-            {AGENTS.map(agent => <AgentCard key={agent.id} agent={agent} />)}
+            {AGENTS.filter(a => a.id !== "orchestrator").map(agent => <AgentCard key={agent.id} agent={agent} />)}
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 12, margin: "32px 0 12px", fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: T.dim, textTransform: "uppercase", letterSpacing: "0.1em" }}>
+            Orchestration layer
+            <div style={{ flex: 1, height: 1, background: T.border }} />
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(480px, 1fr))", gap: 12 }}>
+            <AgentCard agent={AGENTS.find(a => a.id === "orchestrator")} />
           </div>
         </section>
 

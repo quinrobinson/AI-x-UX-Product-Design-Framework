@@ -3958,6 +3958,15 @@ export default function App() {
             onMouseEnter={e => e.target.style.color = T.muted}
             onMouseLeave={e => e.target.style.color = T.dim}
           >Skills Library</button>
+          <button onClick={() => { setShowAgentsPage(true); setActivePath(null); }} style={{
+            fontSize: 11, fontFamily: "'JetBrains Mono', monospace",
+            letterSpacing: "0.06em", textTransform: "uppercase",
+            color: T.dim, background: "none", border: "none",
+            cursor: "pointer", transition: "color 0.15s", padding: 0,
+          }}
+            onMouseEnter={e => e.target.style.color = T.muted}
+            onMouseLeave={e => e.target.style.color = T.dim}
+          >Agents</button>
           <div style={{ width: 1, height: 12, background: T.border }} />
           {[["GitHub", REPO], ["Figma", FIGMA_URL], ["Deck", PPTX_URL]].map(([label, href]) => (
             <a key={label} href={href} target="_blank" rel="noopener noreferrer" style={{
@@ -3993,7 +4002,7 @@ export default function App() {
               <em style={{ fontStyle: "italic", color: T.muted }}>across every phase of product design.</em>
             </h1>
             <p style={{ fontSize: 16, color: T.muted, lineHeight: 1.7, maxWidth: 600, marginBottom: 0 }}>
-              From research through delivery — skills, tools, and prompts built around Claude and Figma working together.
+              From research through delivery — skills, tools, prompts, and agents built around Claude and Figma working together.
             </p>
           </div>
         )}
@@ -4128,7 +4137,7 @@ export default function App() {
         {/* Page header — shown when a path is active */}
         {activePath && (() => {
           const pages = {
-            phase:       { title: "Start with a Phase",       desc: "Six phases. Three artifact types. One continuous workflow. Each phase produces artifacts that feed the next." },
+            phase:       { title: "Start with a Phase",       desc: "Six phases. Four artifact types. One continuous workflow. Each phase produces artifacts that feed the next." },
             ways:        { title: "Ways to Work",             desc: "Each scenario maps a full design challenge — from a design sprint to a complete design system build — to a path through the framework." },
             deliverable: { title: "Start with a Deliverable", desc: "Know what you need to produce. Find the right prompt for that deliverable — or open the Design System Studio if that's your output." },
           };
