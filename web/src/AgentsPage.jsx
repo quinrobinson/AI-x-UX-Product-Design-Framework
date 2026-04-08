@@ -145,9 +145,7 @@ const AGENTS = [
 function MapCell({ cell }) {
   if (cell.type === "empty") {
     return (
-      <div style={{ borderRadius: 6, padding: 20, minHeight: 120, background: "#1a1a1a", border: "1px dashed #2C2C2C", display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: T.dim, opacity: 0.4 }}>—</span>
-      </div>
+      <div style={{ borderRadius: 6, padding: 20, minHeight: 120, background: "#1a1a1a", border: "1px dashed #2C2C2C" }} />
     );
   }
 
@@ -160,7 +158,8 @@ function MapCell({ cell }) {
 
   return (
     <div style={{ borderRadius: 6, padding: 20, minHeight: 120, background: cellBg, border: `1px solid ${cellBorder}`, display: "flex", flexDirection: "column", gap: 10 }}>
-      <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, textTransform: "uppercase", letterSpacing: "0.1em", fontWeight: 500, color: labelColor }}>
+      <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, textTransform: "uppercase", letterSpacing: "0.1em", fontWeight: 500, color: labelColor, display: "flex", alignItems: "center", gap: 5 }}>
+        <span style={{ fontSize: 8, lineHeight: 1 }}>{isPrimary ? "●" : "○"}</span>
         {isPrimary ? "Primary" : "Occasional"}
       </span>
       <div style={{ opacity: contentOpacity, display: "flex", flexDirection: "column", gap: 10 }}>
