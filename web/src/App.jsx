@@ -21,7 +21,32 @@ import InsightReportGenerator from "./InsightReportGenerator";
 import ComponentSpecGenerator from "./ComponentSpecGenerator";
 import DesignQALogger from "./DesignQALogger";
 import AgentsPage from "./AgentsPage";
-import { IconStairsUp, IconStack3, IconPackage } from "@tabler/icons-react";
+import { IconStack3, IconPackage } from "@tabler/icons-react";
+
+function IconIsometricStairs({ size = 24, strokeWidth = 0.3, style }) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24"
+      fill="none" stroke="currentColor" strokeWidth={strokeWidth}
+      strokeLinecap="round" strokeLinejoin="round" style={style}>
+      {/* Front stair profile — 3 steps ascending left to right */}
+      <path d="M3 21 L3 15 L9 15 L9 9 L15 9 L15 3 L21 3 L21 21 Z" />
+      {/* Depth lines from step corners going upper-left */}
+      <line x1="3" y1="15" x2="0" y2="12" />
+      <line x1="9" y1="15" x2="6" y2="12" />
+      <line x1="9" y1="9" x2="6" y2="6" />
+      <line x1="15" y1="9" x2="12" y2="6" />
+      <line x1="15" y1="3" x2="12" y2="0" />
+      <line x1="21" y1="3" x2="18" y2="0" />
+      {/* Back top-face edges */}
+      <line x1="0" y1="12" x2="6" y2="12" />
+      <line x1="6" y1="6" x2="12" y2="6" />
+      <line x1="12" y1="0" x2="18" y2="0" />
+      {/* Left outer face */}
+      <line x1="0" y1="12" x2="0" y2="21" />
+      <line x1="0" y1="21" x2="3" y2="21" />
+    </svg>
+  );
+}
 
 // ── Tokens ──────────────────────────────────────────────────────────────────
 const T = {
@@ -4031,7 +4056,7 @@ export default function App() {
                   color: "#22C55E",
                   desc: "I know where I am in the project. Show me tools and guides for that phase.",
                   cta: "Choose a phase →",
-                  Icon: IconStairsUp,
+                  Icon: IconIsometricStairs,
                   iconSize: 190, iconPos: { bottom: -20, right: -24 },
                 },
                 {
