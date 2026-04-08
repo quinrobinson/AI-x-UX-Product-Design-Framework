@@ -550,6 +550,88 @@ function Drawer({ content, onClose }) {
   );
 }
 
+// ── Skills Data ──────────────────────────────────────────────────────────────
+const SKILL_PHASES = [
+  {
+    phase: "01 — Discover",
+    skills: [
+      { name: "Research Planning",          desc: "Scaffold a research plan and interview guide from a project brief or business goal.",                                    leverage: "high" },
+      { name: "Research Synthesis",         desc: "Transform raw research data into structured themes, ranked pain points, and actionable insights.",                      leverage: "high" },
+      { name: "Competitive Analysis",       desc: "Map the competitive landscape, audit UX patterns across products, and identify differentiation opportunities.",         leverage: "high" },
+      { name: "Insight Framing",            desc: "Transform synthesized research insights into sharp, actionable HMW statements that seed ideation.",                     leverage: "high" },
+      { name: "Service Blueprint",          desc: "Generate current-state and future-state service blueprints that map the full end-to-end experience.",                  leverage: "high" },
+    ],
+  },
+  {
+    phase: "02 — Define",
+    skills: [
+      { name: "Problem Framing",            desc: "Transform research outputs into a focused, pressure-tested problem frame with HMW questions and a design brief.",       leverage: "high" },
+      { name: "Journey Mapping",            desc: "Generate research-grounded journey maps visualizing actions, thoughts, emotions, and opportunities.",                   leverage: "high" },
+      { name: "Persona Creation",           desc: "Generate research-grounded personas that humanize user data and anchor design decisions.",                              leverage: "high" },
+      { name: "Assumption Mapping",         desc: "Surface, categorize, and prioritize the team's implicit assumptions before committing to a design direction.",          leverage: "high" },
+      { name: "Requirements Prioritization",desc: "Systematically prioritize design requirements using MoSCoW, RICE, and Impact/Effort frameworks.",                      leverage: "high" },
+    ],
+  },
+  {
+    phase: "03 — Ideate",
+    skills: [
+      { name: "Concept Generation",         desc: "Generate a broad set of design concepts from a validated problem frame using structured brainstorming.",                leverage: "high" },
+      { name: "Concept Critique",           desc: "Systematically evaluate concept directions before prototyping, surfacing weaknesses and hidden assumptions.",           leverage: "high" },
+      { name: "Concept Proof",              desc: "Generate Figma Make prompts that turn written concept cards into throwaway interactive prototypes.",                    leverage: "high" },
+      { name: "Idea Clustering",            desc: "Transform a large set of raw concepts into a navigable landscape of strategic directions.",                            leverage: "high" },
+      { name: "Storyboarding",              desc: "Translate a selected concept into a narrative visualization of how a user experiences it before wireframing.",         leverage: "high" },
+      { name: "Visual Design Execution",    desc: "Select visual styles, build color systems, pair typography, define spacing scales, and produce motion principles.",    leverage: "high" },
+    ],
+  },
+  {
+    phase: "04 — Prototype",
+    skills: [
+      { name: "Prototyping",                desc: "Build functional prototypes and validate interaction quality across web and native platforms.",                         leverage: "high" },
+      { name: "User Flow Mapping",          desc: "Map the complete step-by-step path a user takes including decision points, branches, and error paths.",                leverage: "high" },
+      { name: "UX Copy Writing",            desc: "Write all interface text — labels, CTAs, error messages, empty states, onboarding copy, and tooltips.",                leverage: "high" },
+      { name: "Prototype Scoping",          desc: "Define exactly what to build and what to leave out before prototyping begins.",                                        leverage: "high" },
+      { name: "Accessibility Audit",        desc: "Audit designs, prototypes, and code for WCAG 2.1 AA compliance across web and native mobile.",                        leverage: "high" },
+      { name: "Heuristic Review",           desc: "Evaluate a prototype against Nielsen's 10 usability heuristics before user testing.",                                  leverage: "high" },
+      { name: "Test Script Drafting",       desc: "Write a complete usability test script — scenarios, tasks, observation prompts, and post-test questions.",             leverage: "high" },
+    ],
+  },
+  {
+    phase: "05 — Validate",
+    skills: [
+      { name: "Usability Testing",          desc: "Plan, run, and analyze usability tests and heuristic evaluations.",                                                    leverage: "high" },
+      { name: "Findings Synthesis",         desc: "Synthesize raw usability test notes into structured findings with themes, frequency, and severity.",                   leverage: "high" },
+      { name: "Insight Report",             desc: "Generate a complete usability findings report — from raw synthesis to a structured stakeholder document.",             leverage: "high" },
+      { name: "Iteration Brief",            desc: "Convert usability test findings into a precise, actionable iteration brief with prioritized changes.",                 leverage: "high" },
+      { name: "Recruitment Screener",       desc: "Generate a participant recruitment screener with criteria, questions, and disqualifiers from a persona.",              leverage: "high" },
+      { name: "Stakeholder Presentation",   desc: "Reframe test findings for executive, engineering, and design team audiences — each version tailored differently.",    leverage: "high" },
+    ],
+  },
+  {
+    phase: "06 — Deliver",
+    skills: [
+      { name: "Design Delivery",            desc: "Create component specifications, developer handoff docs, and platform-specific delivery packages.",                    leverage: "high" },
+      { name: "Component Specs",            desc: "Generate complete component specifications — every state, variant, spacing value, and interaction behavior.",          leverage: "high" },
+      { name: "Design QA",                  desc: "Structure, prioritize, and document QA issues comparing the built implementation to the design spec.",                 leverage: "high" },
+      { name: "Accessibility Annotation",   desc: "Generate WCAG 2.1 AA accessibility annotations for design handoff — ARIA roles, focus order, and screen reader support.", leverage: "high" },
+      { name: "Handoff Annotation",         desc: "Generate screen-by-screen annotation text for developer handoff — behaviors, edge cases, and interaction notes.",     leverage: "high" },
+      { name: "Design Decision Record",     desc: "Document why specific design choices were made — context, alternatives considered, and rationale.",                   leverage: "high" },
+      { name: "Design System Audit",        desc: "Audit a design system before handoff against Material, Atlassian, Carbon, and Apple HIG standards.",                  leverage: "high" },
+    ],
+  },
+  {
+    phase: "Cross-phase",
+    skills: [
+      { name: "Design Systems",             desc: "Audit a product against industry-leading design systems with token documentation and Figma variable setup.",           leverage: "high" },
+      { name: "Figma Playbook",             desc: "Execute design work directly in Figma using the Figma MCP — frames, components, variables, and annotations.",         leverage: "high" },
+      { name: "Figma DS Audit",             desc: "Audit an existing Figma design system by reading variables, styles, and components for gaps.",                        leverage: "high" },
+      { name: "Figma DS Export",            desc: "Export a design system built in the Design System Studio to Figma as variables and text styles.",                     leverage: "high" },
+      { name: "Phase Handoff",              desc: "Generate and use Phase Handoff Blocks to chain the six design phases into one continuous workflow.",                   leverage: "high" },
+      { name: "Skill Chaining",             desc: "Connect design phases so outputs become inputs — structured handoff across all six phases.",                          leverage: "high" },
+      { name: "Which Claude",               desc: "Route every design task to the right Claude surface — Chat, Cowork, or Code — based on task type and requirements.", leverage: "high" },
+    ],
+  },
+];
+
 // ── Main Page ────────────────────────────────────────────────────────────────
 export default function AgentsPage({ onBack }) {
   const [drawer, setDrawer] = useState(null);
@@ -611,6 +693,36 @@ export default function AgentsPage({ onBack }) {
             onAgentClick={agent => setDrawer({ type: "agent", agent })}
             onSetupClick={() => setDrawer({ type: "setup" })}
           />
+        </section>
+
+        {/* ── Skills ── */}
+        <section style={{ marginTop: 80 }}>
+          <div style={{ marginBottom: 28 }}>
+            <h2 style={{ fontFamily: "'Inter', sans-serif", fontSize: "clamp(20px, 2vw, 28px)", fontWeight: 600, color: T.text, marginBottom: 12, letterSpacing: "-0.2px" }}>Skills</h2>
+            <p style={{ fontSize: 15, color: T.muted, lineHeight: 1.7, maxWidth: 600 }}>
+              44 structured skill files — one per workflow. Upload a skill to Claude to activate phase-specific templates, quality checklists, and AI-ready prompts.
+            </p>
+            <p style={{ marginTop: 8, fontSize: 12, color: T.dim, lineHeight: 1.6 }}>
+              Skills are plain .md files. Upload to Claude Chat to extend any conversation, or place in your project for Claude Code access. Download all skills from the Skills Library.
+            </p>
+          </div>
+
+          {SKILL_PHASES.map((group, gi) => (
+            <div key={group.phase}>
+              <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, textTransform: "uppercase", letterSpacing: "0.08em", color: T.dim, marginBottom: 8, marginTop: gi === 0 ? 0 : 28 }}>
+                {group.phase}
+              </div>
+              {group.skills.map((skill, si) => (
+                <div
+                  key={skill.name}
+                  style={{ display: "flex", alignItems: "baseline", gap: 16, padding: "8px 0", borderBottom: `1px solid ${T.border}`, flexWrap: "wrap" }}
+                >
+                  <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 12, color: T.text, minWidth: 200, flexShrink: 0 }}>{skill.name}</span>
+                  <span style={{ fontSize: 13, color: T.dim, flex: 1, minWidth: 200, lineHeight: 1.5 }}>{skill.desc}</span>
+                </div>
+              ))}
+            </div>
+          ))}
         </section>
 
         {/* ── Hooks ── */}
