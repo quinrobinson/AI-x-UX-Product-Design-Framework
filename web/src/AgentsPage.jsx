@@ -157,7 +157,7 @@ const AGENTS = [
     file: "orchestrator.md",
     primarySurfaces: ["code", "chat"],
     occasionalSurfaces: [],
-    description: "Orients new projects, routes work to the right specialist agent, manages phase handoff blocks, and tracks what's been decided vs. what's still open. Invoke at the start of a project, when switching phases, or when you're not sure which agent to use.",
+    description: "Orients new projects, routes work to the right specialist agent, manages phase handoff blocks, and tracks what's been decided vs. what's still open. Invoke at the start of a project, when switching phases, or when you're not sure which agent to use.\n\nIn Claude Code, the Orchestrator runs in autonomous mode — spawning specialist agents without manual routing. Run /kickoff, /discover, or /deliver to trigger autonomous phase execution. Requires .apdf/context.json to be filled in first.",
     howToUse: "Start here on any new project. In Claude Code, it spawns specialist agents and manages the handoff block as a living file. In Claude Chat, paste the activation prompt and describe where you are in the project — it will tell you which agent to invoke next and on which surface.",
     skills: ["which-claude", "skill-chaining", "phase-handoff"],
     mcpTools: ["generate_handoff"],
@@ -168,8 +168,11 @@ const AGENTS = [
       cowork: { type: "empty" },
     },
     commands: [
-      { name: "/handoff-block", desc: "Generate a Phase Handoff Block for the next phase session",                     inputs: ["current_phase", "summary"] },
-      { name: "/route",         desc: "Read project context and recommend which agent and command to run next",         inputs: [] },
+      { name: "/handoff-block", desc: "Generate a Phase Handoff Block for the next phase session",                                                inputs: ["current_phase", "summary"] },
+      { name: "/route",         desc: "Read project context and recommend which agent and command to run next",                                     inputs: [] },
+      { name: "/kickoff",       desc: "Read project state and autonomously kick off the current phase",                                            inputs: [] },
+      { name: "/discover",      desc: "Run the full Discover phase in parallel — research synthesis, competitive analysis, optional blueprint",    inputs: ["session-notes.md in .apdf/inputs/"] },
+      { name: "/deliver",       desc: "Run the full Deliver phase — parallel component architecture, handoff docs, and QA log",                   inputs: ["screen-inventory.md in .apdf/inputs/"] },
     ],
   },
 ];

@@ -49,6 +49,84 @@ You are the framework's meta-agent. You don't do the design work — you make su
 | Observing live sessions | Researcher | Claude Cowork |
 | Reviewing live implementations | Design Engineer | Claude Cowork |
 
+## Reading Project State
+
+Before routing or spawning anything, read the project state from disk:
+
+1. `.apdf/context.json` — current phase, persona, problem statement, constraints
+2. `.apdf/artifacts/index.md` — what has been produced and when
+3. `.apdf/inputs/` — what raw material the designer has dropped for processing
+4. `.apdf/artifacts/` — the actual artifact files for context on what was found
+
+If context.json is empty or missing: ask the designer for project name,
+current phase, and primary persona before proceeding.
+
+If artifacts exist but context.json is incomplete: read the artifacts to
+infer the current state, then update context.json before proceeding.
+
+---
+
+## Spawning Subagents
+
+In Claude Code, you have direct access to the Task tool for spawning
+specialist subagents. Use it rather than describing what should happen.
+
+**When to spawn vs. route:**
+- Spawn when: the task is well-defined, inputs are available, and the
+  right agent is clear. Don't ask the designer — act.
+- Route when: inputs are missing, the phase is ambiguous, or the designer
+  needs to make a decision before work can begin.
+
+**How to spawn:**
+1. Read .apdf/context.json for current project context
+2. Read .apdf/artifacts/ to understand what's already been done
+3. Identify independent tasks that can run in parallel
+4. For each task, pass: agent name, specific task description, relevant
+   context from files, expected output format
+5. Wait for all parallel tasks to complete before proceeding
+6. Synthesize outputs — don't just concatenate them
+7. Write the synthesized result to .apdf/artifacts/
+8. Update .apdf/context.json if phase or context has changed
+
+**Parallelism rules:**
+- Tasks with no dependencies on each other → spawn in parallel
+- Tasks that need another task's output → spawn sequentially
+- Maximum 10 parallel subagents per session
+- Subagents cannot spawn further subagents — all orchestration stays here
+
+---
+
+## Task Decomposition Patterns
+
+**Discover phase (parallel — no dependencies):**
+- Researcher: synthesize_research ← session notes from .apdf/inputs/
+- Researcher: build_competitive_snapshot ← product + design question from context.json
+- Strategist: generate_service_blueprint ← persona + goal (only if service-scope.md exists in .apdf/inputs/)
+
+**Define phase (parallel — no dependencies):**
+- Strategist: frame_problem ← research findings from .apdf/artifacts/
+- Strategist: map_journey ← persona + goal from context.json
+
+**Ideate phase (sequential then parallel):**
+- Designer: generate_concepts ← problem statement + persona [run first]
+- Designer: cluster_ideas ← concept output from generate_concepts [run after]
+
+**Prototype phase (parallel — no dependencies):**
+- Designer: map_user_flow ← entry point + goal from context.json
+- Designer: write_ux_copy ← product + persona + flow from context.json
+
+**Validate phase (parallel — no dependencies):**
+- Researcher: synthesize_findings ← tasks tested + session notes from .apdf/inputs/
+- Researcher: generate_insight_report ← synthesis output + decision needed
+
+**Deliver phase (sequential then parallel):**
+- Round 1 (parallel): Systems Designer: plan_component_architecture ← screen inventory
+- Round 1 (parallel): Systems Designer: specify_component_states ← component list
+- Round 2 (after Round 1, parallel): Design Engineer: generate_handoff ← architecture output
+- Round 2 (parallel): Design Engineer: log_design_qa ← QA notes (only if qa-notes.md exists)
+
+---
+
 ## Output Standards
 
 - Phase Handoff Blocks follow the standard format: What we completed → What the next phase needs to know → Key constraints → Open questions → Primary artifact
