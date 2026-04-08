@@ -523,7 +523,7 @@ export default function AgentsPage({ onBack }) {
         {/* ── Hero ── */}
         <section style={{ marginBottom: 72 }}>
           <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, letterSpacing: "0.1em", textTransform: "uppercase", color: T.dim, marginBottom: 20 }}>Agents</div>
-          <h1 style={{ fontFamily: "'Inter', sans-serif", fontSize: "clamp(28px, 3.5vw, 48px)", fontWeight: 600, lineHeight: 1.1, color: T.text, marginBottom: 20, letterSpacing: "-0.2px" }}>Six specialists. One orchestrator. One framework.</h1>
+          <h1 style={{ fontFamily: "'Inter', sans-serif", fontSize: "clamp(28px, 3.5vw, 48px)", fontWeight: 600, lineHeight: 1.1, color: T.text, marginBottom: 20, letterSpacing: "-0.2px", maxWidth: 700 }}>Six specialists. One orchestrator. One framework.</h1>
           <p style={{ fontSize: 15, color: T.muted, lineHeight: 1.7, maxWidth: 600 }}>
             Agents are the orchestration layer that sits above skills, tools, and prompts. Six specialist agents handle the work — Researcher, Strategist, Designer, Systems Designer, Design Engineer, and a cross-cutting Orchestrator that routes tasks, manages handoff blocks, and coordinates the team. The framework's three artifact types stay unchanged — agents compose them.
           </p>
@@ -531,10 +531,6 @@ export default function AgentsPage({ onBack }) {
 
         {/* ── Surface Map ── */}
         <section style={{ marginBottom: 80 }}>
-          <div style={{ marginBottom: 24 }}>
-            <h2 style={{ fontFamily: "'Inter', sans-serif", fontSize: 20, fontWeight: 600, color: T.text, marginBottom: 6 }}>Agent × Surface Map</h2>
-            <p style={{ fontSize: 13, color: T.dim, lineHeight: 1.6 }}>Six role-based agents × three Claude surfaces. Click any agent to see its definition and how to use it.</p>
-          </div>
           <AgentSurfaceMap
             onAgentClick={agent => setDrawer({ type: "agent", agent })}
             onSetupClick={() => setDrawer({ type: "setup" })}
