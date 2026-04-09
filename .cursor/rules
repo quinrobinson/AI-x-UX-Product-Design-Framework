@@ -57,34 +57,38 @@ Prototype (04) is your primary phase. When a designer opens Cursor during Protot
 
 ## 4. Token Conventions
 
-All values in APDF use the `--apdf-*` naming system across three layers:
+**First: check what token system the project already uses.** Look for a `tokens/`, `styles/tokens/`, or `design-tokens/` directory, or CSS custom properties defined in a `:root` block. Use whatever is there.
+
+**If the project has its own token system:** map all component values to those tokens. Never hardcode hex or pixel values.
+
+**If the project has no token system yet:** APDF recommends a three-layer naming convention as a starting point:
 
 ```
 ref     →   sys        →   comp
 raw value   semantic role   component-scoped alias
 ```
 
-**Examples:**
-
 ```css
 /* ref layer — raw values, never used directly in components */
---apdf-ref-color-blue-500: #3B82F6;
---apdf-ref-space-4: 16px;
+--[prefix]-ref-color-blue-500: #3B82F6;
+--[prefix]-ref-space-4: 16px;
 
 /* sys layer — semantic roles */
---apdf-sys-color-interactive: var(--apdf-ref-color-blue-500);
---apdf-sys-space-component-padding: var(--apdf-ref-space-4);
+--[prefix]-sys-color-interactive: var(--[prefix]-ref-color-blue-500);
+--[prefix]-sys-space-component-padding: var(--[prefix]-ref-space-4);
 
 /* comp layer — component-scoped aliases */
---apdf-comp-button-bg: var(--apdf-sys-color-interactive);
---apdf-comp-button-padding: var(--apdf-sys-space-component-padding);
+--[prefix]-comp-button-bg: var(--[prefix]-sys-color-interactive);
+--[prefix]-comp-button-padding: var(--[prefix]-sys-space-component-padding);
 ```
 
-**Rules:**
+Replace `[prefix]` with the project's own prefix (e.g. `apdf`, `ds`, the client brand slug).
+
+**Rules regardless of which system is in use:**
 - Never hardcode hex values or pixel values in component code
-- Always map to a semantic (`sys`) token first
-- If a sys token doesn't exist for the value, flag it — don't invent a ref and skip sys
-- Token names are kebab-case, always prefixed `--apdf-`
+- Always map to a semantic token first — not a raw ref value
+- If a semantic token doesn't exist for the value, flag it rather than inventing a workaround
+- Token names are always kebab-case
 
 ---
 
@@ -102,7 +106,7 @@ APDF component specs are produced by the `component-spec` skill. When you receiv
 **What you produce from a spec:**
 1. A React component (functional, CSS custom properties, no hardcoded values)
 2. All states implemented — not just default
-3. Token map verified — every CSS property traces to an `--apdf-*` token
+3. Token map verified — every CSS property traces to a project token, no hardcoded values
 4. Accessibility implemented — ARIA attributes, keyboard handlers, focus styles
 5. A post-build checklist confirming: states ✓, tokens ✓, a11y ✓
 
@@ -148,7 +152,7 @@ APDF component specs are produced by the `component-spec` skill. When you receiv
 
 ```
 [ ] All states implemented (default, hover, focus, active, error, disabled, loading)
-[ ] All CSS values map to --apdf-* tokens — zero hardcoded values
+[ ] All CSS values map to project tokens — zero hardcoded hex or pixel values
 [ ] ARIA roles and attributes correct
 [ ] Keyboard navigation tested
 [ ] Color contrast verified

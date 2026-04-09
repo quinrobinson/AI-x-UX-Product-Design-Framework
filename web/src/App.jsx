@@ -2,7 +2,8 @@ import { useState, useEffect } from "react";
 import AIBriefGenerator from "./AIBriefGenerator";
 import ClientDeckBuilder from "./ClientDeckBuilder";
 import FigmaSetupGuide from "./FigmaSetupGuide";
-import SkillsLibrary from "./SkillsLibrary";
+// SkillsLibrary.jsx is a standalone deployable version — not used in this render path.
+// App.jsx uses SkillsLibraryOverlay (defined inline). If you update skill data, sync BOTH files.
 import DesignSystemStudio from "./DesignSystemStudio";
 import ResearchSynthesizer from "./ResearchSynthesizer";
 import ServiceBlueprintGenerator from "./ServiceBlueprintGenerator";
