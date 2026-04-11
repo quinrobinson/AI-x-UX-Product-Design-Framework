@@ -699,7 +699,7 @@ const SKILL_FILES = [
   { file: "prototype-scoping.md",     phase: "04", leverage: "high",      surface: "chat",         desc: "Define what to build and what to leave out — translate concept risks into prototype questions and scope the minimum viable prototype." },
   { file: "heuristic-review.md",      phase: "04", leverage: "high",      surface: "chat",         desc: "Evaluate a prototype against Nielsen's 10 usability heuristics before user testing — with severity ratings and specific fixes." },
   { file: "test-script-drafting.md",  phase: "04", leverage: "high",      surface: "chat",         desc: "Write a complete usability test script — tasks, probing questions, and debrief — that directly tests the prototype's highest-risk assumptions." },
-  { file: "prototyping.md",           phase: "04", leverage: "high",      surface: "chat + cursor",  desc: "Builds functional React or HTML prototypes with correct touch targets, timing, and a QA checklist." },
+  { file: "prototyping.md",           phase: "04", leverage: "high",      surface: "chat + code",    desc: "Builds functional React or HTML prototypes with correct touch targets, timing, and a QA checklist." },
   { file: "accessibility-audit.md",    phase: "04", leverage: "high", surface: "chat",           desc: "Runs a WCAG 2.1 AA audit — contrast, keyboard nav, focus management, screen reader behavior." },
   { file: "usability-findings-synthesis.md", phase: "05", leverage: "high", surface: "chat",   desc: "Synthesize raw usability test session notes into themes, frequency counts, severity ratings, and design recommendations across 5+ sessions." },
   { file: "insight-report.md",         phase: "05", leverage: "high",   surface: "chat",           desc: "Generate a complete usability test findings report — specific observations, direct quotes, recommendations, and a go/no-go decision." },
@@ -718,7 +718,65 @@ const SKILL_FILES = [
   { file: "figma-ds-export.md",        phase: null, leverage: "high", surface: "code + figma mcp",desc: "Export --apdf-* tokens from the Design System Studio to Figma as variable collections, text styles, and component scaffolds." },
   { file: "figma-ds-audit.md",         phase: null, leverage: "high", surface: "code + figma mcp",desc: "Audit an existing Figma design system via MCP — scoring foundations, typography, components, and accessibility against industry standards." },
   { file: "phase-handoff.md",          phase: null, leverage: "high", surface: "chat",           desc: "Generates a structured handoff block at the close of each phase — full context for the next." },
+  { file: "skill-chaining.md",         phase: null, leverage: "high", surface: "chat",           desc: "Chains all six phases into one continuous AI-assisted workflow using handoff blocks — turning separate Claude conversations into a single thread from research through delivery." },
+  { file: "design-system-audit.md",    phase: "06", leverage: "high", surface: "chat",           desc: "Audit a product's design system before handoff against four industry standards — Material Design 3, Atlassian, Carbon, and Apple HIG — with a severity-rated gap analysis." },
+  { file: "which-claude.md",           phase: null, leverage: "high", surface: "chat",           desc: "Route every design task to the right Claude surface—Chat, Cowork, Code, or Cursor. The first skill to read when onboarding to the framework." },
 ];
+
+const AGENT_META_SL = {
+  researcher:   { label: "Researcher",      color: "#C084FC" },
+  strategist:   { label: "Strategist",      color: "#F472B6" },
+  designer:     { label: "Designer",        color: "#38BDF8" },
+  systems:      { label: "Systems Designer",color: "#34D399" },
+  engineer:     { label: "Design Engineer", color: "#FB923C" },
+  orchestrator: { label: "Orchestrator",    color: "#A8A29E" },
+};
+
+const AGENT_ROUTING_SL = {
+  "research-planning.md":            "researcher",
+  "research-synthesis.md":           "researcher",
+  "competitive-analysis.md":         "researcher",
+  "insight-framing.md":              "researcher",
+  "usability-testing.md":            "researcher",
+  "recruitment-screener.md":         "researcher",
+  "test-script-drafting.md":         "researcher",
+  "usability-findings-synthesis.md": "researcher",
+  "insight-report.md":               "researcher",
+  "problem-framing.md":              "strategist",
+  "journey-mapping.md":              "strategist",
+  "persona-creation.md":             "strategist",
+  "assumption-mapping.md":           "strategist",
+  "requirements-prioritization.md":  "strategist",
+  "service-blueprint.md":            "strategist",
+  "stakeholder-presentation.md":     "strategist",
+  "iteration-brief.md":              "strategist",
+  "concept-generation.md":           "designer",
+  "concept-proof.md":                "designer",
+  "visual-design-execution.md":      "designer",
+  "concept-critique.md":             "designer",
+  "idea-clustering.md":              "designer",
+  "storyboarding.md":                "designer",
+  "prototype-scoping.md":            "designer",
+  "user-flow-mapping.md":            "designer",
+  "ux-copy-writing.md":              "designer",
+  "design-systems.md":               "systems",
+  "figma-playbook.md":               "systems",
+  "figma-ds-export.md":              "systems",
+  "figma-ds-audit.md":               "systems",
+  "component-specs.md":              "systems",
+  "design-system-audit.md":          "systems",
+  "prototyping.md":                  "engineer",
+  "heuristic-review.md":             "engineer",
+  "accessibility-audit.md":          "engineer",
+  "design-delivery.md":              "engineer",
+  "design-qa.md":                    "engineer",
+  "design-decision-record.md":       "engineer",
+  "handoff-annotation.md":           "engineer",
+  "accessibility-annotation.md":     "engineer",
+  "which-claude.md":                 "orchestrator",
+  "skill-chaining.md":               "orchestrator",
+  "phase-handoff.md":                "orchestrator",
+};
 
 // ── Prompts registry ─────────────────────────────────────────────────────────
 const PROMPTS = [
@@ -1745,7 +1803,6 @@ function SkillBadge({ surface }) {
   const labels = {
     "chat":             "Chat",
     "chat + code":      "Chat + Code",
-    "chat + cursor":    "Chat + Cursor",
     "code + figma mcp": "Figma MCP",
   };
   const label = labels[surface] || "Chat";
@@ -3145,6 +3202,7 @@ function SkillsLibraryOverlay({ onBack }) {
   const [activeSkill, setActiveSkill] = useState(null);
   const [selected, setSelected] = useState(null);
   const [surfaceFilter, setSurfaceFilter] = useState("all");
+  const [agentFilter, setAgentFilter] = useState("all");
 
   const PHASES_ORDER = ["01","02","03","04","05","06"];
   const PHASE_META = {
@@ -3160,18 +3218,18 @@ function SkillsLibraryOverlay({ onBack }) {
     { id: "all",              label: "All" },
     { id: "chat",             label: "Chat" },
     { id: "chat + code",      label: "Chat + Code" },
-    { id: "chat + cursor",    label: "Chat + Cursor" },
     { id: "code + figma mcp", label: "Figma MCP" },
   ];
 
   const surfaceColors = {
     "chat":             { color: T.muted, bg: T.surface, border: T.border },
     "chat + code":      { color: T.muted, bg: T.surface, border: T.border },
-    "chat + cursor":    { color: T.muted, bg: T.surface, border: T.border },
     "code + figma mcp": { color: T.muted, bg: T.surface, border: T.border },
   };
 
-  const applyFilters = (skills) => surfaceFilter === "all" ? skills : skills.filter(s => s.surface === surfaceFilter);
+  const applyFilters = (skills) => skills
+    .filter(s => surfaceFilter === "all" || s.surface === surfaceFilter)
+    .filter(s => agentFilter === "all" || AGENT_ROUTING_SL[s.file] === agentFilter);
 
   const phaseSkills = selected ? applyFilters(SKILL_FILES.filter(s => s.phase === selected)) : [];
   const crossSkills = applyFilters(SKILL_FILES.filter(s => s.phase === null));
@@ -3209,11 +3267,24 @@ function SkillsLibraryOverlay({ onBack }) {
           )}
         </div>
 
-        {/* Surface badge */}
-        <span style={{ alignSelf: "flex-start", fontSize: 9, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.06em", textTransform: "uppercase", padding: "2px 7px", borderRadius: 99, background: sc.bg, border: `1px solid ${sc.border}`, color: sc.color, display: "inline-flex", alignItems: "center", gap: 4 }}>
-          {skill.surface === "code + figma mcp" ? <FigmaIcon size={9} /> : <ClaudeSparkIcon size={8} />}
-          {skill.surface === "chat" ? "Chat" : skill.surface === "chat + code" ? "Chat + Code" : skill.surface === "chat + cursor" ? "Chat + Cursor" : "Figma MCP"}
-        </span>
+        {/* Surface + Agent badges */}
+        <div style={{ display: "flex", gap: 5, flexWrap: "wrap" }}>
+          <span style={{ fontSize: 9, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.06em", textTransform: "uppercase", padding: "2px 7px", borderRadius: 99, background: sc.bg, border: `1px solid ${sc.border}`, color: sc.color, display: "inline-flex", alignItems: "center", gap: 4 }}>
+            {skill.surface === "code + figma mcp" ? <FigmaIcon size={9} /> : <ClaudeSparkIcon size={8} />}
+            {skill.surface === "chat" ? "Chat" : skill.surface === "chat + code" ? "Chat + Code" : "Figma MCP"}
+          </span>
+          {(() => {
+            const agentId = AGENT_ROUTING_SL[skill.file];
+            const agent = agentId ? AGENT_META_SL[agentId] : null;
+            if (!agent) return null;
+            return (
+              <span style={{ fontSize: 9, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.06em", textTransform: "uppercase", padding: "2px 7px", borderRadius: 99, background: `${agent.color}12`, border: `1px solid ${agent.color}35`, color: agent.color, display: "inline-flex", alignItems: "center", gap: 4 }}>
+                <span style={{ width: 4, height: 4, borderRadius: "50%", background: agent.color, display: "inline-block" }} />
+                {agent.label}
+              </span>
+            );
+          })()}
+        </div>
 
         {/* Description */}
         <p style={{ fontSize: 12, color: T.dim, lineHeight: 1.55, margin: 0, flex: 1 }}>{skill.desc}</p>
@@ -3281,6 +3352,29 @@ function SkillsLibraryOverlay({ onBack }) {
               </div>
             </div>
           </div>
+        </div>
+
+        {/* Agent filter */}
+        <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 16 }}>
+          {[{ id: "all", label: "All agents" }, ...Object.entries(AGENT_META_SL).map(([id, { label }]) => ({ id, label }))].map(f => {
+            const agent = AGENT_META_SL[f.id];
+            const isActive = agentFilter === f.id;
+            const color = agent ? agent.color : T.muted;
+            return (
+              <button key={f.id} onClick={() => setAgentFilter(f.id)} style={{
+                display: "inline-flex", alignItems: "center", gap: 5,
+                padding: "4px 11px", borderRadius: 99, cursor: "pointer",
+                fontFamily: "'JetBrains Mono', monospace", fontSize: 9, letterSpacing: "0.06em", textTransform: "uppercase",
+                border: `1px solid ${isActive ? color : T.border}`,
+                background: isActive ? `${color}12` : "transparent",
+                color: isActive ? color : T.dim,
+                transition: "all 0.12s", outline: "none",
+              }}>
+                {agent && <span style={{ width: 4, height: 4, borderRadius: "50%", background: color, display: "block" }} />}
+                {f.label}
+              </button>
+            );
+          })}
         </div>
 
         {/* Phase strip */}

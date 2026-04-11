@@ -18,7 +18,6 @@ const SURFACES = {
   chat:   { color: "#4ADE80", bg: "rgba(74,222,128,0.07)",  border: "rgba(74,222,128,0.15)",  label: "Claude Chat" },
   code:   { color: "#60A5FA", bg: "rgba(96,165,250,0.07)",  border: "rgba(96,165,250,0.15)",  label: "Claude Code" },
   cowork: { color: "#F59E0B", bg: "rgba(245,158,11,0.07)",  border: "rgba(245,158,11,0.15)",  label: "Claude Cowork" },
-  cursor: { color: "#94A3B8", bg: "rgba(148,163,184,0.07)", border: "rgba(148,163,184,0.15)", label: "Cursor" },
 };
 
 const ROLES = {
@@ -30,7 +29,7 @@ const ROLES = {
   orchestrator: "#A8A29E",
 };
 
-const SURFACE_LABEL = { chat: "Chat", code: "Code", cowork: "Cowork", cursor: "Cursor" };
+const SURFACE_LABEL = { chat: "Chat", code: "Code", cowork: "Cowork" };
 
 const AGENTS = [
   {
@@ -47,9 +46,8 @@ const AGENTS = [
     activationPrompt: "You are the Researcher agent from the Agentic Product Design Framework. Your role is a senior UX researcher. You synthesize interviews, plan research, run competitive analysis, and produce insight reports. Ask me what phase of research we're in and what decisions this research needs to inform.",
     mapCells: {
       chat:   { type: "primary",    tools: ["synthesize_research", "build_competitive_snapshot", "synthesize_findings", "generate_insight_report"], skills: ["research-synthesis", "research-planning", "competitive-analysis", "usability-testing", "recruitment-screener"] },
-      code:   { type: "empty" },
+      code:   { type: "occasional", skills: ["figma-playbook", "competitive-analysis", "service-blueprint"], note: "Push research artifacts to Figma via MCP. Build Research Findings Boards and Competitive Analysis matrices from synthesized data." },
       cowork: { type: "occasional", note: "Observe live usability test sessions. Screen-aware note-taking alongside Maze, Lookback, or UserTesting recordings." },
-      cursor: { type: "empty" },
     },
     commands: [
       { name: "/synthesize-research",  desc: "Synthesize sessions into themes, insights, directions",        inputs: ["research_question", "session_notes"] },
@@ -73,8 +71,7 @@ const AGENTS = [
     mapCells: {
       chat:   { type: "primary",    tools: ["frame_problem", "map_journey", "generate_service_blueprint", "build_client_deck"], skills: ["problem-framing", "journey-mapping", "assumption-mapping", "service-blueprint", "stakeholder-presentation", "persona-creation"] },
       code:   { type: "occasional", note: "Export journey maps and service blueprints to Figma boards via Figma MCP. Push structured outputs to repo." },
-      cowork: { type: "empty" },
-      cursor: { type: "empty" },
+      cowork: { type: "occasional", skills: ["journey-mapping", "service-blueprint"], note: "Walk through Figma journey maps and service blueprints in real time with stakeholders. Review and refine live strategy artifacts." },
     },
     commands: [
       { name: "/frame-problem",     desc: "Transform research into problem statements and HMW questions",        inputs: ["research_data", "persona"] },
@@ -99,7 +96,6 @@ const AGENTS = [
       chat:   { type: "primary",    tools: ["generate_concepts", "cluster_ideas", "generate_concept_proof", "map_user_flow", "write_ux_copy"], skills: ["concept-generation", "concept-critique", "idea-clustering", "storyboarding", "prototype-scoping", "user-flow-mapping", "ux-copy-writing"] },
       code:   { type: "occasional", note: "Build wireframes and concept frames directly in Figma via MCP. Generate Figma Make prompts from session context." },
       cowork: { type: "occasional", note: "Review live prototypes in Figma or staging. Navigate complex design tools with Claude watching alongside." },
-      cursor: { type: "empty" },
     },
     commands: [
       { name: "/generate-concepts", desc: "Generate meaningfully distinct design concepts",                    inputs: ["problem_statement", "persona"] },
@@ -124,8 +120,7 @@ const AGENTS = [
     mapCells: {
       chat:   { type: "occasional", note: "Token strategy, naming conventions, component architecture decisions. Audit analysis and recommendations.", skills: ["design-systems", "design-system-audit", "figma-ds-audit"] },
       code:   { type: "primary",    tools: ["plan_component_architecture", "specify_component_states", "generate_component_spec"], skills: ["figma-ds-export", "figma-playbook", "component-specs"], note: "Push tokens.css / tokens.json to repo. Scaffold components in Figma via MCP. Sync design tokens." },
-      cowork: { type: "empty" },
-      cursor: { type: "empty" },
+      cowork: { type: "occasional", skills: ["design-systems", "figma-ds-audit"], note: "Review a live design system implementation alongside a developer. Spot token drift and component divergence in real time across a browser-based design tool." },
     },
     commands: [
       { name: "/component-architecture", desc: "Analyze screens and produce a component breakdown",               inputs: ["screen_inventory"] },
@@ -138,18 +133,17 @@ const AGENTS = [
     name: "Design Engineer",
     role: "Handoff & QA Agent",
     file: "design-engineer.md",
-    primarySurfaces: ["cursor", "code", "cowork"],
+    primarySurfaces: ["code", "cowork"],
     occasionalSurfaces: ["chat"],
-    description: "Generates handoff docs, runs design QA, writes decision records, and annotates accessibility specs. Use Cursor to build component code from specs. Use Claude Cowork for screen-aware QA against live staging — reviewing implementations alongside the spec in real time.",
-    howToUse: "Use Cursor to translate component specs into working code — framework context is pre-loaded via .cursor/rules. Use Claude Code for generating handoff docs and QA artifacts to disk. Use Claude Cowork to review live staging implementations screen-aware. For pre-handoff accessibility audits or heuristic reviews, Claude Chat with the activation prompt works well.",
+    description: "Generates handoff docs, runs design QA, writes decision records, and annotates accessibility specs. Use Claude Code to build prototype and production code from specs. Use Claude Cowork for screen-aware QA against live staging — reviewing implementations alongside the spec in real time.",
+    howToUse: "Use Claude Code to translate component specs into working code and generate handoff artifacts to disk. Use Claude Cowork to review live staging implementations screen-aware, comparing against spec in real time. For pre-handoff accessibility audits or heuristic reviews, Claude Chat with the activation prompt works well.",
     skills: ["accessibility-audit", "heuristic-review", "design-delivery", "design-qa", "design-decision-record", "handoff-annotation", "accessibility-annotation"],
     mcpTools: ["generate_handoff", "log_design_qa"],
     activationPrompt: "You are the Design Engineer agent from the Agentic Product Design Framework. Your role bridges design and engineering. You generate handoff docs, run design QA, write decision records, and annotate accessibility specs. Ask me what's being handed off and what the current state of implementation is.",
     mapCells: {
       chat:   { type: "occasional", note: "Accessibility audits and heuristic reviews before handoff. Annotation guidance for developers.", skills: ["accessibility-audit", "heuristic-review", "accessibility-annotation"] },
-      code:   { type: "primary",    tools: ["generate_handoff", "log_design_qa"], skills: ["design-delivery", "design-qa", "design-decision-record", "handoff-annotation"], note: "Write handoff docs to disk. Run QA against live implementation. Git operations for delivery artifacts." },
+      code:   { type: "primary",    tools: ["generate_handoff", "log_design_qa"], skills: ["prototyping", "design-delivery", "design-qa", "design-decision-record", "handoff-annotation", "component-specs"], note: "Build prototype and production code from component specs. Write handoff docs to disk. Translate design tokens to CSS custom properties. Generate all component states. Run QA artifacts and Git operations for delivery." },
       cowork: { type: "primary",    note: "Review live staging implementations. Click through built screens to verify against spec. Screen-aware QA that compares implementation to design intent in real time." },
-      cursor: { type: "primary",    skills: ["prototyping", "design-delivery"], note: "Build prototype and production code from APDF component specs. Translate design tokens to CSS custom properties. Generate all component states. Framework context pre-loaded via .cursor/rules." },
     },
     commands: [
       { name: "/handoff",    desc: "Generate a prototype handoff document for engineering",        inputs: ["screens_built", "flows_covered", "problem_statement"] },
@@ -171,8 +165,7 @@ const AGENTS = [
     mapCells: {
       chat:   { type: "primary", note: "Kickoff orientation. Deciding which agent and surface to route to. Generating Phase Handoff Blocks for context transfer between sessions.", skills: ["which-claude", "skill-chaining", "phase-handoff"] },
       code:   { type: "primary", tools: ["generate_handoff"], note: "Spawns subagents. Reads project state from disk. Routes tasks to the right specialist agent. Manages the handoff block as a living project file across the full six-phase lifecycle." },
-      cowork: { type: "empty" },
-      cursor: { type: "empty" },
+      cowork: { type: "occasional", skills: ["skill-chaining", "phase-handoff"], note: "Coordinate multi-agent workflows in a shared session. Review phase progress alongside a specialist agent. Hand off context between phases in real time." },
     },
     commands: [
       { name: "/handoff-block", desc: "Generate a Phase Handoff Block for the next phase session",                                                inputs: ["current_phase", "summary"] },
@@ -236,7 +229,7 @@ function MapCell({ cell }) {
 function AgentSurfaceMap({ onAgentClick, onSetupClick }) {
   const specialists = AGENTS.filter(a => a.id !== "orchestrator");
   const orchestrator = AGENTS.find(a => a.id === "orchestrator");
-  const gridCols = "200px repeat(4, 1fr)";
+  const gridCols = "200px repeat(3, 1fr)";
   const minW = 800;
 
   return (
@@ -245,7 +238,7 @@ function AgentSurfaceMap({ onAgentClick, onSetupClick }) {
       {/* Column headers */}
       <div style={{ display: "grid", gridTemplateColumns: gridCols, gap: 2, marginBottom: 2, minWidth: minW }}>
         <div />
-        {["chat", "code", "cowork", "cursor"].map(surface => (
+        {["chat", "code", "cowork"].map(surface => (
           <div key={surface} style={{ padding: "10px 14px", background: T.surface, border: `1px solid ${T.border}`, borderRadius: "6px 6px 0 0" }}>
             <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: T.dim, textTransform: "uppercase", letterSpacing: "0.08em" }}>
               {SURFACES[surface].label}
@@ -272,7 +265,7 @@ function AgentSurfaceMap({ onAgentClick, onSetupClick }) {
               </div>
               <div style={{ paddingLeft: 8, marginTop: 10, fontFamily: "'JetBrains Mono', monospace", fontSize: 9, color: T.dim, opacity: 0.5, letterSpacing: "0.06em" }}>View →</div>
             </div>
-            {["chat", "code", "cowork", "cursor"].map(surface => (
+            {["chat", "code", "cowork"].map(surface => (
               <MapCell key={surface} cell={orchestrator.mapCells[surface]} />
             ))}
           </div>
@@ -300,7 +293,7 @@ function AgentSurfaceMap({ onAgentClick, onSetupClick }) {
               </div>
               <div style={{ paddingLeft: 8, marginTop: 10, fontFamily: "'JetBrains Mono', monospace", fontSize: 9, color: T.dim, opacity: 0.5, letterSpacing: "0.06em" }}>View →</div>
             </div>
-            {["chat", "code", "cowork", "cursor"].map(surface => (
+            {["chat", "code", "cowork"].map(surface => (
               <MapCell key={surface} cell={agent.mapCells[surface]} />
             ))}
           </div>
@@ -308,7 +301,7 @@ function AgentSurfaceMap({ onAgentClick, onSetupClick }) {
       })}
 
       {/* Map note cards */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 2, marginTop: 32, minWidth: minW }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 2, marginTop: 32, minWidth: minW }}>
         {[
           { title: "Primary vs Occasional", body: <><strong style={{ color: T.text, fontWeight: 500 }}>Primary</strong> means the agent lives here — it's where the bulk of its work happens and where it should be invoked first. <strong style={{ color: T.text, fontWeight: 500 }}>Occasional</strong> means the agent can extend into this surface for specific tasks, but it's not the home base.</> },
           { title: "The key insight", body: <>Skills tell Claude <strong style={{ color: T.text, fontWeight: 500 }}>what to do</strong>. Tools give Claude <strong style={{ color: T.text, fontWeight: 500 }}>how to act</strong>. Agents define <strong style={{ color: T.text, fontWeight: 500 }}>who Claude is</strong> in a given context. The surface determines <strong style={{ color: T.text, fontWeight: 500 }}>where that work happens</strong>. Four layers, one framework.</> },

@@ -54,6 +54,22 @@ chmod +x .claude/hooks/*.sh
 
 The `.claude/settings.json` already points Claude Code at `./mcp/dist/index.js` and wires up the four hooks. Once the server is built and `context.json` is filled in, open Claude Code in this directory — the 18 APDF tools will appear automatically and hooks will fire on every tool call.
 
+### `.apdf/context.json` — Project Context Schema
+
+Copy from `.apdf/context.json.example` and fill in before using MCP tools. The `inject-context.sh` hook injects this into every `mcp__apdf__*` tool call automatically.
+
+| Field | Description |
+|-------|-------------|
+| `project_name` | Project identifier — used in artifact filenames and handoff blocks |
+| `phase` | Current phase: `"01"` through `"06"` (or the phase name, e.g. `"Discover"`) |
+| `persona` | Primary user persona — Claude references this when generating prompts |
+| `problem_statement` | The core design problem being solved |
+| `constraints` | Timeline, technical, business, or platform constraints |
+| `open_questions` | What the team still needs to answer — focuses Claude's attention |
+| `last_handoff` | Paste the Phase Handoff Block from the previous phase to carry context across sessions |
+
+All fields are strings. Leave fields blank if not yet known — the hooks handle partial context gracefully.
+
 See [`/mcp/README.md`](./mcp/README.md) for the full tool reference, verification steps, and troubleshooting.
 
 ---
@@ -70,13 +86,13 @@ a six-phase system (Discover → Define → Ideate → Prototype → Validate �
 with structured skill files, Figma templates, and AI-ready prompts for each phase.
 
 The six phases and their skill files are:
-- Discover → research-planning.md, research-synthesis.md, insight-framing.md, competitive-analysis.md, service-blueprint.md
-- Define → problem-framing.md
-- Ideate → concept-generation.md, visual-design-execution.md
-- Prototype → user-flow-mapping.md, prototype-scoping.md, ux-copy-writing.md, prototyping.md, accessibility-audit.md
-- Validate → usability-testing.md
-- Deliver → design-delivery.md
-- Cross-phase → design-systems.md, figma-playbook.md
+- Discover → research-planning.md, research-synthesis.md, competitive-analysis.md, service-blueprint.md, insight-framing.md
+- Define → problem-framing.md, journey-mapping.md, persona-creation.md, assumption-mapping.md, requirements-prioritization.md
+- Ideate → concept-generation.md, concept-proof.md, visual-design-execution.md, concept-critique.md, idea-clustering.md, storyboarding.md
+- Prototype → prototyping.md, user-flow-mapping.md, ux-copy-writing.md, prototype-scoping.md, heuristic-review.md, test-script-drafting.md, accessibility-audit.md
+- Validate → usability-testing.md, usability-findings-synthesis.md, insight-report.md, recruitment-screener.md, stakeholder-presentation.md, iteration-brief.md
+- Deliver → design-delivery.md, component-specs.md, design-qa.md, handoff-annotation.md, accessibility-annotation.md, design-decision-record.md, design-system-audit.md
+- Cross-phase → design-systems.md, figma-playbook.md, phase-handoff.md, skill-chaining.md, which-claude.md
 
 I'm starting a new design project and need help getting oriented.
 Please ask me the following four questions (all at once is fine):
@@ -107,21 +123,34 @@ Based on my answers, respond with:
 
 ### `/skills` — Claude Skill Files
 
-Eleven structured `.md` skill files — nine organized by phase, plus a cross-cutting Figma Playbook and a Design Systems skill. Each contains workflows, templates, quality checklists, and guidance for integrating AI into that part of the design process.
+43 structured `.md` skill files — organized by phase, covering the full design lifecycle from research through delivery. Browse, preview, and download from the [Skills Library](https://quinrobinson.github.io/Agentic-Product-Design-Framework) on the live site.
 
-| Phase | Skill File | What It Does |
-|-------|-----------|--------------|
-| 01 — Discover | `user-research.md` | Research synthesis, interview guides, thematic coding, research briefs |
-| 01 — Discover | `competitive-analysis.md` | Landscape mapping, feature benchmarks, UX pattern libraries |
-| 02 — Define | `problem-framing.md` | HMW/JTBD/user stories, journey maps, MoSCoW prioritization, design briefs |
-| 03 — Ideate | `concept-generation.md` | Five-Direction concepts, UI patterns, visual system directions, chart type selection |
-| 03 — Ideate | `visual-design-execution.md` | Style selection, color token architecture, typography, spacing, motion, icon standards |
-| 04 — Prototype | `prototyping.md` | Functional prototypes, touch targets, interaction timing, gesture safety, platform QA |
-| 04 — Prototype | `accessibility-audit.md` | WCAG 2.1 AA audit for web + iOS (VoiceOver) + Android (TalkBack) |
-| 05 — Validate | `usability-testing.md` | Test plans, task scenarios, findings synthesis, heuristic evaluations |
-| 06 — Deliver | `design-delivery.md` | Component specs, iOS/Android/Web platform handoff packages, DDRs, release notes |
-| 03 / 06 | `design-systems.md` | Design system audit & token documentation — M3 naming, cross-system comparison, Figma variable setup |
-| All Phases | `figma-playbook.md` | Figma MCP integration — execute design work directly in Figma from Claude |
+| Phase | Skills | Files |
+|-------|--------|-------|
+| 01 — Discover | 5 | `research-planning.md`, `research-synthesis.md`, `competitive-analysis.md`, `service-blueprint.md`, `insight-framing.md` |
+| 02 — Define | 5 | `problem-framing.md`, `journey-mapping.md`, `persona-creation.md`, `assumption-mapping.md`, `requirements-prioritization.md` |
+| 03 — Ideate | 6 | `concept-generation.md`, `concept-proof.md`, `visual-design-execution.md`, `concept-critique.md`, `idea-clustering.md`, `storyboarding.md` |
+| 04 — Prototype | 7 | `prototyping.md`, `accessibility-audit.md`, `user-flow-mapping.md`, `ux-copy-writing.md`, `prototype-scoping.md`, `heuristic-review.md`, `test-script-drafting.md` |
+| 05 — Validate | 6 | `usability-testing.md`, `usability-findings-synthesis.md`, `insight-report.md`, `recruitment-screener.md`, `stakeholder-presentation.md`, `iteration-brief.md` |
+| 06 — Deliver | 7 | `design-delivery.md`, `component-specs.md`, `design-qa.md`, `handoff-annotation.md`, `accessibility-annotation.md`, `design-decision-record.md`, `design-system-audit.md` |
+| Cross-phase | 7 | `design-systems.md`, `figma-playbook.md`, `figma-ds-export.md`, `figma-ds-audit.md`, `phase-handoff.md`, `skill-chaining.md`, `which-claude.md` |
+
+### `/.claude/agents` — Specialist Agents
+
+Six pre-configured Claude agents, each scoped to a role in the design process. Available in Claude Code as subagents (auto-spawned by the Orchestrator) or in any Claude conversation by uploading the agent file.
+
+| Agent | File | Primary Surface | When to Invoke |
+|-------|------|----------------|----------------|
+| **Orchestrator** | `orchestrator.md` | Code + Chat | Start of a project, phase transitions, or when you're not sure which agent to use. Spawns specialist agents in Claude Code. |
+| **Researcher** | `researcher.md` | Chat | Any research activity — planning a study, synthesizing transcripts, competitive analysis, or findings reports. |
+| **Strategist** | `strategist.md` | Chat | Translating research into problem frames, journey maps, personas, and stakeholder presentations. |
+| **Designer** | `designer.md` | Chat | Concept generation, idea clustering, flow mapping, UX copy, and concept proofs. |
+| **Systems Designer** | `systems-designer.md` | Code | Component architecture, token systems, design system audits, and Figma variable scaffolding. |
+| **Design Engineer** | `design-engineer.md` | Code + Cowork | Handoff docs, design QA, accessibility annotations, and building component code from specs. |
+
+**In Claude Code:** The Orchestrator auto-spawns agents based on phase. Run `/kickoff`, `/discover`, or `/deliver` to trigger autonomous phase execution. Requires `.apdf/context.json` to be filled in first.
+
+**In Claude Chat or any conversation:** Upload the agent's `.md` file, or copy the activation prompt from the [Agents page](https://quinrobinson.github.io/Agentic-Product-Design-Framework) on the live site.
 
 ### `/artifacts` — Interactive React Components & Onboarding Deck
 

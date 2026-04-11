@@ -2,9 +2,9 @@
 name: which-claude
 phase: all
 description: >
-  Route every design task to the right Claude surface — Chat, Cowork, Code, or Cursor. Use this
+  Route every design task to the right Claude surface — Chat, Cowork, or Code. Use this
   skill before starting any session if you're unsure which surface to open. Triggers include any
-  question about where to run a workflow, whether to use the browser, terminal, or IDE, how to
+  question about where to run a workflow, whether to use the browser or terminal, how to
   connect Figma, or when a task isn't working as expected. This is the first skill to read
   when onboarding to the framework.
 ai_leverage: high
@@ -17,7 +17,7 @@ surface is the #1 reason workflows stall — not skill gaps, not prompting mista
 
 ---
 
-## The Four Surfaces
+## The Three Surfaces
 
 ### Claude Chat — `claude.ai`
 **What it is:** A browser-based or mobile conversation interface. No setup required.
@@ -68,8 +68,10 @@ your local file system, can execute code, manage Git, and connect to MCP servers
 - **Figma MCP workflows** — this is the only surface that supports direct Figma integration
 - Editing, committing, and pushing files to GitHub
 - Running build scripts, linters, or test suites
-- Generating and writing code files to disk (components, tokens, configs)
+- Generating and writing code files to disk (components, tokens, configs, prototype code)
 - Working with design tokens — exporting, transforming, syncing CSS/JSON files
+- Building prototype and production code from component specs
+- Translating design tokens to CSS custom properties or React props
 - Any workflow in the `figma-playbook.md` skill
 
 **Not for:**
@@ -78,30 +80,6 @@ your local file system, can execute code, manage Git, and connect to MCP servers
 
 **How to start:** Install Claude Code via `npm install -g @anthropic-ai/claude-code` →
 Open your terminal in your project directory → Run `claude` → You're in a session.
-
----
-
-### Cursor — Cursor IDE
-**What it is:** An AI-native code editor pre-loaded with APDF framework context via a `.cursor/rules`
-file in your client project root. No re-briefing required — framework rules, token conventions,
-and component spec format are loaded automatically when you open the project.
-
-**Best for:**
-- Building prototype and production code from APDF component specs
-- Translating design tokens to CSS custom properties or React props
-- Generating component variants and all required interaction states
-- Writing token-aware React components that follow `--apdf-*` naming conventions
-- Implementing design revisions from validated usability findings
-
-**Not for:**
-- Figma MCP integration (use Claude Code — MCP only connects via terminal)
-- Git operations, committing, pushing to GitHub (use Claude Code)
-- Synthesis, reasoning, and strategy (use Claude Chat)
-- Screen-aware QA on live staging environments (use Claude Cowork)
-
-**How to start:** Download Cursor at cursor.com → Open your client project in Cursor →
-Copy `.cursor/rules` from the APDF repo root into your client project root →
-Reopen the project — framework context is now loaded for every session.
 
 ---
 
@@ -125,9 +103,9 @@ Reopen the project — framework context is now loaded for every session.
 | Automate a browser-based task | Claude Cowork |
 | Review a live prototype with Claude watching | Claude Cowork |
 | Navigate a complex web UI with AI assistance | Claude Cowork |
-| Build a component from a spec | Cursor |
-| Translate tokens to CSS/React | Cursor |
-| Generate all component states | Cursor |
+| Build a component from a spec | Claude Code |
+| Translate tokens to CSS/React | Claude Code |
+| Generate all component states | Claude Code |
 
 ---
 
@@ -154,9 +132,9 @@ This is the most common point of confusion. Here's the clear rule:
 | 01 — Discover | Claude Chat | Claude Code (pulling research files from local disk) |
 | 02 — Define | Claude Chat | Claude Code (exporting journey maps to Figma) |
 | 03 — Ideate | Claude Chat | Claude Code (building concept wireframes in Figma) |
-| 04 — Prototype | Claude Chat + **Cursor** | Claude Code (Figma MCP, Git) |
+| 04 — Prototype | Claude Chat + Claude Code | Claude Code (Figma MCP, Git) |
 | 05 — Validate | Claude Chat | Claude Cowork (screen-aware QA on staging) |
-| 06 — Deliver | Claude Chat + Claude Code | **Cursor** (finalizing and hardening component code) |
+| 06 — Deliver | Claude Chat + Claude Code | Claude Code (building and hardening component code) |
 
 ---
 
@@ -177,12 +155,6 @@ This is the most common point of confusion. Here's the clear rule:
 - Claude Code installed: `npm install -g @anthropic-ai/claude-code`
 - For Figma MCP: Figma desktop app (not browser) + MCP configured
 - Verify: `claude --version` and `claude mcp list`
-
-### Cursor
-- Download and install Cursor at cursor.com
-- Open your client project directory in Cursor
-- Copy `.cursor/rules` from the APDF repo root into the client project root
-- No API keys or plugins required — framework context loads automatically
 
 ---
 
