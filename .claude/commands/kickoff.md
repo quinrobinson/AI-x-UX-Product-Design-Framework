@@ -9,6 +9,18 @@ stop and ask the designer to fill in .apdf/context.json before proceeding.
 Do not spawn any subagents until context.json has at minimum:
 project_name, phase, and persona.
 
+If figma_file_url is empty or missing, ask the designer:
+"Do you have a Figma file for this project? If so, paste the URL and I'll
+set it up. This enables dual-output deliverables — every tool will produce
+both a markdown artifact and a Figma visualization. If you don't have one
+yet, I'll proceed with markdown-only deliverables. You can add a Figma
+file later by setting figma_file_url in .apdf/context.json."
+
+If the designer provides a Figma URL, store it in .apdf/context.json:
+- Set figma_file_url to the full URL as provided
+- Extract the file key (the segment after /design/ or /file/ in the URL
+  path) and set figma_file_key to that value
+
 Once context is confirmed:
 1. Read .apdf/context.json for project name, phase, persona, problem statement
 2. Read .apdf/artifacts/index.md (if it exists) to understand what's done

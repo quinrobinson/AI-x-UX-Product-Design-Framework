@@ -15,12 +15,34 @@
             "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/persist-artifact.sh"
           }
         ]
+      },
+      {
+        "matcher": "mcp__.*__use_figma|mcp__.*__create_new_file",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/figma-write-log.sh"
+          }
+        ]
       }
     ],
     "PreToolUse": [
       {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/session-init.sh"
+          }
+        ]
+      },
+      {
         "matcher": "mcp__apdf__.*",
         "hooks": [
+          {
+            "type": "command",
+            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/ds-gate.sh"
+          },
           {
             "type": "command",
             "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/inject-context.sh"

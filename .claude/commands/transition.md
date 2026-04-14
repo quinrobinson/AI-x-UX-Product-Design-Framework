@@ -65,6 +65,7 @@ When confirmed:
    - Carry forward persona, problem_statement, constraints from handoff block
    - Set "open_questions" to the open questions from the handoff block
    - Set "last_handoff" to the filename of the handoff artifact just read
+   - Carry forward figma_file_url, figma_file_key, and design_system_status unchanged from the current context (these persist across all phases)
 
 2. Spawn next phase specialists in parallel using the Task tool,
    following the Task Decomposition Patterns for the next phase.

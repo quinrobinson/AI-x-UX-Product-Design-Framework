@@ -38,6 +38,11 @@ Once you have both, generate a Phase Handoff Block formatted as follows:
 ### Key Artifacts
 [List of artifacts produced]
 
+### Design System Status
+**Status:** [established / external / none / unknown]
+**Token collections:** [Reference, System, Component — or N/A if none]
+**Key tokens in use:** [List primary/surface/accent colors and type scale if established, otherwise N/A]
+
 ### Open Questions
 [Questions the next phase needs to resolve]
 
