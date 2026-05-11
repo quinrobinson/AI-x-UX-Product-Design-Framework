@@ -2,7 +2,14 @@
   "name": "@apdf/mcp",
   "version": "1.0.0",
   "description": "Agentic Product Design Framework — MCP tools for designers using Claude Code or Claude Desktop",
-  "keywords": ["mcp", "ux", "design", "figma", "claude", "product-design"],
+  "keywords": [
+    "mcp",
+    "ux",
+    "design",
+    "figma",
+    "claude",
+    "product-design"
+  ],
   "license": "MIT",
   "type": "module",
   "bin": {
@@ -17,6 +24,7 @@
     "@modelcontextprotocol/sdk": "^1.0.0"
   },
   "devDependencies": {
+    "@types/node": "^25.6.2",
     "typescript": "^5.4.0"
   },
   "engines": {

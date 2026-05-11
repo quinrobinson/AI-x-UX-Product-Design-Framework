@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>APDF — Living System</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&family=DM+Sans:wght@300;400;500&display=swap');
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html,body{background:#0F0F0F;}
+  body{overflow:auto;color:#F2F2F2;font-family:'DM Sans',sans-serif;}
+  /* Canvas wrap — sets minimum dims so the diagram never crowds. Scrolls on small viewports. */
+  .wrap{position:relative;width:100vw;height:100vh;min-width:1180px;min-height:780px;}
+  canvas{position:absolute;top:0;left:0;width:100%;height:100%;display:block;}
+  /* Header — top-left, unobtrusive page label. No center-overlap with diagram. */
+  .hd{position:fixed;top:18px;left:24px;z-index:20;pointer-events:none;opacity:0;animation:fi 0.6s 0.2s forwards;}
+  .ti{font-family:'Inter',sans-serif;font-size:16px;font-weight:600;color:#F2F2F2;letter-spacing:-0.01em;line-height:1.2;}
+  .sb{font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:500;letter-spacing:0.08em;
+    text-transform:uppercase;color:#787878;margin-top:6px;}
+  /* Legend — collapsible disclosure panel anchored bottom-center */
+  .lg-wrap{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:30;
+    display:flex;flex-direction:column;align-items:center;gap:10px;
+    max-width:calc(100vw - 32px);
+    opacity:0;animation:fi-c 0.6s 0.6s forwards;}
+  .lg-toggle{font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:500;
+    letter-spacing:0.08em;text-transform:uppercase;color:#999999;
+    background:rgba(15,15,15,0.94);border:1px solid #2C2C2C;border-radius:6px;
+    padding:8px 14px;cursor:pointer;backdrop-filter:blur(14px);
+    display:inline-flex;align-items:center;gap:8px;
+    box-shadow:0 4px 16px rgba(0,0,0,0.4);transition:border-color .15s,color .15s;}
+  .lg-toggle:hover{border-color:#404040;color:#F2F2F2;}
+  .lg-toggle .chev{font-size:9px;opacity:.7;transition:transform .2s;}
+  .lg-wrap.open .lg-toggle .chev{transform:rotate(180deg);}
+  .lg{display:none;flex-wrap:wrap;align-items:center;justify-content:center;
+    background:rgba(15,15,15,0.94);border:1px solid #2C2C2C;border-radius:8px;
+    padding:12px 6px;backdrop-filter:blur(14px);
+    box-shadow:0 4px 16px rgba(0,0,0,0.4);max-width:100%;}
+  .lg-wrap.open .lg{display:flex;}
+  .li{display:flex;align-items:center;gap:8px;font-family:'JetBrains Mono',monospace;
+    font-size:10px;font-weight:500;letter-spacing:0.08em;color:#999999;
+    text-transform:uppercase;padding:4px 14px;white-space:nowrap;}
+  .li:not(:last-child){border-right:1px solid #2C2C2C;}
+  .sw{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+  .sw.r{background:transparent!important;border:1.5px solid;}
+  .sw.rl{width:18px;height:0;border-radius:0;border-top:1.5px dashed;}
+  /* Multi-color cluster — small dots side-by-side to show phase variety */
+  .sw.multi{display:inline-flex;gap:2px;width:auto;height:auto;border-radius:0;background:transparent!important;}
+  .sw.multi span{width:6px;height:6px;border-radius:50%;}
+  /* Zoom controls — bottom-right */
+  .zoom{position:fixed;bottom:20px;right:24px;z-index:30;
+    display:flex;flex-direction:column;gap:6px;
+    opacity:0;animation:fi 0.6s 0.6s forwards;}
+  .zoom button{width:36px;height:36px;border-radius:6px;
+    background:rgba(15,15,15,0.94);border:1px solid #2C2C2C;
+    color:#999999;cursor:pointer;backdrop-filter:blur(14px);
+    display:flex;align-items:center;justify-content:center;
+    font-family:'JetBrains Mono',monospace;font-size:18px;font-weight:500;
+    transition:border-color .15s,color .15s;
+    box-shadow:0 4px 16px rgba(0,0,0,0.4);}
+  .zoom button:hover{border-color:#404040;color:#F2F2F2;}
+  .zoom-label{font-family:'JetBrains Mono',monospace;font-size:9px;
+    font-weight:500;letter-spacing:0.08em;text-transform:uppercase;color:#787878;
+    text-align:center;padding:4px 0;}
+  /* Tooltip — design-system surface chrome */
+  .tp{position:fixed;background:rgba(22,22,22,0.98);border:1px solid #2C2C2C;border-radius:8px;
+    padding:14px 16px;max-width:240px;pointer-events:none;opacity:0;transition:opacity 0.12s;z-index:50;
+    box-shadow:0 8px 24px rgba(0,0,0,0.5);}
+  .tp.on{opacity:1;}
+  .tp-ty{font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:500;letter-spacing:0.12em;
+    text-transform:uppercase;margin-bottom:6px;}
+  .tp-nm{font-family:'Inter',sans-serif;font-size:14px;font-weight:600;color:#F2F2F2;
+    line-height:1.3;letter-spacing:-0.01em;margin-bottom:4px;}
+  .tp-ev{font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:500;color:#787878;
+    letter-spacing:0.04em;margin-bottom:6px;}
+  .tp-ds{font-family:'DM Sans',sans-serif;font-size:12px;color:#999999;line-height:1.55;}
+  @keyframes fi{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+  .lg{transform:translateX(-50%) translateY(0);}
+  @keyframes fi-c{from{opacity:0;transform:translateX(-50%) translateY(4px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+  .lg{animation-name:fi-c;}
+  canvas.ptr{cursor:pointer;}
+  /* Mobile-friendly hint when scrolling is required */
+  .scroll-hint{display:none;}
+  @media (max-width:820px){
+    .scroll-hint{display:block;position:fixed;top:18px;right:24px;z-index:20;
+      font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:0.08em;
+      text-transform:uppercase;color:#787878;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <canvas id="c"></canvas>
+</div>
+<div class="hd"><div class="ti">One Living System</div><div class="sb">Hover any node to learn more</div></div>
+<div class="scroll-hint">Scroll or drag to explore</div>
+<div class="lg-wrap" id="lgwrap">
+  <div class="lg">
+    <div class="li"><div class="sw" style="background:#E9810C;opacity:.95;"></div>Claude AI</div>
+    <div class="li"><div class="sw" style="background:#999999;opacity:.5;"></div>Surface</div>
+    <div class="li"><div class="sw" style="background:#FCD34D;opacity:.9;border-radius:0;width:14px;height:2px;"></div>Hook (text)</div>
+    <div class="li"><div class="sw" style="background:#818CF8;opacity:.9;border-radius:0;width:14px;height:2px;"></div>Agent (text)</div>
+    <div class="li"><div class="sw rl" style="border-color:#818CF8;"></div>Orchestrator</div>
+    <div class="li">
+      <div class="sw multi"><span style="background:#22C55E"></span><span style="background:#8B5CF6"></span><span style="background:#F59E0B"></span><span style="background:#3B82F6"></span><span style="background:#EF4444"></span><span style="background:#14B8A6"></span></div>
+      Phase (6)
+    </div>
+    <div class="li">
+      <div class="sw multi"><span style="background:#22C55E;opacity:.55"></span><span style="background:#8B5CF6;opacity:.55"></span><span style="background:#F59E0B;opacity:.55"></span><span style="background:#3B82F6;opacity:.55"></span><span style="background:#EF4444;opacity:.55"></span><span style="background:#14B8A6;opacity:.55"></span></div>
+      Skill (per phase)
+    </div>
+    <div class="li"><div class="sw" style="background:#C084FC;opacity:.7;"></div>Cross-Phase</div>
+  </div>
+  <button class="lg-toggle" id="lgbtn" aria-expanded="false" aria-controls="lg" type="button">
+    <span>Legend</span><span class="chev">▾</span>
+  </button>
+</div>
+<div class="zoom">
+  <button id="zoom-in" aria-label="Zoom in" title="Zoom in">+</button>
+  <div class="zoom-label" id="zoom-lvl">100%</div>
+  <button id="zoom-out" aria-label="Zoom out" title="Zoom out">−</button>
+  <button id="zoom-reset" aria-label="Reset zoom" title="Reset zoom" style="font-size:11px;">RESET</button>
+</div>
+<div class="tp" id="tp">
+  <div class="tp-ty" id="tp-ty"></div>
+  <div class="tp-nm" id="tp-nm"></div>
+  <div class="tp-ev" id="tp-ev"></div>
+  <div class="tp-ds" id="tp-ds"></div>
+</div>
+<script>
+const CV=document.getElementById('c'),X=CV.getContext('2d');
+let W,H,CX,CY,T=0,nodes=[],edges=[],parts=[],hov=null,ORC_R=0;
+
+const PC={discover:'#22C55E',define:'#8B5CF6',ideate:'#F59E0B',prototype:'#3B82F6',validate:'#EF4444',deliver:'#14B8A6'};
+const MEM='#38BDF8',AGNT='#818CF8',HOOK='#FCD34D',SURF='#999999',XP='#C084FC';
+const BRAND_ORANGE='#E9810C';
+
+const PHASES=[
+  {id:'discover', lbl:'Discover',  num:'01'},
+  {id:'define',   lbl:'Define',    num:'02'},
+  {id:'ideate',   lbl:'Ideate',    num:'03'},
+  {id:'prototype',lbl:'Prototype', num:'04'},
+  {id:'validate', lbl:'Validate',  num:'05'},
+  {id:'deliver',  lbl:'Deliver',   num:'06'},
+];
+
+const SPEC_AGENTS=[
+  {id:'ag-res',lbl:'Researcher',  phase:'discover',desc:'UX Research Agent — synthesizes interviews, plans research, competitive analysis, insight reports.'},
+  {id:'ag-str',lbl:'Strategist',  phase:'define',  desc:'Design Lead — frames problems, maps journeys, service blueprints, stakeholder decks.'},
+  {id:'ag-des',lbl:'Designer',    phase:'ideate',  desc:'Product Design Agent — concepts, user flows, UX copy, concept proofs.'},
+  {id:'ag-sys',lbl:'Sys Designer',phase:'prototype',desc:'Design Systems Agent — component architecture, state specs, token documentation.'},
+  {id:'ag-eng',lbl:'Design Eng',  phase:'deliver', desc:'Design Engineer/QA — handoff packages, design QA, engineering bridge.'},
+];
+
+const SKILLS_BY_PHASE={
+  discover: [{id:'sk-ur',l:'User Research'},{id:'sk-ca',l:'Comp Analysis'},{id:'sk-ig',l:'Interview Guide'},
+             {id:'sk-sd',l:'Survey Design'},{id:'sk-ar',l:'Analytics Review'},{id:'sk-if',l:'Insight Framing'}],
+  define:   [{id:'sk-pf',l:'Problem Framing'},{id:'sk-hm',l:'HMW Statements'},{id:'sk-jt',l:'JTBD'},
+             {id:'sk-jm',l:'Journey Mapping'},{id:'sk-mo',l:'MoSCoW'},{id:'sk-db',l:'Design Brief'},{id:'sk-pe',l:'Persona'}],
+  ideate:   [{id:'sk-cg',l:'Concept Gen'},{id:'sk-vd',l:'Visual Design'},{id:'sk-ta',l:'Token Arch'},
+             {id:'sk-sb',l:'Style Builder'},{id:'sk-uf',l:'User Flow'},{id:'sk-ic',l:'Idea Clustering'}],
+  prototype:[{id:'sk-pr',l:'Prototyping'},{id:'sk-a1',l:'Accessibility'},{id:'sk-tt',l:'Touch Targets'},
+             {id:'sk-ms',l:'Motion Spec'},{id:'sk-ux',l:'UX Copy'},{id:'sk-ps',l:'Proto Scoping'}],
+  validate: [{id:'sk-ut',l:'Usability Test'},{id:'sk-he',l:'Heuristic Eval'},{id:'sk-rs',l:'Research Synth'},
+             {id:'sk-sv',l:'Severity Rank'},{id:'sk-am',l:'Assumption Map'}],
+  deliver:  [{id:'sk-dd',l:'Design Delivery'},{id:'sk-sp',l:'Component Specs'},{id:'sk-dr',l:'Decision Records'},
+             {id:'sk-dh',l:'Dev Handoff'},{id:'sk-rn',l:'Release Notes'},{id:'sk-qa',l:'Design QA'},{id:'sk-sb2',l:'Service Blueprint'}],
+};
+
+// Cross-phase skill groups
+// Group A: Hook-anchored — which-claude, skill-chaining, phase-handoff (session/routing hooks)
+// Group B: Design System cluster — anchored between Sys Designer agent and Prototype/Deliver
+const XPHASE_HOOK=[
+  {id:'xp-wc', l:'Which Claude',  desc:'Routes every task to the right surface: Chat, Code, or Cowork. The decision layer for the whole framework.'},
+  {id:'xp-sc', l:'Skill Chaining',desc:'Chains all six phases into one continuous workflow using handoff blocks between conversations.'},
+  {id:'xp-ph', l:'Phase Handoff', desc:'Generates structured context blocks at phase close — output of one phase becomes the opening of the next.'},
+];
+const XPHASE_DS=[
+  {id:'xp-ds', l:'Design Systems',   desc:'Audits products against Material Design 3, Atlassian, IBM Carbon, and Apple HIG. Documents M3 tokens.'},
+  {id:'xp-fp', l:'Figma Playbook',   desc:'Executes design work directly in Figma via MCP — patterns for every phase and deliverable type.'},
+  {id:'xp-fe', l:'Figma DS Export',  desc:'Exports design system tokens from Figma to code — variables, styles, and component specs.'},
+  {id:'xp-fa', l:'Figma DS Audit',   desc:'Audits the Figma design system file against structure, naming, coverage, and handoff readiness.'},
+];
+
+const HOOKS=[
+  {id:'hk-ap',lbl:'Auto-Persist',  event:'PostToolUse',
+   desc:'Every MCP tool output written to .apdf/artifacts/ automatically. No manual saving.'},
+  {id:'hk-ai',lbl:'Auto-Inject',   event:'PreToolUse',
+   desc:'Injects .apdf/context.json before any tool runs — persona, problem statement, phase, constraints.'},
+  {id:'hk-sa',lbl:'Session Aware', event:'Stop',
+   desc:'Checks if phase-level work was completed. Reminds designer to run /handoff-block before closing.'},
+  {id:'hk-pr',lbl:'Phase Routing', event:'Stop',
+   desc:'Detects a Phase Handoff Block in artifacts. Prompts /transition to kick off the next phase.'},
+];
+
+const SURFACES=[
+  {id:'sf-ch',lbl:'Chat',   desc:'Agent activation, planning, iteration, prompting.'},
+  {id:'sf-co',lbl:'Code',   desc:'Files, repos, Figma MCP — agentic builder surface.'},
+  {id:'sf-cw',lbl:'Cowork', desc:'Screen-aware desktop automation for non-developers.'},
+];
+
+function build(){
+  nodes=[];edges=[];
+  const S=Math.min(W,H);
+  const R_HOOK=S*.13, R_ORC=S*.222, R_PHASE=S*.29;
+  ORC_R=R_ORC;
+
+  // Center
+  nodes.push({id:'claude',lbl:'Claude AI',type:'center',x:CX,y:CY,r:27,
+    color:BRAND_ORANGE,tl:'Intelligence Layer',
+    desc:'The reasoning engine — every agent, hook, and phase flows through Claude.'});
+
+  // Surfaces inside Claude halo
+  SURFACES.forEach((s,i)=>{
+    const ang=(i/SURFACES.length)*Math.PI*2-Math.PI/2;
+    nodes.push({id:s.id,lbl:s.lbl,type:'surface',
+      x:CX+Math.cos(ang)*16,y:CY+Math.sin(ang)*16,
+      r:5,color:SURF,surfAng:ang,tl:'Claude Surface',desc:s.desc});
+  });
+
+  // Hooks — close to Claude
+  HOOKS.forEach((hk,i)=>{
+    const ang=(i/HOOKS.length)*Math.PI*2-Math.PI/2;
+    const x=CX+Math.cos(ang)*R_HOOK,y=CY+Math.sin(ang)*R_HOOK;
+    nodes.push({id:hk.id,lbl:hk.lbl,type:'hook',x,y,r:18,
+      color:HOOK,angle:ang,tl:'Hook',event:hk.event,desc:hk.desc});
+    edges.push({from:'claude',to:hk.id,col:HOOK,w:.6,al:.18});
+  });
+
+  // Cross-phase hook-anchored skills: branch off Session Aware + Phase Routing hooks
+  // These two hooks sit at angles that point toward top/right — compute their positions
+  const hkSA=nodes.find(n=>n.id==='hk-sa');
+  const hkPR=nodes.find(n=>n.id==='hk-pr');
+  // Anchor point between these two hooks
+  if(hkSA&&hkPR){
+    const anchorAng=(hkSA.angle+hkPR.angle)/2;
+    const branchR=R_HOOK+38;
+    XPHASE_HOOK.forEach((xp,i)=>{
+      const spread=0.52;
+      const frac=XPHASE_HOOK.length>1?i/(XPHASE_HOOK.length-1):.5;
+      const ang=anchorAng-spread/2+frac*spread;
+      const dist=branchR+(i%2)*10;
+      const x=CX+Math.cos(ang)*dist,y=CY+Math.sin(ang)*dist;
+      nodes.push({id:xp.id,lbl:xp.l,type:'xphase-hook',x,y,r:7,
+        color:XP,tl:'Cross-Phase Skill',desc:xp.desc});
+      // connect to nearest hook
+      const nearHook=Math.abs(ang-hkSA.angle)<Math.abs(ang-hkPR.angle)?hkSA:hkPR;
+      edges.push({from:nearHook.id,to:xp.id,col:XP,w:.7,al:.3});
+    });
+  }
+
+  // Phases — solid circles, slightly larger
+  PHASES.forEach((p,i)=>{
+    const ang=(i/PHASES.length)*Math.PI*2-Math.PI/2;
+    const col=PC[p.id];
+    const x=CX+Math.cos(ang)*R_PHASE,y=CY+Math.sin(ang)*R_PHASE;
+    nodes.push({id:p.id,lbl:p.lbl,num:p.num,type:'phase',
+      x,y,r:20,color:col,angle:ang,tl:'Design Phase',
+      desc:`Phase ${p.num} — ${p.lbl}. Dedicated agent, skills, prompts, Figma deliverables.`});
+    const nxt=PHASES[(i+1)%PHASES.length];
+    edges.push({from:p.id,to:nxt.id,col,w:.35,al:.07});
+  });
+
+  // Specialist agents on Orc ring (text-only, larger hit radius)
+  SPEC_AGENTS.forEach(ag=>{
+    const ph=nodes.find(n=>n.id===ag.phase);
+    if(!ph)return;
+    const ang=ph.angle;
+    const x=CX+Math.cos(ang)*R_ORC,y=CY+Math.sin(ang)*R_ORC;
+    nodes.push({id:ag.id,lbl:ag.lbl,type:'agent',x,y,r:24,
+      color:AGNT,angle:ang,tl:`Agent — ${ag.lbl}`,targetPhase:ag.phase,desc:ag.desc});
+    edges.push({from:'claude',to:ag.id,col:AGNT,w:.7,al:.17});
+    edges.push({from:ag.id,to:ag.phase,col:AGNT,w:1.2,al:.48});
+  });
+
+  // Phase skills fan cluster — tighter to their phase
+  PHASES.forEach(p=>{
+    const ph=nodes.find(n=>n.id===p.id);
+    const sks=SKILLS_BY_PHASE[p.id]||[];
+    const col=PC[p.id];
+    const baseR=S*.085+sks.length*1.2;
+    const spread=Math.min(1.4,.22*sks.length);
+    sks.forEach((s,i)=>{
+      const frac=sks.length>1?i/(sks.length-1):.5;
+      const ang=ph.angle-spread/2+frac*spread;
+      const rOff=(i%2===0?0:7)+(Math.sin(i*1.8))*3;
+      const x=ph.x+Math.cos(ang)*(baseR+rOff),y=ph.y+Math.sin(ang)*(baseR+rOff);
+      nodes.push({id:s.id,lbl:s.l,type:'skill',x,y,r:5,color:col,parentPhase:p.id,
+        tl:'Skill File',desc:`${s.l} — structured .md skill file for ${p.lbl} phase deliverables.`});
+      edges.push({from:p.id,to:s.id,col,w:.6,al:.22});
+    });
+  });
+
+  // Design System cross-phase cluster
+  // Anchor: between Sys Designer agent and the space between Prototype & Deliver phases
+  const agSys=nodes.find(n=>n.id==='ag-sys');
+  const agEng=nodes.find(n=>n.id==='ag-eng');
+  if(agSys&&agEng){
+    // midpoint angle between prototype and deliver radials
+    const phProto=nodes.find(n=>n.id==='prototype');
+    const phDeliver=nodes.find(n=>n.id==='deliver');
+    let midAng=(phProto.angle+phDeliver.angle)/2;
+    // cluster sits at hook ring radius, pushed outward slightly past orc ring
+    const dsR=R_ORC+50;
+    XPHASE_DS.forEach((xp,i)=>{
+      const spread=0.7;
+      const frac=XPHASE_DS.length>1?i/(XPHASE_DS.length-1):.5;
+      const ang=midAng-spread/2+frac*spread;
+      const rOff=(i%2===0?0:14);
+      const x=CX+Math.cos(ang)*(dsR+rOff),y=CY+Math.sin(ang)*(dsR+rOff);
+      nodes.push({id:xp.id,lbl:xp.l,type:'xphase-ds',x,y,r:7,
+        color:XP,tl:'Cross-Phase Skill',desc:xp.desc});
+      // connect to both agents
+      edges.push({from:agSys.id,to:xp.id,col:XP,w:.65,al:.22});
+      if(i<2) edges.push({from:agEng.id,to:xp.id,col:XP,w:.45,al:.15});
+    });
+  }
+}
+
+// Particles
+function spawn(){
+  const pool=edges.filter(e=>!e.dash);
+  const e=pool[Math.floor(Math.random()*pool.length)];
+  if(!e)return;
+  const a=nodes.find(n=>n.id===e.from),b=nodes.find(n=>n.id===e.to);
+  if(!a||!b)return;
+  parts.push({fx:a.x,fy:a.y,tx:b.x,ty:b.y,t:0,
+    spd:.003+Math.random()*.007,col:e.col,r:1.5,rev:Math.random()<.25});
+}
+function tickP(){if(Math.random()<.27)spawn();parts=parts.filter(p=>p.t<1);parts.forEach(p=>p.t+=p.spd);}
+
+function ha(hex,a){
+  const r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);
+  return `rgba(${r},${g},${b},${a})`;
+}
+
+function drawBg(){
+  const bg=X.createRadialGradient(CX,CY,0,CX,CY,Math.max(W,H)*.8);
+  bg.addColorStop(0,'#181818');bg.addColorStop(1,'#0F0F0F');
+  X.fillStyle=bg;X.fillRect(0,0,W,H);
+  // Phase ring — keeps the structure legible without a full grid
+  const S=Math.min(W,H);
+  X.save();X.beginPath();X.arc(CX,CY,S*.29,0,Math.PI*2);
+  X.strokeStyle='rgba(255,255,255,.025)';X.lineWidth=1;X.stroke();X.restore();
+  // Orchestrator ring
+  X.save();X.beginPath();X.arc(CX,CY,ORC_R,0,Math.PI*2);
+  X.strokeStyle=ha(AGNT,.22);X.lineWidth=1.2;X.setLineDash([5,8]);X.stroke();X.setLineDash([]);
+  const lAng=-Math.PI*.38;
+  const lx=CX+Math.cos(lAng)*(ORC_R+13),ly=CY+Math.sin(lAng)*(ORC_R+13);
+  X.font=`600 7.5px 'JetBrains Mono',monospace`;
+  X.fillStyle=ha(AGNT,.32);X.textAlign='center';X.textBaseline='middle';
+  X.fillText('ORCHESTRATOR',lx,ly);X.restore();
+}
+
+function drawEdges(){
+  edges.forEach(e=>{
+    const a=nodes.find(n=>n.id===e.from),b=nodes.find(n=>n.id===e.to);
+    if(!a||!b)return;
+    X.save();X.beginPath();X.moveTo(a.x,a.y);X.lineTo(b.x,b.y);
+    X.strokeStyle=ha(e.col,e.al||.18);X.lineWidth=e.w||1;
+    if(e.dash)X.setLineDash([3,9]);
+    X.stroke();X.setLineDash([]);X.restore();
+  });
+}
+
+function drawParts(){
+  parts.forEach(p=>{
+    const t=p.rev?1-p.t:p.t;
+    const px=p.fx+(p.tx-p.fx)*t,py=p.fy+(p.ty-p.fy)*t;
+    const al=Math.sin(t*Math.PI)*.82;
+    X.save();
+    const g=X.createRadialGradient(px,py,0,px,py,p.r*5);
+    g.addColorStop(0,ha(p.col,al*.4));g.addColorStop(1,'transparent');
+    X.beginPath();X.arc(px,py,p.r*5,0,Math.PI*2);X.fillStyle=g;X.fill();
+    X.beginPath();X.arc(px,py,p.r,0,Math.PI*2);X.fillStyle=ha(p.col,al);X.fill();
+    X.restore();
+  });
+}
+
+function drawClusters(){
+  PHASES.forEach(p=>{
+    const ph=nodes.find(n=>n.id===p.id);
+    const sks=nodes.filter(n=>n.type==='skill'&&n.parentPhase===p.id);
+    if(!sks.length)return;
+    let mx=0;sks.forEach(s=>{const d=Math.hypot(s.x-ph.x,s.y-ph.y)+s.r;if(d>mx)mx=d;});
+    X.save();X.beginPath();X.arc(ph.x,ph.y,mx+10,0,Math.PI*2);
+    X.strokeStyle=ha(PC[p.id],.05);X.lineWidth=1;X.setLineDash([2,8]);X.stroke();X.setLineDash([]);X.restore();
+  });
+  // DS cluster boundary
+  const dsNodes=nodes.filter(n=>n.type==='xphase-ds');
+  if(dsNodes.length){
+    let cx=dsNodes.reduce((s,n)=>s+n.x,0)/dsNodes.length;
+    let cy=dsNodes.reduce((s,n)=>s+n.y,0)/dsNodes.length;
+    let mx=0;dsNodes.forEach(n=>{const d=Math.hypot(n.x-cx,n.y-cy)+n.r;if(d>mx)mx=d;});
+    X.save();X.beginPath();X.arc(cx,cy,mx+10,0,Math.PI*2);
+    X.strokeStyle=ha(XP,.06);X.lineWidth=1;X.setLineDash([2,8]);X.stroke();X.setLineDash([]);X.restore();
+  }
+}
+
+function drawNodes(){
+  // Render order: skills first (back) → cross-phase → hook/agent text (no circle) → surface → phase (solid) → center
+  const ORD=['skill','xphase-hook','xphase-ds','hook','surface','phase','agent','center'];
+  [...nodes].sort((a,b)=>ORD.indexOf(a.type)-ORD.indexOf(b.type)).forEach(n=>{
+    const h=hov&&hov.id===n.id;
+    const pulse=n.type==='center'?Math.sin(T*.022)*3:0;
+    const r=n.r+pulse+(h?3:0);
+    X.save();
+
+    // Soft glow halo only for circle-bearing nodes (skip for text-only agent/hook)
+    if(n.type!=='agent'&&n.type!=='hook'){
+      const glR=r*(n.type==='skill'||n.type.startsWith('xphase')?4:5.5);
+      const gl=X.createRadialGradient(n.x,n.y,0,n.x,n.y,glR);
+      gl.addColorStop(0,ha(n.color,h?.2:n.type==='skill'?.04:n.type==='center'?.18:.10));
+      gl.addColorStop(1,'transparent');
+      X.beginPath();X.arc(n.x,n.y,glR,0,Math.PI*2);X.fillStyle=gl;X.fill();
+    }
+
+    // Shapes — skip agents and hooks (text only)
+    if(n.type==='center'){
+      X.beginPath();X.arc(n.x,n.y,r,0,Math.PI*2);
+      const cg=X.createRadialGradient(n.x,n.y,0,n.x,n.y,r);
+      cg.addColorStop(0,'#FF8C42');cg.addColorStop(.55,'#E8601A');cg.addColorStop(1,'#A03808');
+      X.fillStyle=cg;X.fill();
+      X.strokeStyle='rgba(232,96,26,.5)';X.lineWidth=2;X.stroke();
+    }else if(n.type==='surface'){
+      X.beginPath();X.arc(n.x,n.y,r,0,Math.PI*2);
+      X.fillStyle=ha(SURF,h?.7:.4);X.fill();
+    }else if(n.type==='phase'){
+      // SOLID filled circle — phase color
+      X.beginPath();X.arc(n.x,n.y,r,0,Math.PI*2);
+      X.fillStyle=ha(n.color,h?1:.92);X.fill();
+    }else if(n.type==='skill'){
+      X.beginPath();X.arc(n.x,n.y,r,0,Math.PI*2);
+      X.fillStyle=ha(n.color,h?.95:.55);X.fill();
+      if(h){X.strokeStyle=ha(n.color,.9);X.lineWidth=1;X.stroke();}
+    }else if(n.type==='xphase-hook'||n.type==='xphase-ds'){
+      X.beginPath();X.arc(n.x,n.y,r,0,Math.PI*2);
+      X.fillStyle=ha(XP,h?.3:.12);X.fill();
+      X.strokeStyle=ha(XP,h?1:.55);X.lineWidth=h?1.8:1.2;X.setLineDash([2,3]);X.stroke();X.setLineDash([]);
+    }
+    // Agents + hooks: no circle. Text only (rendered below).
+    X.restore();
+
+    // ── Labels ────────────────────────────────────────────────────────────
+    X.save();X.textAlign='center';X.textBaseline='middle';
+    if(n.type==='center'){
+      X.fillStyle='rgba(255,255,255,0.95)';X.font=`600 8px 'JetBrains Mono',monospace`;X.fillText('CLAUDE',n.x,n.y-5);
+      X.fillStyle='rgba(255,255,255,0.5)';X.font=`400 7px 'JetBrains Mono',monospace`;X.fillText('AI',n.x,n.y+5);
+    }else if(n.type==='surface'){
+      const lx=n.x+(n.x-CX)*3.5,ly=n.y+(n.y-CY)*3.5;
+      X.font=`400 6.5px 'JetBrains Mono',monospace`;X.fillStyle=ha(SURF,h?.65:.22);X.fillText(n.lbl.toUpperCase(),lx,ly);
+    }else if(n.type==='hook'){
+      // Text-only treatment — more prominent than before
+      X.font=`600 10px 'JetBrains Mono',monospace`;X.fillStyle=ha(HOOK,h?1:.9);
+      X.fillText(n.lbl.toUpperCase(),n.x,n.y-5);
+      X.font=`500 8px 'JetBrains Mono',monospace`;X.fillStyle=ha(HOOK,h?.7:.45);
+      X.fillText(n.event,n.x,n.y+7);
+    }else if(n.type==='phase'){
+      // Phase number sits inside the solid disc — white for legibility
+      X.font=`600 11px 'JetBrains Mono',monospace`;X.fillStyle='rgba(15,15,15,0.95)';X.fillText(n.num,n.x,n.y);
+      const lx=n.x+Math.cos(n.angle)*(r+16),ly=n.y+Math.sin(n.angle)*(r+16);
+      X.font=`600 10px 'DM Sans',sans-serif`;X.fillStyle=ha(n.color,h?1:.85);X.fillText(n.lbl.toUpperCase(),lx,ly);
+    }else if(n.type==='agent'){
+      // Text-only treatment — more prominent
+      X.font=`600 10px 'JetBrains Mono',monospace`;X.fillStyle=ha(AGNT,h?1:.92);
+      const w=n.lbl.split(' ');
+      if(w.length>1){X.fillText(w[0].toUpperCase(),n.x,n.y-6);X.fillText(w.slice(1).join(' ').toUpperCase(),n.x,n.y+6);}
+      else X.fillText(n.lbl.toUpperCase(),n.x,n.y);
+    }else if(n.type==='skill'&&h){
+      X.font=`400 7.5px 'JetBrains Mono',monospace`;X.fillStyle=ha(n.color,.95);X.fillText(n.lbl.toUpperCase(),n.x,n.y-n.r-8);
+    }else if(n.type==='xphase-hook'||n.type==='xphase-ds'){
+      const outAng=Math.atan2(n.y-CY,n.x-CX);
+      const lx=n.x+Math.cos(outAng)*(n.r+9),ly=n.y+Math.sin(outAng)*(n.r+9);
+      X.font=`400 7px 'JetBrains Mono',monospace`;X.fillStyle=ha(XP,h?1:.58);
+      X.textAlign=n.x<CX-20?'right':n.x>CX+20?'left':'center';
+      X.fillText(n.lbl.toUpperCase(),lx,ly);
+    }
+    X.restore();
+  });
+}
+
+function hit(mx,my){
+  for(let i=nodes.length-1;i>=0;i--){
+    const n=nodes[i];if(n.type==='surface')continue;
+    if(Math.hypot(mx-n.x,my-n.y)<n.r+10)return n;
+  }
+  return null;
+}
+
+const tte=document.getElementById('tp'),tty=document.getElementById('tp-ty'),
+      ttn=document.getElementById('tp-nm'),ttev=document.getElementById('tp-ev'),ttd=document.getElementById('tp-ds');
+
+CV.addEventListener('mousemove',e=>{
+  // Translate viewport coords into canvas coords. Account for CSS scaling (zoom)
+  const r=CV.getBoundingClientRect();
+  const sx=CV.width/r.width, sy=CV.height/r.height;
+  const mx=(e.clientX-r.left)*sx, my=(e.clientY-r.top)*sy;
+  const n=hit(mx,my);hov=n;CV.className=n?'ptr':'';
+  if(n){
+    const c=n.type==='phase'||n.type==='skill'?n.color:
+             n.type==='memory'?MEM:n.type==='hook'?HOOK:
+             (n.type==='xphase-hook'||n.type==='xphase-ds')?XP:AGNT;
+    tty.style.color=c;tty.textContent=n.tl||'';
+    ttn.textContent=n.lbl;
+    ttev.textContent=n.event?`Event: ${n.event} · fires automatically`:'';
+    ttd.textContent=n.desc||'';
+    tte.classList.add('on');
+    // Position tooltip in viewport coords (it's position:fixed)
+    const vw=window.innerWidth, vh=window.innerHeight;
+    tte.style.left=Math.min(e.clientX+16,vw-260)+'px';
+    tte.style.top=Math.min(e.clientY+16,vh-150)+'px';
+  }else tte.classList.remove('on');
+});
+CV.addEventListener('mouseleave',()=>{hov=null;tte.classList.remove('on');});
+
+function loop(){T++;X.clearRect(0,0,W,H);drawBg();drawEdges();drawClusters();tickP();drawParts();drawNodes();requestAnimationFrame(loop);}
+function resize(){
+  const wrap=document.querySelector('.wrap');
+  W=CV.width=wrap.clientWidth;
+  H=CV.height=wrap.clientHeight;
+  CX=W/2;CY=H/2;
+  build();
+}
+window.addEventListener('resize',resize);
+resize();loop();
+
+/* Legend collapsible */
+const lgbtn=document.getElementById('lgbtn'),lgwrap=document.getElementById('lgwrap');
+lgbtn.addEventListener('click',()=>{
+  const open=lgwrap.classList.toggle('open');
+  lgbtn.setAttribute('aria-expanded',open?'true':'false');
+});
+
+/* Zoom — CSS scale on the wrap. Resets canvas size on zoom-out so layout stays correct. */
+let ZOOM=1;const ZMIN=0.5,ZMAX=2;
+const zlvl=document.getElementById('zoom-lvl');
+function applyZoom(){
+  const wrap=document.querySelector('.wrap');
+  wrap.style.transformOrigin='center top';
+  wrap.style.transform=`scale(${ZOOM})`;
+  // Adjust the wrap's effective size so scaled content can be scrolled fully
+  wrap.style.marginBottom=ZOOM>1?(wrap.clientHeight*(ZOOM-1))+'px':'0';
+  wrap.style.marginRight=ZOOM>1?(wrap.clientWidth*(ZOOM-1))+'px':'0';
+  zlvl.textContent=Math.round(ZOOM*100)+'%';
+}
+document.getElementById('zoom-in').addEventListener('click',()=>{ZOOM=Math.min(ZMAX,Math.round((ZOOM+0.1)*10)/10);applyZoom();});
+document.getElementById('zoom-out').addEventListener('click',()=>{ZOOM=Math.max(ZMIN,Math.round((ZOOM-0.1)*10)/10);applyZoom();});
+document.getElementById('zoom-reset').addEventListener('click',()=>{ZOOM=1;applyZoom();});
+</script>
+</body>
+</html>

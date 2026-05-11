@@ -2,3 +2,11 @@
 body { margin: 0; -webkit-font-smoothing: antialiased; }
 button { font-family: inherit; }
 a { font-family: inherit; }
+
+/* Responsive nav wordmark visibility */
+.hide-mobile { display: inline; }
+.show-mobile { display: none; }
+@media (max-width: 720px) {
+  .hide-mobile { display: none; }
+  .show-mobile { display: inline; }
+}

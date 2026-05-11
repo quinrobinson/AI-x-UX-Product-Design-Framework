@@ -1,0 +1,326 @@
+{
+  "version": "1.0.0",
+  "description": "Expected artifact types per phase. Populated from skills/ directory. Add custom artifact types here to promote them to framework status.",
+  "phases": {
+    "discover": {
+      "artifacts": [
+        {
+          "type": "research-synthesis",
+          "name": "Research Synthesis",
+          "description": "Synthesized themes, patterns, and insight statements from raw interview transcripts or session notes",
+          "produced_by": "researcher",
+          "dependency_risk": "Strategist cannot frame the problem without a synthesis — will work from assumptions",
+          "assumption_risk": "User needs, behaviors, and mental models are assumed rather than evidenced"
+        },
+        {
+          "type": "competitive-analysis",
+          "name": "Competitive Analysis",
+          "description": "Competitive landscape map: product comparisons, differentiators, strengths, weaknesses, opportunity gaps",
+          "produced_by": "researcher",
+          "dependency_risk": "Designer may duplicate existing solutions or miss obvious differentiators",
+          "assumption_risk": "Market positioning and white space are assumed rather than mapped"
+        },
+        {
+          "type": "research-plan",
+          "name": "Research Plan",
+          "description": "Research questions, recommended methods, participant criteria, session structure, and success criteria",
+          "produced_by": "researcher",
+          "dependency_risk": "Research sessions run without structure or alignment on what questions to answer",
+          "assumption_risk": "Research scope and priorities are assumed rather than agreed"
+        },
+        {
+          "type": "insight-framing",
+          "name": "Insight Framing",
+          "description": "Actionable insight statements with supporting evidence, confidence ratings, and design implications",
+          "produced_by": "researcher",
+          "dependency_risk": "Strategist works from raw observations rather than synthesized insight",
+          "assumption_risk": "What the findings mean for design is assumed rather than explicitly stated"
+        },
+        {
+          "type": "service-blueprint",
+          "name": "Service Blueprint",
+          "description": "Layered service blueprint showing frontstage, backstage, and support processes",
+          "produced_by": "strategist",
+          "dependency_risk": "Multi-channel scope and service dependencies remain undocumented",
+          "assumption_risk": "Back-end processes and support systems are assumed to work as expected"
+        }
+      ]
+    },
+    "define": {
+      "artifacts": [
+        {
+          "type": "problem-statement",
+          "name": "Problem Statement",
+          "description": "Validated problem statement in standard format: user, need, insight, barrier, opportunity",
+          "produced_by": "strategist",
+          "dependency_risk": "Designer generates concepts without a shared definition of what problem is being solved",
+          "assumption_risk": "The core problem and design opportunity are assumed rather than defined"
+        },
+        {
+          "type": "hmw-questions",
+          "name": "How Might We Questions",
+          "description": "3+ HMW questions generated from the problem statement to open the design space",
+          "produced_by": "strategist",
+          "dependency_risk": "Concept generation has no creative constraints to push against",
+          "assumption_risk": "Design direction is assumed to be correct without structured reframing"
+        },
+        {
+          "type": "persona",
+          "name": "Persona",
+          "description": "Research-grounded persona with name, archetype, primary need, key behaviors, context, frustrations, and goals",
+          "produced_by": "strategist",
+          "dependency_risk": "Designer generates concepts for an abstract user rather than a specific, evidenced one",
+          "assumption_risk": "User needs, context, and behaviors are assumed rather than grounded in research"
+        },
+        {
+          "type": "journey-map",
+          "name": "Journey Map",
+          "description": "User journey across phases, touchpoints, emotions, pain points, and opportunities",
+          "produced_by": "strategist",
+          "dependency_risk": "Concept generation targets isolated screens rather than the full user journey",
+          "assumption_risk": "Current-state pain points and opportunity moments are assumed"
+        },
+        {
+          "type": "assumption-map",
+          "name": "Assumption Map",
+          "description": "Assumptions ranked by risk if wrong × how well we know it",
+          "produced_by": "strategist",
+          "dependency_risk": "High-risk assumptions go unchecked into the design phase",
+          "assumption_risk": "Which beliefs need validation is assumed rather than explicitly prioritized"
+        },
+        {
+          "type": "requirements-prioritization",
+          "name": "Requirements Prioritization",
+          "description": "Prioritized requirements ranked by user value, business value, and feasibility",
+          "produced_by": "strategist",
+          "dependency_risk": "Designer prioritizes features based on personal judgment rather than explicit criteria",
+          "assumption_risk": "What must be built vs. what is nice-to-have is assumed"
+        }
+      ]
+    },
+    "ideate": {
+      "artifacts": [
+        {
+          "type": "design-concepts",
+          "name": "Design Concepts",
+          "description": "4+ meaningfully different design concepts with concept cards: name, summary, key design moves, trade-offs, assumptions",
+          "produced_by": "designer",
+          "dependency_risk": "Team converges on one direction without exploring the space — may miss a better solution",
+          "assumption_risk": "The first idea generated is assumed to be the best direction"
+        },
+        {
+          "type": "concept-critique",
+          "name": "Concept Critique",
+          "description": "Evaluation of concepts against desirability, feasibility, novelty criteria with written rationale",
+          "produced_by": "designer",
+          "dependency_risk": "Direction is chosen without explicit evaluation — rationale is implicit and undocumented",
+          "assumption_risk": "Concept strengths and weaknesses are assumed rather than assessed"
+        },
+        {
+          "type": "idea-clusters",
+          "name": "Idea Clusters",
+          "description": "Brainstorm output grouped into named themes with a lead concept per cluster",
+          "produced_by": "designer",
+          "dependency_risk": "Workshop or brainstorm output remains unstructured and unusable",
+          "assumption_risk": "Which ideas are related and which are distinct is assumed"
+        },
+        {
+          "type": "storyboard",
+          "name": "Storyboard",
+          "description": "Narrative storyboard showing how a user moves through a design direction",
+          "produced_by": "designer",
+          "dependency_risk": "Concept is communicated abstractly — stakeholders cannot evaluate without seeing the flow",
+          "assumption_risk": "How the design fits into the user's real context is assumed"
+        },
+        {
+          "type": "visual-design-execution",
+          "name": "Visual Design Execution",
+          "description": "Color system, type scale, visual style direction, and application to key screens",
+          "produced_by": "designer",
+          "dependency_risk": "Systems Designer builds tokens without a defined visual style — tokens may need rebuilding",
+          "assumption_risk": "Visual direction and brand expression are assumed rather than defined"
+        },
+        {
+          "type": "concept-proof",
+          "name": "Concept Proof",
+          "description": "Minimal concept proof — Figma Make prompt or HTML skeleton — from a concept description",
+          "produced_by": "designer",
+          "dependency_risk": "Concept is evaluated theoretically rather than tested in tangible form",
+          "assumption_risk": "Whether the concept works as imagined is assumed"
+        }
+      ]
+    },
+    "prototype": {
+      "artifacts": [
+        {
+          "type": "user-flow",
+          "name": "User Flow",
+          "description": "End-to-end flow a user takes to complete a goal: steps, screens/states, decision points",
+          "produced_by": "designer",
+          "dependency_risk": "Prototype is built without a documented flow — screens are disconnected",
+          "assumption_risk": "The full path from entry to goal completion is assumed to be understood"
+        },
+        {
+          "type": "prototype",
+          "name": "Prototype",
+          "description": "Interactive or static prototype built to test a specific assumption or flow",
+          "produced_by": "designer",
+          "dependency_risk": "Validation is attempted without a testable artifact — findings are speculative",
+          "assumption_risk": "Whether the design works for users is assumed rather than tested"
+        },
+        {
+          "type": "prototype-scope",
+          "name": "Prototype Scope",
+          "description": "Definition of what the prototype needs to test and how to build it with minimum effort",
+          "produced_by": "designer",
+          "dependency_risk": "Prototype is over-built (wastes time) or under-built (can't answer the question)",
+          "assumption_risk": "What fidelity level is appropriate for the test objective is assumed"
+        },
+        {
+          "type": "ux-copy",
+          "name": "UX Copy",
+          "description": "Interface copy for screens in scope: labels, empty states, error messages, onboarding, tooltips",
+          "produced_by": "designer",
+          "dependency_risk": "Prototype uses placeholder text — usability test results are contaminated",
+          "assumption_risk": "How the interface communicates to users is assumed rather than designed"
+        },
+        {
+          "type": "test-script",
+          "name": "Test Script",
+          "description": "Usability test script with scenario, tasks, probes, and success criteria",
+          "produced_by": "researcher",
+          "dependency_risk": "Test sessions are unstructured — findings cannot be compared across participants",
+          "assumption_risk": "What to ask and observe during sessions is assumed"
+        },
+        {
+          "type": "accessibility-audit-prototype",
+          "name": "Accessibility Audit (Prototype)",
+          "description": "Pre-test accessibility check of prototype against WCAG 2.1 AA",
+          "produced_by": "design-engineer",
+          "dependency_risk": "Accessibility issues contaminate usability findings or require rework post-test",
+          "assumption_risk": "Prototype is assumed to be accessible without verification"
+        },
+        {
+          "type": "heuristic-review",
+          "name": "Heuristic Review",
+          "description": "Evaluation against Nielsen's 10 usability heuristics before user testing",
+          "produced_by": "design-engineer",
+          "dependency_risk": "Obvious usability issues surface during testing rather than being resolved beforehand",
+          "assumption_risk": "Prototype usability is assumed without expert review"
+        }
+      ]
+    },
+    "validate": {
+      "artifacts": [
+        {
+          "type": "usability-findings-synthesis",
+          "name": "Usability Findings Synthesis",
+          "description": "Consolidated findings from usability test sessions: themes, patterns, severity ratings",
+          "produced_by": "researcher",
+          "dependency_risk": "Design iteration proceeds without structured findings — changes are based on impressions",
+          "assumption_risk": "What users struggled with and why is assumed rather than evidenced"
+        },
+        {
+          "type": "insight-report",
+          "name": "Insight Report",
+          "description": "Formatted insight report for stakeholder review: top findings, evidence, recommendations",
+          "produced_by": "researcher",
+          "dependency_risk": "Stakeholders cannot evaluate findings or make decisions without a structured report",
+          "assumption_risk": "What the findings mean for the product is assumed rather than explicitly stated"
+        },
+        {
+          "type": "iteration-brief",
+          "name": "Iteration Brief",
+          "description": "Prioritized list of changes to make based on validation findings, with rationale",
+          "produced_by": "researcher",
+          "dependency_risk": "Designer iterates without a prioritized list — changes may not address highest-severity issues",
+          "assumption_risk": "Which findings require design changes and which are acceptable risks is assumed"
+        },
+        {
+          "type": "recruitment-screener",
+          "name": "Recruitment Screener",
+          "description": "Screener questions to qualify research participants for the study",
+          "produced_by": "researcher",
+          "dependency_risk": "Sessions include participants who don't match the target persona — findings don't generalize",
+          "assumption_risk": "Participant fit is assumed rather than verified"
+        },
+        {
+          "type": "stakeholder-presentation",
+          "name": "Stakeholder Presentation",
+          "description": "Structured presentation for executive or client alignment on research findings and next steps",
+          "produced_by": "strategist",
+          "dependency_risk": "Stakeholders lack a shared understanding of findings — alignment on next steps is harder",
+          "assumption_risk": "Stakeholder buy-in is assumed rather than actively built"
+        },
+        {
+          "type": "usability-testing-plan",
+          "name": "Usability Testing Plan",
+          "description": "Plan for running usability test sessions: objectives, tasks, participant criteria, logistics",
+          "produced_by": "researcher",
+          "dependency_risk": "Sessions run without clear objectives or structure — findings are inconsistent",
+          "assumption_risk": "Test design and logistics are assumed to be understood by all involved"
+        }
+      ]
+    },
+    "deliver": {
+      "artifacts": [
+        {
+          "type": "handoff-document",
+          "name": "Handoff Document",
+          "description": "Developer handoff package: component inventory, spec tables, interaction notes, token mapping, edge cases",
+          "produced_by": "design-engineer",
+          "dependency_risk": "Engineering builds from Figma alone — implementation diverges from intent",
+          "assumption_risk": "What developers need to implement the design correctly is assumed"
+        },
+        {
+          "type": "design-qa-log",
+          "name": "Design QA Log",
+          "description": "QA log comparing implementation to design spec: issue ID, severity, expected vs. actual, resolution status",
+          "produced_by": "design-engineer",
+          "dependency_risk": "Implementation ships with unresolved spec deviations",
+          "assumption_risk": "Implementation accuracy is assumed rather than verified"
+        },
+        {
+          "type": "accessibility-audit",
+          "name": "Accessibility Audit",
+          "description": "Audit against WCAG 2.1 AA: pass/fail per criterion, affected component, remediation recommendation",
+          "produced_by": "design-engineer",
+          "dependency_risk": "Accessibility issues ship — legal risk and exclusion of users with disabilities",
+          "assumption_risk": "Implementation accessibility is assumed rather than audited"
+        },
+        {
+          "type": "design-decision-records",
+          "name": "Design Decision Records",
+          "description": "Formal records of design decisions: context, options considered, decision, rationale, trade-offs",
+          "produced_by": "design-engineer",
+          "dependency_risk": "Future teams cannot understand why decisions were made — decisions are relitigated",
+          "assumption_risk": "Rationale behind design choices is assumed to be remembered or obvious"
+        },
+        {
+          "type": "component-specs",
+          "name": "Component Specs",
+          "description": "Full component specifications: anatomy, props, token references, state matrix, accessibility notes, usage guidelines",
+          "produced_by": "systems-designer",
+          "dependency_risk": "Engineering implements components without a spec — states and variants are guessed",
+          "assumption_risk": "Component behavior, states, and token usage are assumed to be clear from Figma"
+        },
+        {
+          "type": "design-system-audit",
+          "name": "Design System Audit",
+          "description": "Audit against industry standards: coverage, consistency, accessibility pass rate, specific gaps",
+          "produced_by": "systems-designer",
+          "dependency_risk": "Design system inconsistencies ship without a record — technical debt accumulates silently",
+          "assumption_risk": "Design system quality and coverage are assumed rather than measured"
+        },
+        {
+          "type": "handoff-annotation",
+          "name": "Handoff Annotation",
+          "description": "Design annotated for developer handoff: measurements, tokens, behaviors, edge cases",
+          "produced_by": "design-engineer",
+          "dependency_risk": "Developers interpret Figma directly — spacing, tokens, and behaviors are guessed",
+          "assumption_risk": "What needs explicit annotation vs. what is self-evident in Figma is assumed"
+        }
+      ]
+    }
+  }
+}

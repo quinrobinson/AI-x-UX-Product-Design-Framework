@@ -22,7 +22,8 @@ import InsightReportGenerator from "./InsightReportGenerator";
 import ComponentSpecGenerator from "./ComponentSpecGenerator";
 import DesignQALogger from "./DesignQALogger";
 import AgentsPage from "./AgentsPage";
-import { IconStack3, IconPackage } from "@tabler/icons-react";
+import TopNav from "./TopNav";
+import { IconStack3, IconPackage, IconChecklist, IconUsersGroup, IconFileText, IconRoute, IconChevronDown, IconChevronUp, IconLayoutGrid, IconPlus, IconMinus } from "@tabler/icons-react";
 
 function IconHexPrisms({ size = 24, strokeWidth = 0.3, style }) {
   // Three isometric hexagonal prisms side by side, touching
@@ -1985,18 +1986,125 @@ function SetupBlock({ onOpenFigmaGuide }) {
   );
 }
 
-// ── Path: Phase ───────────────────────────────────────────────────────────────
-function PhasePromptCard({ item }) {
-  const [popoverOpen, setPopoverOpen] = useState(false);
+// ── Prompt modal (shared) ────────────────────────────────────────────────────
+function PromptModal({ open, onClose, title, subtitle, text }) {
   const [copied, setCopied] = useState(false);
-  const text = item.text || "";
-  const desc = item.when || item.subtitle || "";
+
+  useEffect(() => {
+    if (!open) return;
+    const onKey = e => { if (e.key === "Escape") onClose(); };
+    window.addEventListener("keydown", onKey);
+    // Lock body scroll while modal is open
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      document.body.style.overflow = prevOverflow;
+    };
+  }, [open, onClose]);
+
+  if (!open) return null;
 
   function handleCopy() {
-    navigator.clipboard.writeText(text);
+    navigator.clipboard.writeText(text || "");
     setCopied(true);
     setTimeout(() => setCopied(false), 1800);
   }
+
+  return (
+    <div onClick={onClose} role="dialog" aria-modal="true" style={{
+      position: "fixed", inset: 0, zIndex: 9000,
+      background: "rgba(0,0,0,0.7)",
+      backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)",
+      display: "flex", alignItems: "center", justifyContent: "center",
+      padding: "24px 16px",
+      animation: "modal-fade 160ms ease-out",
+    }}>
+      <style>{`
+        @keyframes modal-fade { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes modal-rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+      `}</style>
+      <div onClick={e => e.stopPropagation()} style={{
+        background: T.card,
+        border: `1px solid ${T.border}`,
+        borderRadius: 12,
+        width: "100%", maxWidth: 640, maxHeight: "82vh",
+        display: "flex", flexDirection: "column", overflow: "hidden",
+        boxShadow: "0 24px 64px rgba(0,0,0,0.6)",
+        animation: "modal-rise 200ms cubic-bezier(0.2, 0.8, 0.2, 1)",
+      }}>
+        {/* Header */}
+        <div style={{
+          display: "flex", alignItems: "flex-start", justifyContent: "space-between",
+          padding: "20px 24px 18px",
+          borderBottom: `1px solid ${T.border}`, gap: 16,
+        }}>
+          <div style={{ minWidth: 0, flex: 1 }}>
+            {subtitle && (
+              <div style={{
+                fontSize: 10, fontFamily: "'JetBrains Mono', monospace",
+                fontWeight: 500, letterSpacing: "0.08em", textTransform: "uppercase",
+                color: T.dim, marginBottom: 6,
+              }}>{subtitle}</div>
+            )}
+            <div style={{
+              fontSize: 16, fontWeight: 600, color: T.text,
+              fontFamily: "'Inter', sans-serif", lineHeight: 1.3,
+              letterSpacing: "-0.01em",
+            }}>{title}</div>
+          </div>
+          <button onClick={onClose} aria-label="Close" style={{
+            background: "transparent", border: "none", borderRadius: 6,
+            color: T.dim, cursor: "pointer", fontSize: 18, lineHeight: 1,
+            padding: "4px 10px", flexShrink: 0, transition: "color 0.12s",
+            fontFamily: "inherit",
+          }}
+            onMouseEnter={e => e.currentTarget.style.color = T.text}
+            onMouseLeave={e => e.currentTarget.style.color = T.dim}
+          >✕</button>
+        </div>
+
+        {/* Prompt body */}
+        <pre style={{
+          flex: 1, overflowY: "auto", margin: 0,
+          fontFamily: "'JetBrains Mono', monospace", fontSize: 12,
+          color: T.muted, lineHeight: 1.7, whiteSpace: "pre-wrap",
+          padding: "20px 24px",
+        }}>{text}</pre>
+
+        {/* Footer */}
+        <div style={{
+          padding: "16px 24px",
+          borderTop: `1px solid ${T.border}`,
+          display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap",
+        }}>
+          <span style={{
+            fontSize: 10, fontFamily: "'JetBrains Mono', monospace",
+            letterSpacing: "0.08em", textTransform: "uppercase", color: T.dim,
+          }}>Paste into Claude to use</span>
+          <button onClick={handleCopy} style={{
+            padding: "9px 18px", borderRadius: 6,
+            fontSize: 11, fontFamily: "'JetBrains Mono', monospace", fontWeight: 500,
+            letterSpacing: "0.08em", textTransform: "uppercase",
+            cursor: "pointer", transition: "all 0.15s",
+            border: `1px solid ${copied ? "#22C55E" : T.borderHover}`,
+            background: copied ? "rgba(34,197,94,0.1)" : T.surface,
+            color: copied ? "#22C55E" : T.text,
+          }}
+            onMouseEnter={e => { if (!copied) e.currentTarget.style.borderColor = T.text; }}
+            onMouseLeave={e => { if (!copied) e.currentTarget.style.borderColor = T.borderHover; }}
+          >{copied ? "✓ Copied" : "Copy prompt"}</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Path: Phase ───────────────────────────────────────────────────────────────
+function PhasePromptCard({ item }) {
+  const [open, setOpen] = useState(false);
+  const text = item.text || "";
+  const desc = item.when || item.subtitle || "";
 
   return (
     <>
@@ -2012,7 +2120,7 @@ function PhasePromptCard({ item }) {
         <p style={{ fontSize: 12, color: T.muted, lineHeight: 1.55, margin: 0, flex: 1 }}>{desc}</p>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, marginTop: 4 }}>
           <Mono color={T.dim} size={9}>{item.skill || ""}</Mono>
-          <button onClick={() => setPopoverOpen(true)} style={{
+          <button onClick={() => setOpen(true)} style={{
             padding: "5px 12px", borderRadius: 5, flexShrink: 0,
             fontSize: 11, fontFamily: "'JetBrains Mono', monospace",
             letterSpacing: "0.06em", textTransform: "uppercase",
@@ -2025,42 +2133,41 @@ function PhasePromptCard({ item }) {
         </div>
       </div>
 
-      {popoverOpen && (
-        <div onClick={() => setPopoverOpen(false)} style={{
-          position: "fixed", inset: 0, zIndex: 9000,
-          background: "rgba(0,0,0,0.65)", backdropFilter: "blur(2px)",
-          display: "flex", alignItems: "center", justifyContent: "center", padding: "24px 16px",
-        }}>
-          <div onClick={e => e.stopPropagation()} style={{
-            background: T.card, border: `1px solid ${T.border}`, borderRadius: 12,
-            width: "100%", maxWidth: 600, maxHeight: "80vh",
-            display: "flex", flexDirection: "column", overflow: "hidden",
-          }}>
-            <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", padding: "18px 20px 16px", borderBottom: `1px solid ${T.border}`, gap: 12 }}>
-              <div style={{ minWidth: 0 }}>
-                <div style={{ fontSize: 14, fontWeight: 600, color: T.text, lineHeight: 1.3, marginBottom: 3 }}>{item.name}</div>
-                <div style={{ fontSize: 11, color: T.dim, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.05em" }}>{item.skill || item.group || ""}</div>
-              </div>
-              <button onClick={() => setPopoverOpen(false)} style={{ background: "transparent", border: `1px solid ${T.border}`, borderRadius: 5, color: T.dim, cursor: "pointer", fontSize: 13, lineHeight: 1, padding: "4px 8px", flexShrink: 0, transition: "all 0.12s" }}
-                onMouseEnter={e => { e.currentTarget.style.borderColor = T.borderHover; e.currentTarget.style.color = T.text; }}
-                onMouseLeave={e => { e.currentTarget.style.borderColor = T.border; e.currentTarget.style.color = T.dim; }}
-              >✕</button>
-            </div>
-            <pre style={{ flex: 1, overflowY: "auto", margin: 0, fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: T.muted, lineHeight: 1.72, whiteSpace: "pre-wrap", padding: "18px 20px" }}>{text}</pre>
-            <div style={{ padding: "14px 20px", borderTop: `1px solid ${T.border}` }}>
-              <button onClick={handleCopy} style={{ padding: "8px 20px", borderRadius: 6, fontSize: 11, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.06em", textTransform: "uppercase", fontWeight: 600, cursor: "pointer", border: `1.5px solid ${copied ? "#22C55E" : T.border}`, background: "transparent", color: copied ? "#22C55E" : T.muted, transition: "all 0.15s" }}>{copied ? "✓ Copied" : "Copy prompt"}</button>
-            </div>
-          </div>
-        </div>
-      )}
+      <PromptModal
+        open={open}
+        onClose={() => setOpen(false)}
+        title={item.name}
+        subtitle={item.skill || item.group || ""}
+        text={text}
+      />
     </>
   );
 }
 
-function PhasePath({ onOpenTool }) {
-  const [selected, setSelected] = useState(null);
+function PhasePath({ onOpenTool, initialPhase }) {
+  const [selected, setSelected] = useState(() => {
+    if (initialPhase && PHASES.some(p => p.id === initialPhase)) return initialPhase;
+    return null;
+  });
   const [tab, setTab] = useState("prompts");
   const [activeSkill, setActiveSkill] = useState(null);
+
+  // Keep `selected` in sync if the initialPhase prop changes (route change)
+  useEffect(() => {
+    const next = initialPhase && PHASES.some(p => p.id === initialPhase) ? initialPhase : null;
+    setSelected(next);
+    if (next) setTab("prompts");
+  }, [initialPhase]);
+
+  function selectPhase(id) {
+    const next = selected === id ? null : id;
+    setSelected(next);
+    setTab("prompts");
+    if (typeof window !== "undefined") {
+      // Hash format: #/phases/<id>; bare = #/phases
+      window.history.replaceState(null, "", next ? `#/phases/${next}` : "#/phases");
+    }
+  }
 
   const phase = selected ? PHASES.find(p => p.id === selected) : null;
   const p = phase ? T.phases[phase.id] : null;
@@ -2087,11 +2194,12 @@ function PhasePath({ onOpenTool }) {
           const isActive = selected === ph.id;
           return (
             <button key={ph.id}
-              onClick={() => { setSelected(selected === ph.id ? null : ph.id); setTab("prompts"); }}
+              onClick={() => selectPhase(ph.id)}
               style={{
+                position: "relative",
                 padding: "14px 10px 12px", border: "none",
                 borderRight: i < 5 ? `1px solid ${T.border}` : "none",
-                borderBottom: isActive ? `2px solid ${phColor}` : "2px solid transparent",
+                borderBottom: "2px solid transparent",
                 background: isActive ? T.surface : "transparent",
                 cursor: "pointer", textAlign: "center", transition: "all 0.15s", outline: "none",
               }}
@@ -2101,20 +2209,49 @@ function PhasePath({ onOpenTool }) {
               <div style={{ width: 6, height: 6, borderRadius: "50%", background: phColor, margin: "0 auto 8px", boxShadow: isActive ? `0 0 8px ${phColor}` : "none", transition: "box-shadow 0.15s" }} />
               <div style={{ fontSize: 9, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.08em", textTransform: "uppercase", color: isActive ? phColor : T.dim, marginBottom: 2 }}>{ph.id}</div>
               <div style={{ fontSize: 11, fontWeight: 500, color: isActive ? T.text : T.muted, lineHeight: 1.2 }}>{ph.label}</div>
+              {isActive && (
+                <span aria-hidden style={{
+                  position: "absolute", left: 0, right: 0, bottom: -2, height: 2,
+                  background: phColor,
+                  pointerEvents: "none",
+                }} />
+              )}
             </button>
           );
         })}
       </div>
 
       {/* Detail panel */}
-      <div style={{ overflow: "hidden", minHeight: 280 }}>
+      <div style={{ overflow: "hidden" }}>
         {!selected ? (
           /* ── Empty state ── */
-          <div style={{ padding: "64px 0 48px", textAlign: "center" }}>
-            <div style={{ fontSize: 10, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.12em", textTransform: "uppercase", color: "#3A3A3A", marginBottom: 12 }}>Select a phase</div>
-            <p style={{ fontSize: 13, color: "#4A4A4A", lineHeight: 1.65, maxWidth: 340, margin: "0 auto" }}>
-              Choose a phase above to see its prompts, skills, and step-by-step guidance.
-            </p>
+          <div style={{ padding: "48px 0 32px" }}>
+            <div style={{ maxWidth: 580, margin: "0 auto", textAlign: "center" }}>
+              <div style={{ fontSize: 11, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.12em", textTransform: "uppercase", color: T.dim, marginBottom: 14 }}>What's in a phase</div>
+              <p style={{ fontSize: 14, color: T.muted, lineHeight: 1.7, margin: 0 }}>
+                Each phase is a stage of design with its own purpose, artifacts, and tools. Selecting one reveals the prompts you can run, the skills you can upload to Claude, and a recommended sequence to move from incoming context to a clean handoff.
+              </p>
+            </div>
+            <div style={{ marginTop: 40, display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 12, maxWidth: 760, marginLeft: "auto", marginRight: "auto" }}>
+              <div style={{ background: T.surface, border: `1px solid ${T.border}`, borderRadius: 8, padding: "16px 18px" }}>
+                <div style={{ fontSize: 10, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.08em", textTransform: "uppercase", color: T.muted, marginBottom: 6 }}>Prompts</div>
+                <p style={{ fontSize: 12, color: T.muted, lineHeight: 1.55, margin: 0 }}>
+                  Ready-to-paste prompts that turn raw inputs into structured artifacts for that phase.
+                </p>
+              </div>
+              <div style={{ background: T.surface, border: `1px solid ${T.border}`, borderRadius: 8, padding: "16px 18px" }}>
+                <div style={{ fontSize: 10, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.08em", textTransform: "uppercase", color: T.muted, marginBottom: 6 }}>Skills</div>
+                <p style={{ fontSize: 12, color: T.muted, lineHeight: 1.55, margin: 0 }}>
+                  Markdown skill files you upload to Claude to extend any conversation with the framework's playbooks.
+                </p>
+              </div>
+              <div style={{ background: T.surface, border: `1px solid ${T.border}`, borderRadius: 8, padding: "16px 18px" }}>
+                <div style={{ fontSize: 10, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.08em", textTransform: "uppercase", color: T.muted, marginBottom: 6 }}>How to use</div>
+                <p style={{ fontSize: 12, color: T.muted, lineHeight: 1.55, margin: 0 }}>
+                  What comes in, what hands off, the recommended sequence — and where Figma MCP fits in this stage.
+                </p>
+              </div>
+            </div>
           </div>
         ) : (
           /* ── Phase detail panel ── */
@@ -2172,19 +2309,31 @@ function PhasePath({ onOpenTool }) {
                 grouped[g].push(item);
               });
               return (
-                <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
-                  {groupOrder.map(groupLabel => (
-                    <div key={groupLabel}>
-                      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
-                        <span style={{ fontSize: 10, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.1em", textTransform: "uppercase", color: T.dim, whiteSpace: "nowrap" }}>{groupLabel}</span>
-                        <div style={{ flex: 1, height: 1, background: T.border }} />
-                        <span style={{ fontSize: 10, fontFamily: "'JetBrains Mono', monospace", color: T.dim }}>{grouped[groupLabel].length}</span>
+                <div>
+                  {groupOrder.map((groupLabel, idx) => {
+                    const items = grouped[groupLabel];
+                    return (
+                      <div key={groupLabel} className="phase-group-row" style={{
+                        display: "grid",
+                        gridTemplateColumns: "180px 1fr",
+                        gap: 32,
+                        paddingTop: idx === 0 ? 0 : 24,
+                        paddingBottom: idx === groupOrder.length - 1 ? 0 : 24,
+                        borderTop: idx === 0 ? "none" : `1px solid ${T.border}`,
+                      }}>
+                        <div style={{ paddingTop: 4 }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+                            <span style={{ width: 5, height: 5, borderRadius: "50%", background: p.color }} />
+                            <span style={{ fontFamily: "'Inter', sans-serif", fontSize: 15, fontWeight: 600, color: T.text, lineHeight: 1.25, letterSpacing: "-0.01em" }}>{groupLabel}</span>
+                          </div>
+                          <Mono color={T.dim} size={10}>{items.length} prompt{items.length !== 1 ? "s" : ""}</Mono>
+                        </div>
+                        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: 10 }}>
+                          {items.map(item => <PhasePromptCard key={item.id} item={item} />)}
+                        </div>
                       </div>
-                      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))", gap: 10 }}>
-                        {grouped[groupLabel].map(item => <PhasePromptCard key={item.id} item={item} />)}
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               );
             })()}
@@ -2194,7 +2343,17 @@ function PhasePath({ onOpenTool }) {
               phaseSkills.length === 0 ? (
                 <div style={{ padding: "20px 0", textAlign: "center" }}><Mono color={T.dim}>No skills yet for this phase</Mono></div>
               ) : (
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))", gap: 10 }}>
+                <div className="phase-group-row" style={{
+                  display: "grid", gridTemplateColumns: "180px 1fr", gap: 32,
+                }}>
+                  <div style={{ paddingTop: 4 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+                      <span style={{ width: 5, height: 5, borderRadius: "50%", background: p.color }} />
+                      <span style={{ fontFamily: "'Inter', sans-serif", fontSize: 15, fontWeight: 600, color: T.text, lineHeight: 1.25, letterSpacing: "-0.01em" }}>Skill files</span>
+                    </div>
+                    <Mono color={T.dim} size={10}>{phaseSkills.length} for {phase.label.toLowerCase()}</Mono>
+                  </div>
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: 10 }}>
                   {phaseSkills.map(skill => (
                     <div key={skill.file} style={{
                       background: T.surface, border: `1px solid ${T.border}`, borderRadius: 8,
@@ -2228,6 +2387,7 @@ function PhasePath({ onOpenTool }) {
                       </div>
                     </div>
                   ))}
+                  </div>
                 </div>
               )
             )}
@@ -2808,15 +2968,8 @@ Based on my answers, recommend the most appropriate deliverable and tell me:
 
 // ── Deliverable card ──────────────────────────────────────────────────────────
 function DeliverableCard({ d, borderColor, hoverColor, onOpenTool, getDelivPrompt }) {
-  const [popoverOpen, setPopoverOpen] = useState(false);
-  const [copied, setCopied] = useState(false);
+  const [open, setOpen] = useState(false);
   const isStudio = d.ref === "design-system";
-
-  function handleCopy() {
-    navigator.clipboard.writeText(getDelivPrompt(d));
-    setCopied(true);
-    setTimeout(() => setCopied(false), 1800);
-  }
 
   return (
     <>
@@ -2858,7 +3011,7 @@ function DeliverableCard({ d, borderColor, hoverColor, onOpenTool, getDelivPromp
               onMouseLeave={e => { e.currentTarget.style.borderColor = T.border; e.currentTarget.style.color = T.muted; }}
             >Open tool</button>
           ) : (
-            <button onClick={() => setPopoverOpen(true)} style={{
+            <button onClick={() => setOpen(true)} style={{
               padding: "5px 12px", borderRadius: 5, flexShrink: 0,
               fontSize: 11, fontFamily: "'JetBrains Mono', monospace",
               letterSpacing: "0.06em", textTransform: "uppercase",
@@ -2872,66 +3025,13 @@ function DeliverableCard({ d, borderColor, hoverColor, onOpenTool, getDelivPromp
         </div>
       </div>
 
-      {/* Prompt popover */}
-      {popoverOpen && (
-        <div
-          onClick={() => setPopoverOpen(false)}
-          style={{
-            position: "fixed", inset: 0, zIndex: 9000,
-            background: "rgba(0,0,0,0.65)", backdropFilter: "blur(2px)",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            padding: "24px 16px",
-          }}
-        >
-          <div
-            onClick={e => e.stopPropagation()}
-            style={{
-              background: T.card, border: `1px solid ${T.border}`, borderRadius: 12,
-              width: "100%", maxWidth: 600, maxHeight: "80vh",
-              display: "flex", flexDirection: "column", overflow: "hidden",
-            }}
-          >
-            {/* Popover header */}
-            <div style={{
-              display: "flex", alignItems: "flex-start", justifyContent: "space-between",
-              padding: "18px 20px 16px", borderBottom: `1px solid ${T.border}`, gap: 12,
-            }}>
-              <div style={{ minWidth: 0 }}>
-                <div style={{ fontSize: 14, fontWeight: 600, color: T.text, lineHeight: 1.3, marginBottom: 3 }}>{d.name}</div>
-                <div style={{ fontSize: 11, color: T.dim, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.05em" }}>{d.label}</div>
-              </div>
-              <button onClick={() => setPopoverOpen(false)} style={{
-                background: "transparent", border: `1px solid ${T.border}`, borderRadius: 5,
-                color: T.dim, cursor: "pointer", fontSize: 13, lineHeight: 1,
-                padding: "4px 8px", flexShrink: 0, transition: "all 0.12s",
-              }}
-                onMouseEnter={e => { e.currentTarget.style.borderColor = T.borderHover; e.currentTarget.style.color = T.text; }}
-                onMouseLeave={e => { e.currentTarget.style.borderColor = T.border; e.currentTarget.style.color = T.dim; }}
-              >✕</button>
-            </div>
-
-            {/* Prompt text */}
-            <pre style={{
-              flex: 1, overflowY: "auto", margin: 0,
-              fontFamily: "'JetBrains Mono', monospace", fontSize: 11,
-              color: T.muted, lineHeight: 1.72, whiteSpace: "pre-wrap",
-              padding: "18px 20px",
-            }}>{getDelivPrompt(d)}</pre>
-
-            {/* Footer */}
-            <div style={{ padding: "14px 20px", borderTop: `1px solid ${T.border}` }}>
-              <button onClick={handleCopy} style={{
-                padding: "8px 20px", borderRadius: 6,
-                fontSize: 11, fontFamily: "'JetBrains Mono', monospace",
-                letterSpacing: "0.06em", textTransform: "uppercase", fontWeight: 600,
-                cursor: "pointer", border: `1.5px solid ${copied ? "#22C55E" : T.border}`,
-                background: "transparent", color: copied ? "#22C55E" : T.muted,
-                transition: "all 0.15s",
-              }}>{copied ? "✓ Copied" : "Copy prompt"}</button>
-            </div>
-          </div>
-        </div>
-      )}
+      <PromptModal
+        open={open}
+        onClose={() => setOpen(false)}
+        title={d.name}
+        subtitle={d.label}
+        text={getDelivPrompt(d)}
+      />
     </>
   );
 }
@@ -3091,6 +3191,8 @@ function DeliverablePath({ onOpenTool }) {
 // ── Tool shell ────────────────────────────────────────────────────────────────
 function ToolShell({ tool, onHome }) {
   const ToolComponent = tool.component;
+  const phase = tool.phase ? PHASES.find(p => p.id === tool.phase) : null;
+  const backLabel = phase ? `← ${phase.label}` : "← Home";
   return (
     <div style={{ minHeight: "100vh", background: T.bg, fontFamily: "'DM Sans', sans-serif" }}>
       <div style={{
@@ -3099,7 +3201,7 @@ function ToolShell({ tool, onHome }) {
         borderBottom: `1px solid ${T.border}`,
         padding: "0 28px", display: "flex", alignItems: "center", gap: 12, height: 52,
       }}>
-        <button onClick={onHome}
+        <button onClick={() => onHome(tool.phase)}
           onMouseEnter={e => { e.currentTarget.style.borderColor = T.borderHover; e.currentTarget.style.color = T.text; }}
           onMouseLeave={e => { e.currentTarget.style.borderColor = T.border; e.currentTarget.style.color = T.muted; }}
           style={{
@@ -3109,7 +3211,7 @@ function ToolShell({ tool, onHome }) {
             fontSize: 11, fontFamily: "'JetBrains Mono', monospace",
             letterSpacing: "0.06em", textTransform: "uppercase",
             color: T.muted, transition: "all 0.15s",
-          }}>← Home</button>
+          }}>{backLabel}</button>
         <div style={{ width: 1, height: 16, background: T.border }} />
         <PhaseTag phaseId={tool.phase} small />
         <span style={{ fontSize: 13, fontWeight: 500, color: T.text, fontFamily: "'DM Sans', sans-serif" }}>{tool.name}</span>
@@ -3198,9 +3300,9 @@ function ZipDownloadBtn({ skills }) {
 }
 
 // ── Skills Library Overlay ───────────────────────────────────────────────────
-function SkillsLibraryOverlay({ onBack }) {
+function SkillsLibraryOverlay({ currentPage = "skills", onNavigate, initialPhase }) {
   const [activeSkill, setActiveSkill] = useState(null);
-  const [selected, setSelected] = useState(null);
+  const [selected, setSelected] = useState(initialPhase || null);
   const [surfaceFilter, setSurfaceFilter] = useState("all");
   const [agentFilter, setAgentFilter] = useState("all");
 
@@ -3313,26 +3415,23 @@ function SkillsLibraryOverlay({ onBack }) {
         ::-webkit-scrollbar-thumb { background: #2a2a2a; border-radius: 2px; }
       `}</style>
 
-      {/* Header */}
-      <div style={{ borderBottom: `1px solid ${T.border}`, padding: "0 clamp(24px, 5vw, 80px)", height: 60, display: "flex", alignItems: "center", justifyContent: "space-between", position: "sticky", top: 0, zIndex: 50, background: `${T.bg}f0`, backdropFilter: "blur(12px)" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <button onClick={onBack} style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "transparent", border: `1px solid ${T.border}`, borderRadius: 6, padding: "5px 12px", cursor: "pointer", fontSize: 11, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.06em", textTransform: "uppercase", color: T.muted, transition: "all 0.15s" }}>← Home</button>
-        </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+      <TopNav currentPage={currentPage} onNavigate={onNavigate} baseUrl={import.meta.env.BASE_URL} />
+
+      <div style={{ maxWidth: 1440, margin: "0 auto", padding: "40px clamp(24px, 5vw, 80px) 80px" }}>
+
+        {/* Page utility row: skill count + zip download */}
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 12, marginBottom: 24 }}>
           <span style={{ fontSize: 10, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.08em", textTransform: "uppercase", color: T.dim }}>
             {allFiltered.length} skill{allFiltered.length !== 1 ? "s" : ""}
           </span>
           <ZipDownloadBtn skills={allFiltered} />
         </div>
-      </div>
-
-      <div style={{ maxWidth: 1440, margin: "0 auto", padding: "40px clamp(24px, 5vw, 80px) 80px" }}>
 
         {/* Page header */}
         <div style={{ marginBottom: 20 }}>
           <Mono color={T.dim} size={13}>Framework</Mono>
         </div>
-        <h1 style={{ fontFamily: "'Inter', sans-serif", fontSize: "clamp(28px, 3.5vw, 48px)", fontWeight: 600, lineHeight: 1.1, color: T.text, marginBottom: 40, letterSpacing: "-0.2px" }}>Skills Library</h1>
+        <h1 style={{ fontFamily: "'Inter', sans-serif", fontSize: "clamp(32px, 3.6vw, 48px)", fontWeight: 600, lineHeight: 1.1, color: T.text, marginBottom: 40, letterSpacing: "-0.2px" }}>Skills Library</h1>
 
         {/* What is a Skill */}
         <div style={{ background: "rgba(59,130,246,0.06)", border: "1px solid rgba(59,130,246,0.2)", borderRadius: 10, padding: "20px 24px", marginBottom: 28 }}>
@@ -3354,31 +3453,8 @@ function SkillsLibraryOverlay({ onBack }) {
           </div>
         </div>
 
-        {/* Agent filter */}
-        <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 16 }}>
-          {[{ id: "all", label: "All agents" }, ...Object.entries(AGENT_META_SL).map(([id, { label }]) => ({ id, label }))].map(f => {
-            const agent = AGENT_META_SL[f.id];
-            const isActive = agentFilter === f.id;
-            const color = agent ? agent.color : T.muted;
-            return (
-              <button key={f.id} onClick={() => setAgentFilter(f.id)} style={{
-                display: "inline-flex", alignItems: "center", gap: 5,
-                padding: "4px 11px", borderRadius: 99, cursor: "pointer",
-                fontFamily: "'JetBrains Mono', monospace", fontSize: 9, letterSpacing: "0.06em", textTransform: "uppercase",
-                border: `1px solid ${isActive ? color : T.border}`,
-                background: isActive ? `${color}12` : "transparent",
-                color: isActive ? color : T.dim,
-                transition: "all 0.12s", outline: "none",
-              }}>
-                {agent && <span style={{ width: 4, height: 4, borderRadius: "50%", background: color, display: "block" }} />}
-                {f.label}
-              </button>
-            );
-          })}
-        </div>
-
-        {/* Phase strip */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(6, minmax(0, 1fr))", border: `1px solid ${T.border}`, borderRadius: 10, overflow: "hidden", marginBottom: 1 }}>
+        {/* Phase strip — primary selection */}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(6, minmax(0, 1fr))", border: `1px solid ${T.border}`, borderRadius: 10, overflow: "hidden", marginBottom: 16 }}>
           {PHASES_ORDER.map((ph, i) => {
             const m = PHASE_META[ph];
             const isActive = selected === ph;
@@ -3386,7 +3462,7 @@ function SkillsLibraryOverlay({ onBack }) {
             return (
               <button key={ph}
                 onClick={() => setSelected(selected === ph ? null : ph)}
-                style={{ padding: "14px 10px 12px", border: "none", borderRight: i < 5 ? `1px solid ${T.border}` : "none", borderBottom: isActive ? `2px solid ${m.color}` : "2px solid transparent", background: isActive ? T.surface : "transparent", cursor: "pointer", textAlign: "center", transition: "all 0.15s", outline: "none" }}
+                style={{ position: "relative", padding: "14px 10px 12px", border: "none", borderRight: i < 5 ? `1px solid ${T.border}` : "none", borderBottom: "2px solid transparent", background: isActive ? T.surface : "transparent", cursor: "pointer", textAlign: "center", transition: "all 0.15s", outline: "none" }}
                 onMouseEnter={e => { if (!isActive) e.currentTarget.style.background = T.card; }}
                 onMouseLeave={e => { if (!isActive) e.currentTarget.style.background = "transparent"; }}
               >
@@ -3394,42 +3470,80 @@ function SkillsLibraryOverlay({ onBack }) {
                 <div style={{ fontSize: 9, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.08em", textTransform: "uppercase", color: isActive ? m.color : T.dim, marginBottom: 2 }}>{ph}</div>
                 <div style={{ fontSize: 11, fontWeight: 500, color: isActive ? T.text : T.muted, lineHeight: 1.2 }}>{m.label}</div>
                 <div style={{ fontSize: 9, color: T.dim, fontFamily: "'JetBrains Mono', monospace", marginTop: 3 }}>{count}</div>
+                {isActive && (
+                  <span aria-hidden style={{ position: "absolute", left: 0, right: 0, bottom: -2, height: 2, background: m.color, pointerEvents: "none" }} />
+                )}
               </button>
             );
           })}
         </div>
 
+        {/* Consolidated filters — agent + surface together. Visible whether or not a phase is selected. */}
+        <div style={{
+          display: "flex", flexWrap: "wrap", alignItems: "center", gap: 16,
+          padding: "12px 14px", marginBottom: 24,
+          background: T.surface, border: `1px solid ${T.border}`, borderRadius: 8,
+        }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", flex: 1, minWidth: 280 }}>
+            <span style={{ fontSize: 10, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.08em", textTransform: "uppercase", color: T.dim, marginRight: 4 }}>Agent</span>
+            {[{ id: "all", label: "All" }, ...Object.entries(AGENT_META_SL).map(([id, { label }]) => ({ id, label }))].map(f => {
+              const agent = AGENT_META_SL[f.id];
+              const isActive = agentFilter === f.id;
+              const color = agent ? agent.color : T.muted;
+              return (
+                <button key={f.id} onClick={() => setAgentFilter(f.id)} style={{
+                  display: "inline-flex", alignItems: "center", gap: 5,
+                  padding: "4px 10px", borderRadius: 99, cursor: "pointer",
+                  fontFamily: "'JetBrains Mono', monospace", fontSize: 9, letterSpacing: "0.06em", textTransform: "uppercase", fontWeight: 500,
+                  border: `1px solid ${isActive ? color : T.border}`,
+                  background: isActive ? `${color}14` : "transparent",
+                  color: isActive ? color : T.dim,
+                  transition: "all 0.12s", outline: "none",
+                }}>
+                  {agent && <span style={{ width: 4, height: 4, borderRadius: "50%", background: color, display: "block" }} />}
+                  {f.label}
+                </button>
+              );
+            })}
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+            <span style={{ fontSize: 10, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.08em", textTransform: "uppercase", color: T.dim, marginRight: 4 }}>Surface</span>
+            {SURFACE_FILTERS.map(f => {
+              const isActive = surfaceFilter === f.id;
+              return (
+                <button key={f.id} onClick={() => setSurfaceFilter(f.id)} style={{
+                  padding: "4px 10px", borderRadius: 99, cursor: "pointer",
+                  fontSize: 9, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.06em", textTransform: "uppercase", fontWeight: 500,
+                  border: `1px solid ${isActive ? T.borderHover : T.border}`,
+                  background: isActive ? T.card : "transparent",
+                  color: isActive ? T.text : T.dim,
+                  transition: "all 0.12s",
+                }}>{f.label}</button>
+              );
+            })}
+          </div>
+        </div>
+
         {/* Phase detail panel */}
         <div style={{ overflow: "hidden", marginBottom: 20 }}>
           {!selected ? (
-            <div style={{ padding: "64px 0 48px", textAlign: "center" }}>
-              <div style={{ fontSize: 10, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.12em", textTransform: "uppercase", color: "#3A3A3A", marginBottom: 12 }}>Select a phase</div>
-              <p style={{ fontSize: 13, color: "#4A4A4A", lineHeight: 1.65, maxWidth: 340, margin: "0 auto" }}>
-                Choose a phase above to browse skill files for that stage.
+            <div style={{ padding: "32px 0 24px", textAlign: "center" }}>
+              <div style={{ fontSize: 11, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.12em", textTransform: "uppercase", color: T.dim, marginBottom: 10 }}>Select a phase</div>
+              <p style={{ fontSize: 13, color: T.muted, lineHeight: 1.65, maxWidth: 380, margin: "0 auto" }}>
+                Choose a phase above to browse skill files for that stage. Cross-phase skills are always visible below.
               </p>
             </div>
           ) : (
-            <div style={{ padding: "20px 0 24px" }}>
-              {/* Phase header + surface filter */}
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16, flexWrap: "wrap", gap: 10 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <div style={{ width: 7, height: 7, borderRadius: "50%", background: meta.color, boxShadow: `0 0 7px ${meta.color}` }} />
-                  <span style={{ fontSize: 11, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.1em", textTransform: "uppercase", color: meta.color }}>{selected} — {meta.label}</span>
-                  <span style={{ fontSize: 11, color: T.dim, fontFamily: "'JetBrains Mono', monospace" }}>{phaseSkills.length} skill{phaseSkills.length !== 1 ? "s" : ""}</span>
-                </div>
-                {/* Surface filter inline */}
-                <div style={{ display: "flex", gap: 5 }}>
-                  {SURFACE_FILTERS.map(f => {
-                    const isActive = surfaceFilter === f.id;
-                    return (
-                      <button key={f.id} onClick={() => setSurfaceFilter(f.id)} style={{ padding: "3px 11px", borderRadius: 20, cursor: "pointer", fontSize: 9, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.07em", textTransform: "uppercase", border: `1px solid ${isActive ? T.borderHover : T.border}`, background: isActive ? T.card : "transparent", color: isActive ? T.text : T.dim, transition: "all 0.12s" }}>{f.label}</button>
-                    );
-                  })}
-                </div>
+            <div style={{ padding: "8px 0 24px" }}>
+              {/* Phase header */}
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14, flexWrap: "wrap" }}>
+                <div style={{ width: 7, height: 7, borderRadius: "50%", background: meta.color, boxShadow: `0 0 7px ${meta.color}` }} />
+                <span style={{ fontSize: 11, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.1em", textTransform: "uppercase", color: meta.color }}>{selected} — {meta.label}</span>
+                <span style={{ fontSize: 11, color: T.dim, fontFamily: "'JetBrains Mono', monospace" }}>{phaseSkills.length} skill{phaseSkills.length !== 1 ? "s" : ""}</span>
               </div>
               {phaseSkills.length === 0 ? (
                 <div style={{ padding: "20px 0", textAlign: "center" }}>
-                  <span style={{ fontSize: 12, color: T.dim, fontFamily: "'JetBrains Mono', monospace" }}>No skills match this surface filter</span>
+                  <span style={{ fontSize: 12, color: T.dim, fontFamily: "'JetBrains Mono', monospace" }}>No skills match the active filters</span>
                 </div>
               ) : (
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: 10 }}>
@@ -4004,34 +4118,468 @@ function SkillDetailPage({ skill, onBack }) {
   );
 }
 
+// ── What you get ──────────────────────────────────────────────────────────────
+function WhatYouGet({ onOpenSkills, onOpenAgents }) {
+  const items = [
+    { count: "43", label: "Skills", desc: "Markdown skill files for every phase of design. Upload to Claude to extend any conversation with phase-specific workflows.", actionLabel: "Browse skills →", onClick: onOpenSkills },
+    { count: "19", label: "Tools", desc: "Interactive prompt builders. Add your context, get a structured Claude prompt ready to run.", actionLabel: null, onClick: null },
+    { count: "6", label: "Agents", desc: "Role-based specialists for Claude Code. Each one has skills, tools, and a Definition of Done.", actionLabel: "Meet the team →", onClick: onOpenAgents },
+    { count: "3", label: "Hooks", desc: "Deterministic triggers — auto-persist artifacts, inject project context, route phases on session close.", actionLabel: null, onClick: null },
+  ];
+  return (
+    <div style={{ marginBottom: 64 }}>
+      <div style={{ marginBottom: 6 }}><Mono color={T.dim} size={11}>Overview</Mono></div>
+      <h2 style={{ fontFamily: "'Inter', sans-serif", fontSize: "clamp(22px, 2.4vw, 30px)", fontWeight: 600, color: T.text, lineHeight: 1.2, letterSpacing: "-0.02em", margin: 0, marginBottom: 6 }}>What you get</h2>
+      <p style={{ fontSize: 14, color: T.muted, lineHeight: 1.65, margin: 0, marginBottom: 20, maxWidth: 620 }}>Four primitives compose the framework. Together they cover what to do, how to act, who Claude is, and when things fire automatically.</p>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 12 }}>
+        {items.map(item => (
+          <div key={item.label} style={{ background: T.surface, border: `1px solid ${T.border}`, borderRadius: 8, padding: "16px 18px", display: "flex", flexDirection: "column", gap: 8 }}>
+            <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
+              <span style={{ fontSize: 24, fontWeight: 600, color: T.text, fontFamily: "'Inter', sans-serif", letterSpacing: "-0.5px" }}>{item.count}</span>
+              <span style={{ fontSize: 11, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.08em", textTransform: "uppercase", color: T.muted }}>{item.label}</span>
+            </div>
+            <p style={{ fontSize: 12, color: T.dim, lineHeight: 1.55, margin: 0, flex: 1 }}>{item.desc}</p>
+            {item.actionLabel && (
+              <button onClick={item.onClick} style={{ alignSelf: "flex-start", marginTop: 4, padding: 0, background: "transparent", border: "none", fontSize: 10, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.07em", textTransform: "uppercase", color: T.muted, cursor: "pointer" }}
+                onMouseEnter={e => e.currentTarget.style.color = T.text}
+                onMouseLeave={e => e.currentTarget.style.color = T.muted}
+              >{item.actionLabel}</button>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ── Quickstarts ───────────────────────────────────────────────────────────────
+const QUICKSTARTS = [
+  // Discover
+  { id: "brief",           label: "I need an AI-ready project brief",            tool: "brief",                phase: "01" },
+  { id: "research-notes",  label: "I have research notes to synthesize",         tool: "research-synthesizer", phase: "01" },
+  { id: "competitive",     label: "I need a competitive snapshot",               tool: "competitive-snapshot", phase: "01" },
+  { id: "service-bp",      label: "I need a service blueprint",                  tool: "service-blueprint",    phase: "01" },
+  // Define
+  { id: "frame-problem",   label: "I need to frame a problem",                   tool: "problem-framing",      phase: "02" },
+  { id: "journey",         label: "I need to map a user journey",                tool: "journey-mapping",      phase: "02" },
+  // Ideate
+  { id: "concepts",        label: "I need to generate design concepts",          tool: "concept-generator",    phase: "03" },
+  { id: "cluster-ideas",   label: "I need to cluster ideas from a workshop",     tool: "idea-clustering",      phase: "03" },
+  // Prototype
+  { id: "user-flow",       label: "I need to map a user flow",                   tool: "user-flow-mapper",     phase: "04" },
+  { id: "ux-copy",         label: "I need to write UX copy",                     tool: "ux-copy-writer",       phase: "04" },
+  // Validate
+  { id: "findings",        label: "I need to synthesize usability findings",     tool: "findings-synthesizer", phase: "05" },
+  { id: "insight-report",  label: "I need an insight report for stakeholders",   tool: "insight-report",       phase: "05" },
+  { id: "deck",            label: "I need a stakeholder presentation",           tool: "deck",                 phase: "05" },
+  // Deliver
+  { id: "comp-arch",       label: "I need to plan component architecture",       tool: "component-architecture", phase: "06" },
+  { id: "comp-spec",       label: "I need to spec a component",                  tool: "component-spec",       phase: "06" },
+  { id: "comp-states",     label: "I need to define component states",           tool: "component-state",      phase: "06" },
+  { id: "design-qa",       label: "I need to log design QA",                     tool: "design-qa",            phase: "06" },
+  { id: "handoff",         label: "I'm preparing for developer handoff",         tool: "proto-handoff",        phase: "06" },
+];
+
+function QuickstartCard({ q, onOpenTool }) {
+  const phaseColor = T.phases[q.phase]?.color || T.dim;
+  return (
+    <button onClick={() => onOpenTool(q.tool)} style={{
+      background: T.surface,
+      border: `1px solid ${T.border}`,
+      borderLeft: `2px solid ${phaseColor}`,
+      borderRadius: "0 8px 8px 0",
+      padding: "14px 16px",
+      textAlign: "left", cursor: "pointer",
+      display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12,
+      transition: "border-color 0.15s",
+    }}
+      onMouseEnter={e => { e.currentTarget.style.borderTopColor = T.borderHover; e.currentTarget.style.borderRightColor = T.borderHover; e.currentTarget.style.borderBottomColor = T.borderHover; }}
+      onMouseLeave={e => { e.currentTarget.style.borderTopColor = T.border; e.currentTarget.style.borderRightColor = T.border; e.currentTarget.style.borderBottomColor = T.border; }}
+    >
+      <span style={{ fontSize: 13, color: T.text, fontFamily: "'DM Sans', sans-serif", flex: 1, minWidth: 0 }}>{q.label}</span>
+      <span style={{ fontSize: 10, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.07em", textTransform: "uppercase", color: T.dim, flexShrink: 0 }}>Open →</span>
+    </button>
+  );
+}
+
+function Quickstarts({ onOpenTool, grouped = false }) {
+  // Compact home version (legacy) — flat grid
+  if (!grouped) {
+    return (
+      <div style={{ marginBottom: 56 }}>
+        <div style={{ marginBottom: 16 }}><Mono color={T.dim} size={12}>Quickstarts</Mono></div>
+        <div className="quickstart-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8 }}>
+          {QUICKSTARTS.map(q => <QuickstartCard key={q.id} q={q} onOpenTool={onOpenTool} />)}
+        </div>
+      </div>
+    );
+  }
+  // Page version — phase tab selector + filtered grid (also "All" view)
+  return <QuickstartsByPhase onOpenTool={onOpenTool} />;
+}
+
+function QuickstartsByPhase({ onOpenTool }) {
+  const [selected, setSelected] = useState("all");
+  const items = selected === "all"
+    ? QUICKSTARTS
+    : QUICKSTARTS.filter(q => q.phase === selected);
+
+  return (
+    <div>
+      {/* Phase strip selector — matches Phases page strip */}
+      <div style={{
+        display: "grid", gridTemplateColumns: "repeat(7, minmax(0, 1fr))",
+        border: `1px solid ${T.border}`, borderRadius: 10,
+        overflow: "hidden", marginBottom: 24,
+      }}>
+        {/* All tab */}
+        <button
+          onClick={() => setSelected("all")}
+          style={{
+            position: "relative",
+            padding: "14px 10px 12px", border: "none",
+            borderRight: `1px solid ${T.border}`,
+            borderBottom: "2px solid transparent",
+            background: selected === "all" ? T.surface : "transparent",
+            cursor: "pointer", textAlign: "center", transition: "all 0.15s",
+          }}
+          onMouseEnter={e => { if (selected !== "all") e.currentTarget.style.background = T.card; }}
+          onMouseLeave={e => { if (selected !== "all") e.currentTarget.style.background = "transparent"; }}
+        >
+          <div style={{ width: 6, height: 6, borderRadius: "50%", background: T.muted, margin: "0 auto 8px", opacity: selected === "all" ? 1 : 0.6 }} />
+          <div style={{ fontSize: 9, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.08em", textTransform: "uppercase", color: selected === "all" ? T.text : T.dim, marginBottom: 2 }}>All</div>
+          <div style={{ fontSize: 11, fontWeight: 500, color: selected === "all" ? T.text : T.muted, lineHeight: 1.2 }}>{QUICKSTARTS.length} tasks</div>
+          {selected === "all" && (
+            <span aria-hidden style={{ position: "absolute", left: 0, right: 0, bottom: -2, height: 2, background: T.muted, pointerEvents: "none" }} />
+          )}
+        </button>
+        {/* Phase tabs */}
+        {PHASES.map((ph, i) => {
+          const phColor = T.phases[ph.id].color;
+          const isActive = selected === ph.id;
+          const count = QUICKSTARTS.filter(q => q.phase === ph.id).length;
+          return (
+            <button key={ph.id}
+              onClick={() => setSelected(ph.id)}
+              style={{
+                position: "relative",
+                padding: "14px 10px 12px", border: "none",
+                borderRight: i < 5 ? `1px solid ${T.border}` : "none",
+                borderBottom: "2px solid transparent",
+                background: isActive ? T.surface : "transparent",
+                cursor: "pointer", textAlign: "center", transition: "all 0.15s",
+              }}
+              onMouseEnter={e => { if (!isActive) e.currentTarget.style.background = T.card; }}
+              onMouseLeave={e => { if (!isActive) e.currentTarget.style.background = "transparent"; }}
+            >
+              <div style={{ width: 6, height: 6, borderRadius: "50%", background: phColor, margin: "0 auto 8px", boxShadow: isActive ? `0 0 8px ${phColor}` : "none", transition: "box-shadow 0.15s" }} />
+              <div style={{ fontSize: 9, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.08em", textTransform: "uppercase", color: isActive ? phColor : T.dim, marginBottom: 2 }}>{ph.id}</div>
+              <div style={{ fontSize: 11, fontWeight: 500, color: isActive ? T.text : T.muted, lineHeight: 1.2 }}>{ph.label}</div>
+              {isActive && (
+                <span aria-hidden style={{ position: "absolute", left: 0, right: 0, bottom: -2, height: 2, background: phColor, pointerEvents: "none" }} />
+              )}
+              <span style={{ position: "absolute", top: 8, right: 8, fontSize: 9, fontFamily: "'JetBrains Mono', monospace", color: T.dim }}>{count}</span>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Section heading for the active filter */}
+      <div style={{ display: "flex", alignItems: "baseline", gap: 12, marginBottom: 14 }}>
+        {selected === "all" ? (
+          <>
+            <h3 style={{ fontFamily: "'Inter', sans-serif", fontSize: 18, fontWeight: 600, color: T.text, lineHeight: 1.3, letterSpacing: "-0.01em", margin: 0 }}>All quickstarts</h3>
+            <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, letterSpacing: "0.08em", textTransform: "uppercase", color: T.dim }}>{items.length} tasks across 6 phases</span>
+          </>
+        ) : (
+          (() => {
+            const ph = PHASES.find(p => p.id === selected);
+            const phColor = T.phases[selected].color;
+            return (
+              <>
+                <span style={{ width: 8, height: 8, borderRadius: "50%", background: phColor, boxShadow: `0 0 6px ${phColor}` }} />
+                <h3 style={{ fontFamily: "'Inter', sans-serif", fontSize: 18, fontWeight: 600, color: phColor, lineHeight: 1.3, letterSpacing: "-0.01em", margin: 0 }}>{ph.id} — {ph.label}</h3>
+                <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, letterSpacing: "0.08em", textTransform: "uppercase", color: T.dim }}>{items.length} task{items.length !== 1 ? "s" : ""}</span>
+              </>
+            );
+          })()
+        )}
+      </div>
+
+      {/* Quickstart grid */}
+      <div className="quickstart-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8 }}>
+        {items.map(q => <QuickstartCard key={q.id} q={q} onOpenTool={onOpenTool} />)}
+      </div>
+    </div>
+  );
+}
+
+// ── Agents preview ────────────────────────────────────────────────────────────
+const AGENTS_PREVIEW = [
+  { id: "orchestrator", name: "Orchestrator",     role: "Project PM Agent",     color: "#A8A29E", desc: "Drives every phase to a complete, handoff-ready output. Routes work, manages handoff blocks, runs gap analysis." },
+  { id: "researcher",   name: "Researcher",       role: "UX Research Agent",    color: "#C084FC", desc: "Surfaces 3–5 actionable insights from raw research. Confidence-rated. Standard insight format." },
+  { id: "strategist",   name: "Strategist",       role: "Design Lead Agent",    color: "#F472B6", desc: "Produces a problem frame and strategic direction. Validated problem statement, HMW questions, persona, journey." },
+  { id: "designer",     name: "Designer",         role: "Product Design Agent", color: "#38BDF8", desc: "Produces a validated concept direction. 4+ concepts, evaluated, recommended direction with rationale." },
+  { id: "systems",      name: "Systems Designer", role: "Design Systems Agent", color: "#34D399", desc: "Produces a token system and component architecture. Every component specified, every state defined." },
+  { id: "engineer",     name: "Design Engineer",  role: "Handoff & QA Agent",   color: "#FB923C", desc: "Produces a handoff package. QA against implementation, accessibility audit, decision records." },
+];
+
+function AgentsPreview({ onOpenAgents }) {
+  return (
+    <div style={{ marginBottom: 56 }}>
+      <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 16, gap: 12, flexWrap: "wrap" }}>
+        <Mono color={T.dim} size={12}>Agents</Mono>
+        <button onClick={() => onOpenAgents()} style={{ background: "transparent", border: "none", fontSize: 10, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.07em", textTransform: "uppercase", color: T.muted, cursor: "pointer" }}
+          onMouseEnter={e => e.currentTarget.style.color = T.text}
+          onMouseLeave={e => e.currentTarget.style.color = T.muted}
+        >View all agents →</button>
+      </div>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 8 }}>
+        {AGENTS_PREVIEW.map(a => (
+          <button key={a.id} onClick={() => onOpenAgents(a.id)} style={{
+            background: T.surface,
+            border: `1px solid ${T.border}`,
+            borderLeft: `2px solid ${a.color}`,
+            borderRadius: "0 8px 8px 0",
+            padding: "14px 16px",
+            textAlign: "left", cursor: "pointer",
+            display: "flex", flexDirection: "column", gap: 6,
+            transition: "border-color 0.15s",
+          }}
+            onMouseEnter={e => { e.currentTarget.style.borderTopColor = T.borderHover; e.currentTarget.style.borderRightColor = T.borderHover; e.currentTarget.style.borderBottomColor = T.borderHover; }}
+            onMouseLeave={e => { e.currentTarget.style.borderTopColor = T.border; e.currentTarget.style.borderRightColor = T.border; e.currentTarget.style.borderBottomColor = T.border; }}
+          >
+            <div style={{ fontSize: 13, fontWeight: 600, color: a.color, lineHeight: 1.3 }}>{a.name}</div>
+            <div style={{ fontSize: 10, fontFamily: "'JetBrains Mono', monospace", color: T.dim, marginTop: 2, marginBottom: 6, letterSpacing: "0.04em" }}>{a.role}</div>
+            <p style={{ fontSize: 11.5, color: T.muted, lineHeight: 1.55, margin: 0 }}>{a.desc}</p>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ── Skills preview ────────────────────────────────────────────────────────────
+function SkillsPreview({ onOpenSkills }) {
+  const phaseCounts = PHASES.map(ph => ({
+    ...ph,
+    count: SKILL_FILES.filter(s => s.phase === ph.id).length,
+    color: T.phases[ph.id].color,
+  }));
+  const total = SKILL_FILES.length;
+  return (
+    <div style={{ marginBottom: 56 }}>
+      <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 16, gap: 12, flexWrap: "wrap" }}>
+        <Mono color={T.dim} size={12}>Skills · {total} total</Mono>
+        <button onClick={() => onOpenSkills()} style={{ background: "transparent", border: "none", fontSize: 10, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.07em", textTransform: "uppercase", color: T.muted, cursor: "pointer" }}
+          onMouseEnter={e => e.currentTarget.style.color = T.text}
+          onMouseLeave={e => e.currentTarget.style.color = T.muted}
+        >Browse all skills →</button>
+      </div>
+      <div className="skills-preview-grid" style={{ display: "grid", gridTemplateColumns: "repeat(6, 1fr)", gap: 8 }}>
+        {phaseCounts.map(ph => (
+          <button key={ph.id} onClick={() => onOpenSkills(ph.id)} style={{ background: T.surface, border: `1px solid ${T.border}`, borderRadius: 8, padding: "12px 14px", textAlign: "left", cursor: "pointer", display: "flex", alignItems: "center", gap: 12, transition: "border-color 0.15s" }}
+            onMouseEnter={e => e.currentTarget.style.borderColor = T.borderHover}
+            onMouseLeave={e => e.currentTarget.style.borderColor = T.border}
+          >
+            <div style={{ width: 8, height: 8, borderRadius: "50%", background: ph.color, boxShadow: `0 0 6px ${ph.color}`, flexShrink: 0 }} />
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: 11.5, fontWeight: 600, color: T.text, lineHeight: 1.3 }}>{ph.label}</div>
+              <div style={{ fontSize: 10, fontFamily: "'JetBrains Mono', monospace", color: T.dim, marginTop: 2, letterSpacing: "0.04em" }}>{ph.id}</div>
+            </div>
+            <span style={{ fontSize: 13, fontWeight: 600, color: ph.color, fontFamily: "'JetBrains Mono', monospace", flexShrink: 0 }}>{ph.count}</span>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ── Routing ───────────────────────────────────────────────────────────────────
+const ROUTES = ["home", "phases", "quickstarts", "agents", "skills", "scenarios", "system"];
+
+function parseRoute() {
+  if (typeof window === "undefined") return { page: "home", param: null };
+  // Legacy: bare phase id like "#01" → redirect to "#/phases/01"
+  const raw = window.location.hash.replace(/^#/, "").trim();
+  if (/^0[1-6]$/.test(raw)) return { page: "phases", param: raw };
+  const h = raw.replace(/^\//, "");
+  if (!h) return { page: "home", param: null };
+  let [page, param] = h.split("/");
+  // Legacy alias: ways → scenarios
+  if (page === "ways") page = "scenarios";
+  if (!ROUTES.includes(page)) return { page: "home", param: null };
+  return { page, param: param || null };
+}
+
+// ── Wayfinder card (home "Where do you want to start?") ───────────────────────
+function WayfinderCard({ id, label, lede, count, color, icon: Icon, onNavigate }) {
+  return (
+    <button onClick={() => onNavigate(id)} style={{
+      position: "relative", overflow: "hidden",
+      background: T.surface,
+      border: `1px solid ${T.border}`,
+      borderRadius: 10,
+      padding: "20px 22px", textAlign: "left", cursor: "pointer",
+      display: "flex", flexDirection: "column", gap: 10,
+      minHeight: 168, transition: "border-color 200ms, background 200ms",
+      fontFamily: "inherit",
+    }}
+      onMouseEnter={e => { e.currentTarget.style.borderColor = T.borderHover; e.currentTarget.style.background = "#1C1C1C"; const ic = e.currentTarget.querySelector('.wf-icon'); if (ic) ic.style.opacity = "0.55"; }}
+      onMouseLeave={e => { e.currentTarget.style.borderColor = T.border; e.currentTarget.style.background = T.surface; const ic = e.currentTarget.querySelector('.wf-icon'); if (ic) ic.style.opacity = "0.32"; }}
+    >
+      {/* Decorative icon — top-right, large, low opacity in category color */}
+      {Icon && (
+        <span aria-hidden className="wf-icon" style={{
+          position: "absolute", top: 16, right: 14,
+          color, opacity: 0.32, pointerEvents: "none",
+          transition: "opacity 200ms",
+          display: "inline-flex",
+        }}>
+          <Icon size={56} stroke={1.4} />
+        </span>
+      )}
+      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8, position: "relative", zIndex: 1 }}>
+        <span style={{ width: 6, height: 6, borderRadius: "50%", background: color }} />
+        <span style={{ fontSize: 10, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.08em", textTransform: "uppercase", color, fontWeight: 500 }}>{label}</span>
+        {count !== undefined && (
+          <span style={{ fontSize: 10, fontFamily: "'JetBrains Mono', monospace", color: T.dim }}>· {count}</span>
+        )}
+      </div>
+      <p style={{ fontSize: 14, color: T.text, lineHeight: 1.5, margin: 0, marginBottom: 10, fontFamily: "'DM Sans', sans-serif", fontWeight: 500, position: "relative", zIndex: 1, paddingRight: 64 }}>{lede}</p>
+      <span style={{ fontSize: 10, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.07em", textTransform: "uppercase", color: T.muted, marginTop: "auto", position: "relative", zIndex: 1 }}>Open →</span>
+    </button>
+  );
+}
+
+// ── Page shell (interior pages — TopNav + content + footer) ───────────────────
+function PageShell({ currentPage, onNavigate, mounted, children, hideFooter }) {
+  return (
+    <div style={{
+      minHeight: "100vh", background: T.bg,
+      fontFamily: "'DM Sans', sans-serif", color: T.text,
+      opacity: mounted ? 1 : 0, transition: "opacity 0.3s ease",
+    }}>
+      <TopNav currentPage={currentPage} onNavigate={onNavigate} baseUrl={import.meta.env.BASE_URL} />
+      <div style={{ maxWidth: 1440, margin: "0 auto", padding: "56px clamp(24px, 5vw, 80px) 80px" }}>
+        {children}
+        {!hideFooter && (
+          <>
+            <div style={{ marginTop: 64, height: 1, background: T.border }} />
+            <div style={{ paddingTop: 24 }}>
+              <Mono color={T.dim} size={10}>Agentic Product Design Framework</Mono>
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
 // ── App ───────────────────────────────────────────────────────────────────────
 export default function App() {
   const [mounted, setMounted] = useState(false);
-  const [activePath, setActivePath] = useState(null);  // "phase" | "ways" | "deliverable"
+  const [route, setRoute] = useState(parseRoute);
   const [activeTool, setActiveTool] = useState(null);
   const [showFigmaGuide, setShowFigmaGuide] = useState(false);
-  const [showSkillsLibrary, setShowSkillsLibrary] = useState(false);
-  const [showAgentsPage, setShowAgentsPage] = useState(false);
-  const [activeSkill, setActiveSkill] = useState(null);
 
   useEffect(() => { setTimeout(() => setMounted(true), 60); }, []);
 
-  // Figma guide
-  if (showFigmaGuide) return <FigmaSetupGuide onBack={() => setShowFigmaGuide(false)} />;
+  // Hash <-> route sync
+  useEffect(() => {
+    const handler = () => setRoute(parseRoute());
+    window.addEventListener("hashchange", handler);
+    return () => window.removeEventListener("hashchange", handler);
+  }, []);
 
-  // Skills Library overlay
-  // Skill detail now handled via SkillDrawer inline
-  if (showSkillsLibrary) return <SkillsLibraryOverlay onBack={() => setShowSkillsLibrary(false)} />;
-
-  // Agents page
-  if (showAgentsPage) return <AgentsPage onBack={() => setShowAgentsPage(false)} />;
-
-  // Active tool
-  if (activeTool) {
-    const tool = TOOLS.find(t => t.id === activeTool);
-    if (tool) return <ToolShell tool={tool} onHome={() => setActiveTool(null)} />;
+  function navigate(page, param) {
+    if (page === "home" || !page) {
+      window.history.pushState(null, "", window.location.pathname + window.location.search);
+      setRoute({ page: "home", param: null });
+    } else {
+      window.location.hash = param ? `/${page}/${param}` : `/${page}`;
+    }
+    if (typeof window !== "undefined") {
+      window.scrollTo({ top: 0, behavior: "instant" });
+    }
   }
 
+  // Figma guide (one-off setup flow)
+  if (showFigmaGuide) return <FigmaSetupGuide onBack={() => setShowFigmaGuide(false)} />;
+
+  // Active tool view
+  if (activeTool) {
+    const tool = TOOLS.find(t => t.id === activeTool);
+    if (tool) return <ToolShell tool={tool} onHome={(phase) => {
+      setActiveTool(null);
+      if (phase) navigate("phases", phase);
+      else navigate("home");
+    }} />;
+  }
+
+  // Page-level rendering
+  if (route.page === "agents") {
+    return <AgentsPage currentPage="agents" onNavigate={navigate} initialAgentId={route.param} />;
+  }
+  if (route.page === "skills") {
+    return <SkillsLibraryOverlay currentPage="skills" onNavigate={navigate} initialPhase={route.param} />;
+  }
+  if (route.page === "phases") {
+    return (
+      <PageShell currentPage="phases" onNavigate={navigate} mounted={mounted}>
+        <div style={{ marginBottom: 32 }}>
+          <Mono color={T.dim} size={12}>Framework</Mono>
+          <h1 style={{ fontFamily: "'Inter', sans-serif", fontSize: "clamp(32px, 3.6vw, 48px)", fontWeight: 600, lineHeight: 1.1, color: T.text, letterSpacing: "-0.02em", marginTop: 12, marginBottom: 12 }}>Phases</h1>
+          <p style={{ fontSize: 15, color: T.muted, lineHeight: 1.65, maxWidth: 640, margin: 0 }}>
+            Six phases. Three artifact types. One continuous workflow. Pick a phase to see its prompts, skills, and recommended sequence.
+          </p>
+        </div>
+        <PhasePath onOpenTool={setActiveTool} initialPhase={route.param} />
+      </PageShell>
+    );
+  }
+  if (route.page === "quickstarts") {
+    return (
+      <PageShell currentPage="quickstarts" onNavigate={navigate} mounted={mounted}>
+        <div style={{ marginBottom: 32 }}>
+          <Mono color={T.dim} size={12}>Framework</Mono>
+          <h1 style={{ fontFamily: "'Inter', sans-serif", fontSize: "clamp(32px, 3.6vw, 48px)", fontWeight: 600, lineHeight: 1.1, color: T.text, letterSpacing: "-0.02em", marginTop: 12, marginBottom: 14 }}>Quickstarts</h1>
+          <p style={{ fontSize: 15, color: T.muted, lineHeight: 1.65, maxWidth: 640, margin: 0 }}>
+            Common tasks mapped to a single tool, grouped by the phase where you'll usually do them. Pick one and go — Claude will ask follow-up questions to fill in any gaps.
+          </p>
+        </div>
+        <Quickstarts onOpenTool={setActiveTool} grouped={true} />
+      </PageShell>
+    );
+  }
+  if (route.page === "system") {
+    return (
+      <div style={{ minHeight: "100vh", background: "#020816", display: "flex", flexDirection: "column", color: T.text, fontFamily: "'DM Sans', sans-serif", opacity: mounted ? 1 : 0, transition: "opacity 0.3s ease" }}>
+        <TopNav currentPage="system" onNavigate={navigate} baseUrl={import.meta.env.BASE_URL} />
+        <iframe
+          src={`${import.meta.env.BASE_URL}apdf-system-viz.html`}
+          title="APDF System Visualization"
+          style={{ flex: 1, width: "100%", minHeight: "calc(100vh - 58px)", border: "none", display: "block", background: "#020816" }}
+        />
+      </div>
+    );
+  }
+  if (route.page === "scenarios") {
+    return (
+      <PageShell currentPage="scenarios" onNavigate={navigate} mounted={mounted}>
+        <div style={{ marginBottom: 32 }}>
+          <Mono color={T.dim} size={12}>Framework</Mono>
+          <h1 style={{ fontFamily: "'Inter', sans-serif", fontSize: "clamp(32px, 3.6vw, 48px)", fontWeight: 600, lineHeight: 1.1, color: T.text, letterSpacing: "-0.02em", marginTop: 12, marginBottom: 12 }}>Scenarios</h1>
+          <p style={{ fontSize: 15, color: T.muted, lineHeight: 1.65, maxWidth: 640, margin: 0 }}>
+            Bigger design challenges — from a sprint to a full system build — mapped to multi-phase paths through the framework.
+          </p>
+        </div>
+        <WaysToWorkPath onOpenTool={setActiveTool} />
+      </PageShell>
+    );
+  }
+
+  // Home (wayfinder)
   return (
     <div style={{
       minHeight: "100vh", background: T.bg,
@@ -4066,14 +4614,24 @@ export default function App() {
         .tool-row { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; }
         .how-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
         .how-figma { display: flex; gap: 10px; align-items: flex-start; }
+        .phase-group-row { display: grid; grid-template-columns: 180px 1fr; gap: 32px; }
+        @media (max-width: 760px) {
+          .phase-group-row { grid-template-columns: 1fr !important; gap: 14px !important; }
+        }
         @media (max-width: 768px) {
           .how-grid { grid-template-columns: 1fr; }
           .ways-explainer-grid { grid-template-columns: 1fr 1fr; }
           .setup-path-grid { grid-template-columns: 1fr; }
+          .quickstart-grid { grid-template-columns: repeat(2, 1fr) !important; }
+          .skills-preview-grid { grid-template-columns: repeat(3, 1fr) !important; }
+          .wayfinder-grid { grid-template-columns: repeat(2, 1fr) !important; }
         }
         @media (max-width: 600px) {
           .setup-path-grid { grid-template-columns: 1fr; }
           .path-grid { grid-template-columns: 1fr !important; }
+          .quickstart-grid { grid-template-columns: 1fr !important; }
+          .skills-preview-grid { grid-template-columns: repeat(2, 1fr) !important; }
+          .wayfinder-grid { grid-template-columns: 1fr !important; }
           .path-grid-item { border-right: none !important; border-bottom: 1px solid #2C2C2C; }
           .path-grid-item:last-child { border-bottom: none; }
           .three-ways-badge { display: block; margin-bottom: 6px; }
@@ -4103,267 +4661,141 @@ export default function App() {
         }
       `}</style>
 
-      {/* Header */}
-      <div style={{
-        borderBottom: `1px solid ${T.border}`,
-        padding: "0 40px", height: 58,
-        display: "flex", alignItems: "center", justifyContent: "space-between",
-        position: "sticky", top: 0, zIndex: 50,
-        background: `${T.bg}f0`, backdropFilter: "blur(12px)",
-      }}>
-        <div style={{ display: "flex", flexDirection: "column", gap: 5, justifyContent: "center" }}>
-          <span style={{ fontSize: 11, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.08em", textTransform: "uppercase", color: T.muted }}>
-            <span className="hide-mobile">Agentic Product Design Framework</span>
-            <span className="show-mobile">APDF</span>
-          </span>
-        </div>
-        <div style={{ display: "flex", gap: 16, alignItems: "center" }}>
-          <button onClick={() => setShowSkillsLibrary(true)} style={{
-            fontSize: 11, fontFamily: "'JetBrains Mono', monospace",
-            letterSpacing: "0.06em", textTransform: "uppercase",
-            color: T.muted, background: "transparent", border: `1px solid ${T.border}`,
-            borderRadius: 6, padding: "5px 12px",
-            cursor: "pointer", transition: "all 0.15s",
-          }}
-            onMouseEnter={e => { e.currentTarget.style.borderColor = T.borderHover; e.currentTarget.style.color = T.text; }}
-            onMouseLeave={e => { e.currentTarget.style.borderColor = T.border; e.currentTarget.style.color = T.muted; }}
-          >Skills Library</button>
-          <button onClick={() => { setShowAgentsPage(true); setActivePath(null); }} style={{
-            fontSize: 11, fontFamily: "'JetBrains Mono', monospace",
-            letterSpacing: "0.06em", textTransform: "uppercase",
-            color: T.muted, background: "transparent", border: `1px solid ${T.border}`,
-            borderRadius: 6, padding: "5px 12px",
-            cursor: "pointer", transition: "all 0.15s",
-          }}
-            onMouseEnter={e => { e.currentTarget.style.borderColor = T.borderHover; e.currentTarget.style.color = T.text; }}
-            onMouseLeave={e => { e.currentTarget.style.borderColor = T.border; e.currentTarget.style.color = T.muted; }}
-          >Agents</button>
-          <div style={{ width: 1, height: 12, background: T.border }} />
-          {[["GitHub", REPO], ["Figma", FIGMA_URL], ["Deck", PPTX_URL]].map(([label, href]) => (
-            <a key={label} href={href} target="_blank" rel="noopener noreferrer" style={{
-              fontSize: 11, fontFamily: "'JetBrains Mono', monospace",
-              letterSpacing: "0.06em", textTransform: "uppercase",
-              color: T.dim, textDecoration: "none", transition: "color 0.15s",
-            }}
-              onMouseEnter={e => e.target.style.color = T.muted}
-              onMouseLeave={e => e.target.style.color = T.dim}
-            >{label}</a>
-          ))}
-        </div>
-      </div>
+      <TopNav currentPage="home" onNavigate={navigate} baseUrl={import.meta.env.BASE_URL} />
+
+      {/* Page-level ambient brand-gradient wash — bleeds full viewport width behind hero */}
+      <div style={{ position: "relative", overflow: "hidden" }}>
+        <div aria-hidden style={{
+          position: "absolute", top: 0, left: 0, right: 0, height: 720,
+          pointerEvents: "none", zIndex: 0,
+          background: "radial-gradient(50% 70% at 25% 35%, rgba(134,59,255,0.22) 0%, transparent 70%), radial-gradient(55% 75% at 80% 55%, rgba(233,129,12,0.18) 0%, transparent 70%)",
+        }} />
 
       {/* Main content */}
-      <div style={{ maxWidth: 1440, margin: "0 auto", padding: "72px clamp(24px, 5vw, 80px) 96px" }}>
+      <div style={{ position: "relative", zIndex: 1, maxWidth: 1440, margin: "0 auto", padding: "72px clamp(24px, 5vw, 80px) 96px" }}>
 
-        {/* Home pill — only when a path is active */}
-        {activePath && <HomePill onClick={() => setActivePath(null)} />}
-
-        {/* What it is */}
-        {!activePath && (
-          <div style={{ marginBottom: 64 }}>
-            <div style={{ marginBottom: 20 }}>
-              <Mono color={T.dim} size={13}>Framework</Mono>
-            </div>
-            <h1 style={{
-              fontFamily: "'Inter', sans-serif",
-              fontSize: "clamp(28px, 3.5vw, 48px)", fontWeight: 600, lineHeight: 1.1,
-              color: T.text, marginBottom: 16, letterSpacing: "-0.3px",
-            }}>
-              A system for using <span style={{ color: "#D97706" }}>Claude</span> <span style={{ fontSize: "0.55em", verticalAlign: "middle", color: T.dim }}>+</span> <span style={{ color: "#9B59F7" }}>Figma</span><br />
-              <em style={{ fontStyle: "italic", color: T.muted }}>across every phase of product design.</em>
-            </h1>
-            <p style={{ fontSize: 16, color: T.muted, lineHeight: 1.7, maxWidth: 600, marginBottom: 0 }}>
-              From research through delivery — skills, tools, prompts, and agents built around Claude and Figma working together.
-            </p>
+        {/* Hero */}
+        <div style={{ marginBottom: 56 }}>
+          <div style={{ marginBottom: 20 }}>
+            <Mono color={T.dim} size={13}>Framework</Mono>
           </div>
-        )}
+          <h1 style={{
+            fontFamily: "'Inter', sans-serif",
+            fontSize: "clamp(32px, 4vw, 56px)", fontWeight: 600, lineHeight: 1.05,
+            color: T.text, marginBottom: 18, letterSpacing: "-0.5px",
+          }}>
+            A system for using <span style={{
+              background: "linear-gradient(90deg, #863BFF 0%, #C084FC 35%, #E9810C 100%)",
+              backgroundClip: "text", WebkitBackgroundClip: "text", color: "transparent",
+            }}>Claude + Figma</span><br />
+            <em style={{ fontStyle: "italic", color: T.muted }}>across every phase of product design.</em>
+          </h1>
+          <p style={{ fontSize: 16, color: T.muted, lineHeight: 1.7, maxWidth: 620, marginBottom: 0 }}>
+            Skills, tools, agents, and hooks — organized around the six phases of design — ready to drop into Claude Chat, Claude Code, or Figma MCP.
+          </p>
+        </div>
 
-        {/* Setup block — always visible on home, hidden once a path is chosen */}
-        {!activePath && <SetupBlock onOpenFigmaGuide={() => setShowFigmaGuide(true)} />}
+        {/* What you get — establishes the four primitives early */}
+        <WhatYouGet
+          onOpenSkills={() => navigate("skills")}
+          onOpenAgents={() => navigate("agents")}
+        />
 
-        {/* Path chooser — home only */}
-        {!activePath && (
-          <>
-            <div style={{ marginBottom: 20 }}>
-              <Mono color={T.dim} size={12}>How do you want to start?</Mono>
-            </div>
-            <div className="path-grid" style={{
-              marginBottom: 0,
-              border: `1px solid ${T.border}`,
-              borderRadius: 10, overflow: "hidden",
-              background: T.border,
-            }}>
-              {[
-                {
-                  id: "phase",
-                  label: "Start with a Phase",
-                  color: "#22C55E",
-                  desc: "I know where I am in the project. Show me tools and guides for that phase.",
-                  cta: "Choose a phase →",
-                  img: `${import.meta.env.BASE_URL}phases.png`,
-                  imgHeight: "150%", imgRight: -130, imgTop: "calc(25% - 10px)",
-                },
-                {
-                  id: "ways",
-                  label: "Ways to Work",
-                  color: "#8B5CF6",
-                  desc: "I have a mission — a project or challenge I need to run. Show me a path through the framework.",
-                  cta: "Browse scenarios →",
-                  img: `${import.meta.env.BASE_URL}ways-to-work.png`,
-                  imgHeight: "150%", imgRight: -120, imgTop: "calc(25% - 40px)",
-                },
-                {
-                  id: "deliverable",
-                  label: "Start with a Deliverable",
-                  color: "#F59E0B",
-                  desc: "I know what I need to hand off. Find the fastest path to that output.",
-                  cta: "Find a deliverable →",
-                  img: `${import.meta.env.BASE_URL}deliverable.png`,
-                  imgHeight: "150%", imgRight: -120, imgTop: "calc(25% - 40px)",
-                },
-              ].map((item) => (
-                <button
-                  key={item.id}
-                  className="path-grid-item"
-                  onClick={() => setActivePath(item.id)}
-                  style={{
-                    background: "#0F0F0F", border: "none",
-                    padding: "20px 20px 18px", textAlign: "left",
-                    cursor: "pointer", transition: "background 0.15s",
-                    borderBottom: "2px solid transparent",
-                    display: "flex", flexDirection: "column",
-                    position: "relative", overflow: "hidden",
-                  }}
-                  aria-label={item.label}
-                  onMouseEnter={e => e.currentTarget.style.background = "#141414"}
-                  onMouseLeave={e => e.currentTarget.style.background = "#0F0F0F"}
-                >
-                  <img src={item.img} alt="" style={{ position: "absolute", top: item.imgTop, right: item.imgRight, height: item.imgHeight, width: "auto", opacity: 0.5, pointerEvents: "none", userSelect: "none" }} />
-                  <div style={{ position: "relative", zIndex: 1, display: "inline-flex", alignItems: "center", gap: 6, marginBottom: 10 }}>
-                    <div style={{ width: 6, height: 6, borderRadius: "50%", background: T.dim }} />
-                    <span style={{
-                      fontSize: 11, fontFamily: "'JetBrains Mono', monospace",
-                      letterSpacing: "0.08em", textTransform: "uppercase", color: T.muted,
-                    }}>{item.label}</span>
-                  </div>
-                  <p style={{ position: "relative", zIndex: 1, fontSize: 12, color: T.dim, lineHeight: 1.6, margin: 0, flex: 1, paddingRight: 122 }}>{item.desc}</p>
-                  <span style={{
-                    position: "relative", zIndex: 1,
-                    fontSize: 10, fontFamily: "'JetBrains Mono', monospace",
-                    letterSpacing: "0.07em", textTransform: "uppercase",
-                    color: T.muted, marginTop: 14, display: "block",
-                  }}>{item.cta}</span>
-                </button>
-              ))}
-            </div>
+        {/* Setup block — first-time install instructions */}
+        <SetupBlock onOpenFigmaGuide={() => setShowFigmaGuide(true)} />
 
-            {/* Agents callout */}
-            <div style={{
-              marginTop: 10,
-              border: `1px solid ${T.border}`,
-              borderRadius: 10,
-              background: T.surface,
-              padding: "14px 20px",
-              display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, flexWrap: "wrap",
-            }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
-                <span style={{ fontSize: 13, fontWeight: 600, color: T.text, fontFamily: "'DM Sans', sans-serif" }}>Agents</span>
-                <span style={{ fontSize: 12, color: T.dim, lineHeight: 1.5 }}>Six role-based Claude agents — Researcher, Strategist, Designer, and more — each pre-configured with skills and MCP tools.</span>
-              </div>
-              <button
-                onClick={() => setShowAgentsPage(true)}
-                style={{
-                  padding: "7px 16px", borderRadius: 7, flexShrink: 0,
-                  fontSize: 11, fontFamily: "'JetBrains Mono', monospace",
-                  letterSpacing: "0.07em", textTransform: "uppercase",
-                  background: "transparent", border: `1px solid ${T.border}`,
-                  color: T.muted, cursor: "pointer", transition: "all 0.15s", whiteSpace: "nowrap",
-                }}
-                onMouseEnter={e => { e.currentTarget.style.borderColor = T.borderHover; e.currentTarget.style.color = T.text; }}
-                onMouseLeave={e => { e.currentTarget.style.borderColor = T.border; e.currentTarget.style.color = T.muted; }}
-              >Meet the team →</button>
-            </div>
-
-            {/* Design System Studio callout */}
-            <div style={{
-              marginTop: 10,
-              border: `1px solid ${T.border}`,
-              borderRadius: 10,
-              background: T.surface,
-              padding: "14px 20px",
-              display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, flexWrap: "wrap",
-            }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
-                <span style={{ fontSize: 13, fontWeight: 600, color: T.text, fontFamily: "'DM Sans', sans-serif" }}>Design System Studio</span>
-                <span style={{ fontSize: 12, color: T.dim, lineHeight: 1.5 }}>Build, audit, and export a complete token-based design system with live component previews.</span>
-              </div>
-              <button
-                onClick={() => setActiveTool("design-system")}
-                style={{
-                  padding: "7px 16px", borderRadius: 7, flexShrink: 0,
-                  fontSize: 11, fontFamily: "'JetBrains Mono', monospace",
-                  letterSpacing: "0.07em", textTransform: "uppercase",
-                  background: "transparent", border: `1px solid ${T.border}`,
-                  color: T.muted, cursor: "pointer", transition: "all 0.15s", whiteSpace: "nowrap",
-                }}
-                onMouseEnter={e => { e.currentTarget.style.borderColor = T.borderHover; e.currentTarget.style.color = T.text; }}
-                onMouseLeave={e => { e.currentTarget.style.borderColor = T.border; e.currentTarget.style.color = T.muted; }}
-              >Open Studio →</button>
-            </div>
-          </>
-        )}
-
-        {/* Page header — shown when a path is active */}
-        {activePath && (() => {
-          const pages = {
-            phase:       { title: "Start with a Phase",       desc: "Six phases. Three artifact types. One continuous workflow. Each phase produces artifacts that feed the next." },
-            ways:        { title: "Ways to Work",             desc: "Each scenario maps a full design challenge — from a design sprint to a complete design system build — to a path through the framework." },
-            deliverable: { title: "Start with a Deliverable", desc: "Know what you need to produce. Find the right prompt for that deliverable — or open the Design System Studio if that's your output." },
-          };
-          const pg = pages[activePath];
-          return (
-            <div style={{ marginBottom: 40 }}>
-              <h2 style={{
-                fontFamily: "'Inter', sans-serif",
-                fontSize: "clamp(28px, 3.5vw, 48px)", fontWeight: 600,
-                color: T.text, lineHeight: 1.1, marginBottom: 14, letterSpacing: "-0.2px",
-              }}>{pg.title}</h2>
-              <p style={{ fontSize: 14, color: T.muted, lineHeight: 1.65, maxWidth: 560, margin: 0 }}>{pg.desc}</p>
-            </div>
-          );
-        })()}
-
-        {/* Path content */}
-        {activePath === "phase" && (
-          <div style={{ marginTop: 8 }}>
-            <PhasePath
-              onOpenTool={setActiveTool}
+        {/* Where do you want to start? — wayfinder */}
+        <div style={{ marginBottom: 56, marginTop: 56 }}>
+          <div style={{ marginBottom: 6 }}>
+            <Mono color={T.dim} size={11}>Get started</Mono>
+          </div>
+          <h2 style={{ fontFamily: "'Inter', sans-serif", fontSize: "clamp(22px, 2.4vw, 30px)", fontWeight: 600, color: T.text, lineHeight: 1.2, letterSpacing: "-0.02em", margin: 0, marginBottom: 6 }}>Where do you want to start?</h2>
+          <p style={{ fontSize: 14, color: T.muted, lineHeight: 1.65, margin: 0, marginBottom: 20, maxWidth: 620 }}>Five doors into the framework. Pick the one that matches how you're thinking about the work right now — you can always come back for another.</p>
+          <div className="wayfinder-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
+            <WayfinderCard
+              id="phases"
+              label="By phase"
+              count="6 phases"
+              color={T.phases["01"].color}
+              icon={IconStack3}
+              lede="I know where I am in the project. Show me the right tools and skills for that phase."
+              onNavigate={navigate}
+            />
+            <WayfinderCard
+              id="quickstarts"
+              label="By task"
+              count={`${QUICKSTARTS.length} tasks`}
+              color={T.phases["02"].color}
+              icon={IconChecklist}
+              lede="I have a specific thing I need to do — synthesize notes, frame a problem, generate concepts."
+              onNavigate={navigate}
+            />
+            <WayfinderCard
+              id="agents"
+              label="By agent"
+              count="6 agents"
+              color={T.phases["03"].color}
+              icon={IconUsersGroup}
+              lede="I want a Claude specialist — a Researcher, Strategist, Designer, or Engineer to drop into Claude Code."
+              onNavigate={navigate}
+            />
+            <WayfinderCard
+              id="skills"
+              label="By skill"
+              count={`${SKILL_FILES.length} skills`}
+              color={T.phases["04"].color}
+              icon={IconFileText}
+              lede="I want a specific markdown skill to upload to Claude — research synthesis, problem framing, accessibility audit."
+              onNavigate={navigate}
+            />
+            <WayfinderCard
+              id="scenarios"
+              label="By scenario"
+              color={T.phases["05"].color}
+              icon={IconRoute}
+              lede="I'm running a bigger design challenge — a sprint, an audit, a complete system build. Show me a path."
+              onNavigate={navigate}
             />
           </div>
-        )}
+        </div>
 
-        {activePath === "ways" && (
-          <div style={{ marginTop: 8 }}>
-            <WaysToWorkPath onOpenTool={setActiveTool} />
+        {/* Design System Studio — primary CTA with brand-glow treatment */}
+        <button
+          onClick={() => setActiveTool("design-system")}
+          style={{
+            width: "100%", marginBottom: 32,
+            display: "grid", gridTemplateColumns: "1fr auto", alignItems: "center", gap: 24,
+            padding: "20px 24px", textAlign: "left", cursor: "pointer",
+            borderRadius: 10,
+            border: "1px solid rgba(134,59,255,0.30)",
+            background: "linear-gradient(120deg, rgba(134,59,255,0.10) 0%, rgba(192,132,252,0.05) 35%, rgba(233,129,12,0.06) 100%)",
+            transition: "border-color 200ms, box-shadow 200ms",
+            fontFamily: "inherit",
+          }}
+          onMouseEnter={e => { e.currentTarget.style.borderColor = "rgba(134,59,255,0.55)"; e.currentTarget.style.boxShadow = "0 0 0 1px rgba(134,59,255,0.20), 0 0 32px rgba(134,59,255,0.18)"; }}
+          onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(134,59,255,0.30)"; e.currentTarget.style.boxShadow = "none"; }}
+        >
+          <div style={{ display: "flex", alignItems: "baseline", gap: 16, flexWrap: "wrap" }}>
+            <span style={{ fontFamily: "'Inter', sans-serif", fontSize: 16, fontWeight: 600, color: T.text }}>Design System Studio</span>
+            <span style={{ fontSize: 13, color: T.muted, lineHeight: 1.55 }}>Build, audit, and export a complete token-based design system with live component previews.</span>
           </div>
-        )}
+          <span style={{
+            fontSize: 11, fontFamily: "'JetBrains Mono', monospace",
+            letterSpacing: "0.08em", textTransform: "uppercase", fontWeight: 500,
+            padding: "9px 16px", borderRadius: 6, whiteSpace: "nowrap",
+            color: T.text,
+            border: "1px solid rgba(134,59,255,0.45)",
+            background: "linear-gradient(90deg, rgba(134,59,255,0.18) 0%, rgba(233,129,12,0.18) 100%)",
+          }}>Open Studio →</span>
+        </button>
 
-        {activePath === "deliverable" && (
-          <div style={{ marginTop: 8 }}>
-            <DeliverablePath
-              onOpenTool={setActiveTool}
-              onOpenPrompt={() => {}}
-            />
-          </div>
-        )}
+        {/* Footer rule + brand attribution */}
+        <div style={{ marginTop: 0, height: 1, background: T.border }} />
+        <div style={{ paddingTop: 24 }}>
+          <Mono color={T.dim} size={10}>Agentic Product Design Framework</Mono>
+        </div>
 
-        {/* Footer — only on home */}
-        {!activePath && (
-          <div style={{ marginTop: 64, paddingTop: 24, borderTop: `1px solid ${T.border}` }}>
-            <Mono color={T.dim} size={10}>Agentic Product Design Framework</Mono>
-          </div>
-        )}
-
+      </div>
       </div>
     </div>
   );

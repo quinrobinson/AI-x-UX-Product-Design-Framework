@@ -8,7 +8,7 @@ The interactive tools are deployed as a website via GitHub Pages:
 
 **[quinrobinson.github.io/agentic-product-design-framework](https://quinrobinson.github.io/agentic-product-design-framework)**
 
-No install needed — open in any browser and share the URL with your team.
+No install needed — open in any browser and share the URL with your team. The site is organized as five entry paths into the framework — **by phase**, **by task** (Quickstarts), **by agent**, **by skill**, or **by scenario** — plus a **system map** that visualizes how everything connects.
 
 ---
 
@@ -137,7 +137,7 @@ Based on my answers, respond with:
 
 ### `/.claude/agents` — Specialist Agents
 
-Six pre-configured Claude agents, each scoped to a role in the design process. Available in Claude Code as subagents (auto-spawned by the Orchestrator) or in any Claude conversation by uploading the agent file.
+Six pre-configured Claude agents, each scoped to a role in the design process. Available in Claude Code as subagents (auto-spawned by the Orchestrator) or in any Claude conversation by uploading the agent file. Every agent declares a **Primary Goal** (one-sentence outcome commitment) and a **Definition of Done** (checkable completion criteria) at the top of its file, so each agent knows what "finished" looks like before it starts.
 
 | Agent | File | Primary Surface | When to Invoke |
 |-------|------|----------------|----------------|

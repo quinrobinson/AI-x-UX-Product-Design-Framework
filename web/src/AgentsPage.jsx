@@ -1,5 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { IconCircleFilled, IconCircleHalf } from "@tabler/icons-react";
+import TopNav from "./TopNav";
 
 const T = {
   bg: "#0F0F0F",
@@ -42,7 +43,16 @@ const AGENTS = [
     description: "Synthesizes interviews, plans research rounds, runs competitive analysis, and produces insight reports. Invoke when starting any research activity — planning a study, synthesizing transcripts, mapping competitors, or generating a findings report.",
     howToUse: "Open Claude Chat and paste the activation prompt as your first message. Tell the agent what phase of research you're in and what decisions the research needs to inform. Upload relevant skill files (research-synthesis.md, competitive-analysis.md) from the Skills Library for deeper context.",
     skills: ["research-synthesis", "research-planning", "competitive-analysis", "usability-testing", "recruitment-screener", "insight-framing"],
-    mcpTools: ["synthesize_research", "build_competitive_snapshot", "synthesize_findings", "generate_insight_report"],
+    primaryGoal: "Produce a research synthesis that surfaces 3–5 actionable insights the design team can make decisions from — not a summary of what was said, but a clear statement of what it means and what should happen next.",
+    definitionOfDone: [
+      "All raw inputs (transcripts, notes, session data) have been processed — nothing left unsynthesized",
+      "Insight statements follow the standard format and are grounded in specific evidence",
+      "Each insight is confidence-rated: strongly evidenced vs. directional",
+      "A competitive snapshot exists if the phase requires it",
+      "Open questions and unvalidated assumptions are explicitly named",
+      "Phase Handoff Block is written and ready for the Strategist or Designer",
+    ],
+    mcpTools: ["synthesize_research", "build_competitive_snapshot", "synthesize_findings", "generate_insight_report", "artifact-registry"],
     activationPrompt: "You are the Researcher agent from the Agentic Product Design Framework. Your role is a senior UX researcher. You synthesize interviews, plan research, run competitive analysis, and produce insight reports. Ask me what phase of research we're in and what decisions this research needs to inform.",
     mapCells: {
       chat:   { type: "primary",    tools: ["synthesize_research", "build_competitive_snapshot", "synthesize_findings", "generate_insight_report"], skills: ["research-synthesis", "research-planning", "competitive-analysis", "usability-testing", "recruitment-screener"] },
@@ -66,7 +76,17 @@ const AGENTS = [
     description: "Frames problems, maps journeys, defines personas, blueprints services, and builds stakeholder decks. Invoke when translating research into a defined problem space, or when preparing strategy artifacts for alignment.",
     howToUse: "Open Claude Chat and paste the activation prompt. Share your research handoff block or insight summary first — this agent works from evidence, not assumptions. Upload problem-framing.md or journey-mapping.md from the Skills Library to extend its capabilities.",
     skills: ["problem-framing", "journey-mapping", "assumption-mapping", "service-blueprint", "stakeholder-presentation", "persona-creation"],
-    mcpTools: ["frame_problem", "map_journey", "generate_service_blueprint", "build_client_deck"],
+    primaryGoal: "Produce a problem frame and strategic direction that gives the design team a clear, evidence-backed mandate to execute against — eliminating ambiguity about what is being designed and why before any concept work begins.",
+    definitionOfDone: [
+      "A validated problem statement exists in the standard format",
+      "At least 3 HMW questions have been generated from the problem statement",
+      "The primary persona is defined with needs, behaviors, and context",
+      "Current-state journey is documented before any future-state work begins",
+      "All assumptions are mapped and ranked by risk × knowability",
+      "Known facts and assumed facts are explicitly separated throughout all artifacts",
+      "Phase Handoff Block is written and ready for the Designer",
+    ],
+    mcpTools: ["frame_problem", "map_journey", "generate_service_blueprint", "build_client_deck", "artifact-registry"],
     activationPrompt: "You are the Strategist agent from the Agentic Product Design Framework. Your role is a senior design lead. You frame problems, map journeys, define personas, blueprint services, and build stakeholder decks. Ask me what we're trying to define and who the key users are.",
     mapCells: {
       chat:   { type: "primary",    tools: ["frame_problem", "map_journey", "generate_service_blueprint", "build_client_deck"], skills: ["problem-framing", "journey-mapping", "assumption-mapping", "service-blueprint", "stakeholder-presentation", "persona-creation"] },
@@ -90,7 +110,17 @@ const AGENTS = [
     description: "Generates concepts, clusters ideas, maps flows, writes UX copy, and builds concept proofs. Invoke when moving from a defined problem into design exploration, or when generating and evaluating design directions.",
     howToUse: "Open Claude Chat and paste the activation prompt. Share the problem statement and HMW questions from the Strategist's handoff block. Upload concept-generation.md or user-flow-mapping.md from the Skills Library to extend its toolkit.",
     skills: ["concept-generation", "concept-critique", "idea-clustering", "storyboarding", "prototype-scoping", "user-flow-mapping", "ux-copy-writing"],
-    mcpTools: ["generate_concepts", "cluster_ideas", "generate_concept_proof", "map_user_flow", "write_ux_copy"],
+    primaryGoal: "Produce a validated concept direction — not a list of ideas, but a defensible recommendation with clear rationale, documented trade-offs, and enough fidelity that the Systems Designer can begin component architecture without guessing.",
+    definitionOfDone: [
+      "At least 4 meaningfully different concepts have been generated and documented",
+      "Concepts have been evaluated against desirability, feasibility, and novelty criteria",
+      "A recommended direction has been identified with written rationale",
+      "At least one user flow is mapped for the primary use case",
+      "UX copy exists for all primary screens or states in scope",
+      "What remains unresolved is explicitly named — not left implicit",
+      "Phase Handoff Block is written and ready for the Systems Designer or Design Engineer",
+    ],
+    mcpTools: ["generate_concepts", "cluster_ideas", "generate_concept_proof", "map_user_flow", "write_ux_copy", "artifact-registry"],
     activationPrompt: "You are the Designer agent from the Agentic Product Design Framework. Your role is a senior product designer. You generate concepts, cluster ideas, map flows, write UX copy, and build concept proofs. Ask me what problem we're designing for and what's already been defined.",
     mapCells: {
       chat:   { type: "primary",    tools: ["generate_concepts", "cluster_ideas", "generate_concept_proof", "map_user_flow", "write_ux_copy"], skills: ["concept-generation", "concept-critique", "idea-clustering", "storyboarding", "prototype-scoping", "user-flow-mapping", "ux-copy-writing"] },
@@ -115,7 +145,17 @@ const AGENTS = [
     description: "Plans component architecture, specifies states and variants, generates component specs, and manages design tokens. Primary work — pushing token files, Figma MCP operations, Git — happens in Claude Code. Chat is for token strategy and audit analysis.",
     howToUse: "Open Claude Code in your project root and run the agent from .claude/agents/. For token strategy or audit analysis without file operations, use Claude Chat with the activation prompt. Upload design-systems.md or figma-playbook.md from the Skills Library.",
     skills: ["design-systems", "design-system-audit", "figma-ds-audit", "figma-ds-export", "figma-playbook", "component-specs"],
-    mcpTools: ["plan_component_architecture", "specify_component_states", "generate_component_spec"],
+    primaryGoal: "Produce a token system and component architecture that a design engineer can build from without ambiguity — every component specified, every state defined, every token named for intent.",
+    definitionOfDone: [
+      "Token layer is established before any component specs are written",
+      "All tokens follow semantic naming convention (intent, not appearance)",
+      "Every component in scope has a full spec: anatomy, props, states, token references, accessibility notes",
+      "No interactive component is missing hover, focus, active, or disabled states",
+      "No data component is missing loading, empty, error, or populated states",
+      "Decision rationale is documented alongside every architectural choice",
+      "Phase Handoff Block is written and ready for the Design Engineer",
+    ],
+    mcpTools: ["plan_component_architecture", "specify_component_states", "generate_component_spec", "artifact-registry"],
     activationPrompt: "You are the Systems Designer agent from the Agentic Product Design Framework. Your role is a senior design systems engineer. You plan component architecture, specify states, generate specs, and manage design tokens. Ask me what system we're building or auditing.",
     mapCells: {
       chat:   { type: "occasional", note: "Token strategy, naming conventions, component architecture decisions. Audit analysis and recommendations.", skills: ["design-systems", "design-system-audit", "figma-ds-audit"] },
@@ -138,7 +178,17 @@ const AGENTS = [
     description: "Generates handoff docs, runs design QA, writes decision records, and annotates accessibility specs. Use Claude Code to build prototype and production code from specs. Use Claude Cowork for screen-aware QA against live staging — reviewing implementations alongside the spec in real time.",
     howToUse: "Use Claude Code to translate component specs into working code and generate handoff artifacts to disk. Use Claude Cowork to review live staging implementations screen-aware, comparing against spec in real time. For pre-handoff accessibility audits or heuristic reviews, Claude Chat with the activation prompt works well.",
     skills: ["accessibility-audit", "heuristic-review", "design-delivery", "design-qa", "design-decision-record", "handoff-annotation", "accessibility-annotation"],
-    mcpTools: ["generate_handoff", "log_design_qa"],
+    primaryGoal: "Produce a handoff package that eliminates back-and-forth between design and engineering — every spec annotated, every accessibility requirement documented, every QA issue resolved or formally accepted before the feature ships.",
+    definitionOfDone: [
+      "Handoff document exists with component inventory, token references, interaction specs, and edge cases",
+      "Design QA has been run against implementation — not against opinion",
+      "Every QA issue has a severity rating and resolution status",
+      "Accessibility audit is complete with pass/fail per WCAG 2.1 AA criterion",
+      "All design decisions with downstream implications have a Decision Record",
+      "No open QA items without an explicit accept/defer decision",
+      "Phase Handoff Block is written confirming the feature is ready for engineering",
+    ],
+    mcpTools: ["generate_handoff", "log_design_qa", "artifact-registry"],
     activationPrompt: "You are the Design Engineer agent from the Agentic Product Design Framework. Your role bridges design and engineering. You generate handoff docs, run design QA, write decision records, and annotate accessibility specs. Ask me what's being handed off and what the current state of implementation is.",
     mapCells: {
       chat:   { type: "occasional", note: "Accessibility audits and heuristic reviews before handoff. Annotation guidance for developers.", skills: ["accessibility-audit", "heuristic-review", "accessibility-annotation"] },
@@ -157,10 +207,18 @@ const AGENTS = [
     file: "orchestrator.md",
     primarySurfaces: ["code", "chat"],
     occasionalSurfaces: [],
-    description: "Orients new projects, routes work to the right specialist agent, manages phase handoff blocks, and tracks what's been decided vs. what's still open. Invoke at the start of a project, when switching phases, or when you're not sure which agent to use.\n\nIn Claude Code, the Orchestrator runs in autonomous mode — spawning specialist agents without manual routing. Run /kickoff, /discover, or /deliver to trigger autonomous phase execution. Requires .apdf/context.json to be filled in first.",
+    description: "Orients new projects, routes work to the right specialist agent, manages phase handoff blocks, and tracks what's been decided vs. what's still open. Invoke at the start of a project, when switching phases, or when you're not sure which agent to use.\n\nBefore routing any work, runs a Phase Gap Analysis — comparing what exists in .apdf/artifacts/ against the current phase's Definition of Done. Surfaces missing artifacts and their assumption and dependency risks before proceeding.\n\nIn Claude Code, the Orchestrator runs in autonomous mode — spawning specialist agents without manual routing. Run /kickoff, /discover, or /deliver to trigger autonomous phase execution. Requires .apdf/context.json to be filled in first.",
     howToUse: "Start here on any new project. In Claude Code, it spawns specialist agents and manages the handoff block as a living file. In Claude Chat, paste the activation prompt and describe where you are in the project — it will tell you which agent to invoke next and on which surface.",
     skills: ["which-claude", "skill-chaining", "phase-handoff"],
-    mcpTools: ["generate_handoff"],
+    primaryGoal: "Drive every design phase to a complete, handoff-ready output — resolving blockers, spawning the right agents, and knowing when a phase is genuinely done.",
+    definitionOfDone: [
+      "The phase's primary artifact exists in .apdf/artifacts/",
+      "All open questions from the previous handoff block are resolved or explicitly deferred with a reason",
+      "The Phase Handoff Block is updated and reflects current state",
+      "The next agent has been identified and knows what it needs to start",
+      "No undocumented assumptions remain buried in the work",
+    ],
+    mcpTools: ["generate_handoff", "artifact-registry"],
     activationPrompt: "You are the Orchestrator agent from the Agentic Product Design Framework. Your role is a senior design program manager. You orient new projects, route work to the right specialist agent, manage phase handoff blocks, and track what's been decided vs. what's still open. Ask me what project we're starting and where we are in the process.",
     mapCells: {
       chat:   { type: "primary", note: "Kickoff orientation. Deciding which agent and surface to route to. Generating Phase Handoff Blocks for context transfer between sessions.", skills: ["which-claude", "skill-chaining", "phase-handoff"] },
@@ -254,16 +312,23 @@ function AgentSurfaceMap({ onAgentClick, onSetupClick }) {
           <div style={{ display: "grid", gridTemplateColumns: gridCols, gap: 2, marginBottom: 2, minWidth: minW }}>
             <div
               onClick={() => onAgentClick(orchestrator)}
-              style={{ background: T.surface, border: `1px solid ${T.border}`, padding: "14px 16px", cursor: "pointer", transition: "border-color 0.15s", position: "relative", overflow: "hidden", display: "flex", flexDirection: "column", justifyContent: "space-between" }}
-              onMouseEnter={e => e.currentTarget.style.borderColor = T.borderHover}
-              onMouseLeave={e => e.currentTarget.style.borderColor = T.border}
+              style={{
+                background: T.surface,
+                border: `1px solid ${T.border}`,
+                borderLeft: `2px solid ${rc}`,
+                padding: "14px 16px",
+                cursor: "pointer",
+                transition: "border-color 0.15s",
+                display: "flex", flexDirection: "column", justifyContent: "space-between",
+              }}
+              onMouseEnter={e => { e.currentTarget.style.borderTopColor = T.borderHover; e.currentTarget.style.borderRightColor = T.borderHover; e.currentTarget.style.borderBottomColor = T.borderHover; }}
+              onMouseLeave={e => { e.currentTarget.style.borderTopColor = T.border; e.currentTarget.style.borderRightColor = T.border; e.currentTarget.style.borderBottomColor = T.border; }}
             >
-              <div style={{ position: "absolute", top: 0, left: 0, bottom: 0, width: 2, background: rc }} />
-              <div style={{ paddingLeft: 8 }}>
+              <div>
                 <div style={{ fontSize: 13, fontWeight: 600, color: rc, lineHeight: 1.3 }}>{orchestrator.name}</div>
                 <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: T.dim, marginTop: 3 }}>{orchestrator.role}</div>
               </div>
-              <div style={{ paddingLeft: 8, marginTop: 10, fontFamily: "'JetBrains Mono', monospace", fontSize: 9, color: T.dim, opacity: 0.5, letterSpacing: "0.06em" }}>View →</div>
+              <div style={{ marginTop: 10, fontFamily: "'JetBrains Mono', monospace", fontSize: 9, color: T.dim, opacity: 0.5, letterSpacing: "0.06em" }}>View →</div>
             </div>
             {["chat", "code", "cowork"].map(surface => (
               <MapCell key={surface} cell={orchestrator.mapCells[surface]} />
@@ -282,16 +347,23 @@ function AgentSurfaceMap({ onAgentClick, onSetupClick }) {
           <div key={agent.id} style={{ display: "grid", gridTemplateColumns: gridCols, gap: 2, marginBottom: 2, minWidth: minW }}>
             <div
               onClick={() => onAgentClick(agent)}
-              style={{ background: T.surface, border: `1px solid ${T.border}`, padding: "14px 16px", cursor: "pointer", transition: "border-color 0.15s", position: "relative", overflow: "hidden", display: "flex", flexDirection: "column", justifyContent: "space-between" }}
-              onMouseEnter={e => e.currentTarget.style.borderColor = T.borderHover}
-              onMouseLeave={e => e.currentTarget.style.borderColor = T.border}
+              style={{
+                background: T.surface,
+                border: `1px solid ${T.border}`,
+                borderLeft: `2px solid ${rc}`,
+                padding: "14px 16px",
+                cursor: "pointer",
+                transition: "border-color 0.15s",
+                display: "flex", flexDirection: "column", justifyContent: "space-between",
+              }}
+              onMouseEnter={e => { e.currentTarget.style.borderTopColor = T.borderHover; e.currentTarget.style.borderRightColor = T.borderHover; e.currentTarget.style.borderBottomColor = T.borderHover; }}
+              onMouseLeave={e => { e.currentTarget.style.borderTopColor = T.border; e.currentTarget.style.borderRightColor = T.border; e.currentTarget.style.borderBottomColor = T.border; }}
             >
-              <div style={{ position: "absolute", top: 0, left: 0, bottom: 0, width: 2, background: rc }} />
-              <div style={{ paddingLeft: 8 }}>
+              <div>
                 <div style={{ fontSize: 13, fontWeight: 600, color: rc, lineHeight: 1.3 }}>{agent.name}</div>
                 <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: T.dim, marginTop: 3 }}>{agent.role}</div>
               </div>
-              <div style={{ paddingLeft: 8, marginTop: 10, fontFamily: "'JetBrains Mono', monospace", fontSize: 9, color: T.dim, opacity: 0.5, letterSpacing: "0.06em" }}>View →</div>
+              <div style={{ marginTop: 10, fontFamily: "'JetBrains Mono', monospace", fontSize: 9, color: T.dim, opacity: 0.5, letterSpacing: "0.06em" }}>View →</div>
             </div>
             {["chat", "code", "cowork"].map(surface => (
               <MapCell key={surface} cell={agent.mapCells[surface]} />
@@ -370,6 +442,29 @@ function AgentDrawerContent({ agent }) {
 
       {/* Description */}
       <p style={{ fontSize: 13, color: T.muted, lineHeight: 1.65, margin: 0 }}>{agent.description}</p>
+
+      {/* Primary Goal */}
+      {agent.primaryGoal && (
+        <div style={{ background: "rgba(255,255,255,0.03)", border: `1px solid ${T.border}`, borderRadius: 6, padding: "12px 16px" }}>
+          <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: T.dim, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 8 }}>Primary Goal</div>
+          <p style={{ fontSize: 13, color: T.muted, lineHeight: 1.65, margin: 0 }}>{agent.primaryGoal}</p>
+        </div>
+      )}
+
+      {/* Definition of Done */}
+      {agent.definitionOfDone && agent.definitionOfDone.length > 0 && (
+        <div>
+          <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: T.dim, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 10 }}>Definition of Done</div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
+            {agent.definitionOfDone.map((item, i) => (
+              <div key={i} style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
+                <div style={{ width: 13, height: 13, borderRadius: 3, border: `1px solid ${T.border}`, flexShrink: 0, marginTop: 1 }} />
+                <span style={{ fontSize: 12, color: T.dim, lineHeight: 1.55 }}>{item}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Skills */}
       <div>
@@ -632,9 +727,118 @@ const SKILL_PHASES = [
   },
 ];
 
+// ── Disclosure (collapsible section) ─────────────────────────────────────────
+function Disclosure({ title, count, summary, defaultOpen = false, children }) {
+  const [open, setOpen] = useState(defaultOpen);
+  return (
+    <section style={{ marginTop: 56, borderTop: `1px solid ${T.border}` }}>
+      <button onClick={() => setOpen(o => !o)} style={{
+        width: "100%", display: "flex", alignItems: "baseline", justifyContent: "space-between",
+        gap: 16, padding: "28px 0", textAlign: "left", cursor: "pointer",
+        background: "transparent", border: "none", fontFamily: "inherit",
+      }}
+        onMouseEnter={e => e.currentTarget.style.opacity = "0.85"}
+        onMouseLeave={e => e.currentTarget.style.opacity = "1"}
+      >
+        <div style={{ display: "flex", flexDirection: "column", gap: 6, flex: 1, minWidth: 0 }}>
+          <div style={{ display: "flex", alignItems: "baseline", gap: 12, flexWrap: "wrap" }}>
+            <h2 style={{ fontFamily: "'Inter', sans-serif", fontSize: "clamp(24px, 2.6vw, 32px)", fontWeight: 600, color: T.text, lineHeight: 1.2, letterSpacing: "-0.02em", margin: 0 }}>{title}</h2>
+            {count !== undefined && (
+              <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, letterSpacing: "0.08em", textTransform: "uppercase", color: T.dim }}>{count}</span>
+            )}
+          </div>
+          {summary && <p style={{ fontSize: 14, color: T.muted, lineHeight: 1.65, margin: 0, maxWidth: 620 }}>{summary}</p>}
+        </div>
+        <span aria-hidden style={{
+          flexShrink: 0, fontFamily: "'JetBrains Mono', monospace",
+          fontSize: 10, letterSpacing: "0.08em", textTransform: "uppercase",
+          color: T.muted, padding: "6px 12px", borderRadius: 6,
+          border: `1px solid ${T.border}`, transition: "color 0.15s",
+        }}>{open ? "Collapse −" : "Expand +"}</span>
+      </button>
+      {open && (
+        <div style={{ paddingBottom: 28 }}>
+          {children}
+        </div>
+      )}
+    </section>
+  );
+}
+
+// ── Agents grid (primary view: 6-card stack) ─────────────────────────────────
+function AgentsGrid({ onAgentClick }) {
+  // Keep order: Orchestrator first, then specialists in framework order
+  const orchestrator = AGENTS.find(a => a.id === "orchestrator");
+  const specialists = AGENTS.filter(a => a.id !== "orchestrator");
+  const ordered = orchestrator ? [orchestrator, ...specialists] : AGENTS;
+
+  return (
+    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: 12 }}>
+      {ordered.map(agent => {
+        const rc = ROLES[agent.id];
+        const isOrchestrator = agent.id === "orchestrator";
+        return (
+          <button key={agent.id}
+            onClick={() => onAgentClick(agent)}
+            style={{
+              background: T.surface,
+              border: `1px solid ${T.border}`,
+              borderLeft: `2px solid ${rc}`,
+              borderRadius: "0 10px 10px 0",
+              padding: "20px 22px",
+              textAlign: "left", cursor: "pointer",
+              display: "flex", flexDirection: "column", gap: 10,
+              transition: "border-color 0.15s, background 0.15s",
+              fontFamily: "inherit",
+            }}
+            onMouseEnter={e => { e.currentTarget.style.borderTopColor = T.borderHover; e.currentTarget.style.borderRightColor = T.borderHover; e.currentTarget.style.borderBottomColor = T.borderHover; e.currentTarget.style.background = "#1C1C1C"; }}
+            onMouseLeave={e => { e.currentTarget.style.borderTopColor = T.border; e.currentTarget.style.borderRightColor = T.border; e.currentTarget.style.borderBottomColor = T.border; e.currentTarget.style.background = T.surface; }}
+          >
+            <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 12 }}>
+              <div>
+                <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 16, fontWeight: 600, color: rc, lineHeight: 1.25, letterSpacing: "-0.01em" }}>{agent.name}</div>
+                <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: T.dim, marginTop: 4, letterSpacing: "0.04em" }}>{agent.role}</div>
+              </div>
+              {isOrchestrator && (
+                <span style={{ fontSize: 9, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.08em", textTransform: "uppercase", color: rc, padding: "3px 8px", borderRadius: 999, background: `${rc}15`, border: `1px solid ${rc}35` }}>Cross-cutting</span>
+              )}
+            </div>
+            <p style={{ fontSize: 13, color: T.muted, lineHeight: 1.55, margin: 0, flex: 1 }}>{agent.description.split('\n')[0]}</p>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, marginTop: 6 }}>
+              <div style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
+                {[...agent.primarySurfaces, ...agent.occasionalSurfaces].slice(0, 3).map(s => {
+                  const isPrim = agent.primarySurfaces.includes(s);
+                  return (
+                    <span key={s} style={{
+                      fontSize: 9, fontFamily: "'JetBrains Mono', monospace",
+                      letterSpacing: "0.08em", textTransform: "uppercase",
+                      padding: "2px 7px", borderRadius: 3,
+                      background: T.card, border: `1px solid ${T.border}`,
+                      color: isPrim ? T.muted : T.dim,
+                      opacity: isPrim ? 1 : 0.7,
+                    }}>{isPrim ? "" : "↗ "}{SURFACE_LABEL[s]}</span>
+                  );
+                })}
+              </div>
+              <span style={{ fontSize: 10, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.07em", textTransform: "uppercase", color: T.muted }}>View →</span>
+            </div>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
 // ── Main Page ────────────────────────────────────────────────────────────────
-export default function AgentsPage({ onBack }) {
+export default function AgentsPage({ currentPage = "agents", onNavigate, initialAgentId }) {
   const [drawer, setDrawer] = useState(null);
+  const [viewMode, setViewMode] = useState("grid"); // 'grid' | 'map'
+
+  useEffect(() => {
+    if (!initialAgentId) return;
+    const agent = AGENTS.find(a => a.id === initialAgentId);
+    if (agent) setDrawer({ type: "agent", agent });
+  }, [initialAgentId]);
 
   return (
     <div style={{ minHeight: "100vh", background: T.bg, fontFamily: "'DM Sans', sans-serif", color: T.text }}>
@@ -665,48 +869,65 @@ export default function AgentsPage({ onBack }) {
         <Drawer content={drawer} onClose={() => setDrawer(null)} />
       </div>
 
-      {/* ── Sticky header ── */}
-      <div style={{ borderBottom: `1px solid ${T.border}`, padding: "0 clamp(24px, 5vw, 80px)", height: 60, display: "flex", alignItems: "center", justifyContent: "space-between", position: "sticky", top: 0, zIndex: 50, background: `${T.bg}f0`, backdropFilter: "blur(12px)" }}>
-        <button
-          onClick={onBack}
-          style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "transparent", border: `1px solid ${T.border}`, borderRadius: 6, padding: "5px 12px", cursor: "pointer", fontSize: 11, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.06em", textTransform: "uppercase", color: T.muted, transition: "all 0.15s" }}
-          onMouseEnter={e => { e.currentTarget.style.borderColor = T.borderHover; e.currentTarget.style.color = T.text; }}
-          onMouseLeave={e => { e.currentTarget.style.borderColor = T.border; e.currentTarget.style.color = T.muted; }}
-        >← Home</button>
-        <span style={{ fontSize: 10, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.08em", textTransform: "uppercase", color: T.dim }}>6 agents</span>
-      </div>
+      <TopNav currentPage={currentPage} onNavigate={onNavigate} baseUrl={import.meta.env.BASE_URL} />
 
       <div style={{ maxWidth: 1440, margin: "0 auto", padding: "56px clamp(24px, 5vw, 80px) 100px" }}>
 
         {/* ── Hero ── */}
         <section style={{ marginBottom: 72 }}>
           <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, letterSpacing: "0.1em", textTransform: "uppercase", color: T.dim, marginBottom: 20 }}>Agents</div>
-          <h1 style={{ fontFamily: "'Inter', sans-serif", fontSize: "clamp(28px, 3.5vw, 48px)", fontWeight: 600, lineHeight: 1.1, color: T.text, marginBottom: 20, letterSpacing: "-0.2px", maxWidth: 700 }}>Six specialists. One orchestrator. One framework.</h1>
+          <h1 style={{ fontFamily: "'Inter', sans-serif", fontSize: "clamp(32px, 3.6vw, 48px)", fontWeight: 600, lineHeight: 1.1, color: T.text, marginBottom: 20, letterSpacing: "-0.2px", maxWidth: 700 }}>Six specialists. One orchestrator. One framework.</h1>
           <p style={{ fontSize: 15, color: T.muted, lineHeight: 1.7, maxWidth: 600 }}>
             Agents are the orchestration layer that sits above skills, tools, and prompts. Six specialist agents handle the work — Researcher, Strategist, Designer, Systems Designer, Design Engineer, and a cross-cutting Orchestrator that routes tasks, manages handoff blocks, and coordinates the team. The framework's three artifact types stay unchanged — agents compose them.
           </p>
         </section>
 
-        {/* ── Surface Map ── */}
-        <section style={{ marginBottom: 80 }}>
-          <AgentSurfaceMap
-            onAgentClick={agent => setDrawer({ type: "agent", agent })}
-            onSetupClick={() => setDrawer({ type: "setup" })}
-          />
-        </section>
-
-        {/* ── Skills ── */}
-        <section style={{ marginTop: 80 }}>
-          <div style={{ marginBottom: 28 }}>
-            <h2 style={{ fontFamily: "'Inter', sans-serif", fontSize: "clamp(20px, 2vw, 28px)", fontWeight: 600, color: T.text, marginBottom: 12, letterSpacing: "-0.2px" }}>Skills</h2>
-            <p style={{ fontSize: 15, color: T.muted, lineHeight: 1.7, maxWidth: 600 }}>
-              43 structured skill files — one per workflow. Upload a skill to Claude to activate phase-specific templates, quality checklists, and AI-ready prompts.
-            </p>
-            <p style={{ marginTop: 8, fontSize: 12, color: T.dim, lineHeight: 1.6 }}>
-              Skills are plain .md files. Upload to Claude Chat to extend any conversation, or place in your project for Claude Code access. Download all skills from the Skills Library.
-            </p>
+        {/* ── View toggle: grid (primary) or surface map (advanced) ── */}
+        <section style={{ marginBottom: 60 }}>
+          <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 12, marginBottom: 20, flexWrap: "wrap" }}>
+            <div>
+              <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, letterSpacing: "0.1em", textTransform: "uppercase", color: T.dim, marginBottom: 6 }}>The team</div>
+              <h2 style={{ fontFamily: "'Inter', sans-serif", fontSize: "clamp(22px, 2.4vw, 30px)", fontWeight: 600, color: T.text, lineHeight: 1.2, letterSpacing: "-0.02em", margin: 0 }}>Six agents, one orchestrator</h2>
+            </div>
+            <div role="tablist" aria-label="Agents view" style={{ display: "inline-flex", border: `1px solid ${T.border}`, borderRadius: 6, overflow: "hidden", flexShrink: 0 }}>
+              <button role="tab" aria-selected={viewMode === "grid"} onClick={() => setViewMode("grid")} style={{
+                padding: "7px 14px", border: "none", cursor: "pointer",
+                background: viewMode === "grid" ? T.surface : "transparent",
+                color: viewMode === "grid" ? T.text : T.dim,
+                fontFamily: "'JetBrains Mono', monospace", fontSize: 10,
+                letterSpacing: "0.08em", textTransform: "uppercase", fontWeight: 500,
+                transition: "all 0.15s",
+              }}>Cards</button>
+              <button role="tab" aria-selected={viewMode === "map"} onClick={() => setViewMode("map")} style={{
+                padding: "7px 14px", border: "none", borderLeft: `1px solid ${T.border}`, cursor: "pointer",
+                background: viewMode === "map" ? T.surface : "transparent",
+                color: viewMode === "map" ? T.text : T.dim,
+                fontFamily: "'JetBrains Mono', monospace", fontSize: 10,
+                letterSpacing: "0.08em", textTransform: "uppercase", fontWeight: 500,
+                transition: "all 0.15s",
+              }}>Surface map</button>
+            </div>
           </div>
 
+          {viewMode === "grid" ? (
+            <AgentsGrid onAgentClick={agent => setDrawer({ type: "agent", agent })} />
+          ) : (
+            <AgentSurfaceMap
+              onAgentClick={agent => setDrawer({ type: "agent", agent })}
+              onSetupClick={() => setDrawer({ type: "setup" })}
+            />
+          )}
+        </section>
+
+        {/* ── Skills (collapsible) ── */}
+        <Disclosure
+          title="Skills"
+          count="43 across all phases"
+          summary="Structured skill files — one per workflow. Upload a skill to Claude to activate phase-specific templates, quality checklists, and AI-ready prompts."
+        >
+          <p style={{ marginTop: 0, marginBottom: 24, fontSize: 12, color: T.dim, lineHeight: 1.6 }}>
+            Skills are plain .md files. Upload to Claude Chat to extend any conversation, or place in your project for Claude Code access. Download all skills from the Skills Library.
+          </p>
           {SKILL_PHASES.map((group, gi) => (
             <div key={group.phase}>
               <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, textTransform: "uppercase", letterSpacing: "0.08em", color: T.dim, marginBottom: 8, marginTop: gi === 0 ? 0 : 28 }}>
@@ -723,20 +944,14 @@ export default function AgentsPage({ onBack }) {
               ))}
             </div>
           ))}
-        </section>
+        </Disclosure>
 
-        {/* ── Hooks ── */}
-        <section style={{ marginTop: 80 }}>
-          <div style={{ marginBottom: 28 }}>
-            <h2 style={{ fontFamily: "'Inter', sans-serif", fontSize: "clamp(20px, 2vw, 28px)", fontWeight: 600, color: T.text, marginBottom: 12, letterSpacing: "-0.2px" }}>Hooks</h2>
-            <p style={{ fontSize: 15, color: T.muted, lineHeight: 1.7, maxWidth: 600 }}>
-              Three deterministic triggers. Fire every time — no prompting required.
-            </p>
-            <p style={{ marginTop: 8, fontSize: 12, color: T.dim, lineHeight: 1.6, maxWidth: 600 }}>
-              Unlike agents and commands, hooks don't rely on Claude choosing to act. They fire automatically every time the matching event occurs.
-            </p>
-          </div>
-
+        {/* ── Hooks (collapsible) ── */}
+        <Disclosure
+          title="Hooks"
+          count="4 triggers"
+          summary="Deterministic triggers that fire every time — no prompting required. Unlike agents and commands, hooks don't rely on Claude choosing to act."
+        >
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 2 }}>
             {[
               {
@@ -791,7 +1006,7 @@ export default function AgentsPage({ onBack }) {
               Copy <span style={{ color: T.muted }}>settings.local.json.example</span> to <span style={{ color: T.muted }}>settings.local.json</span> to activate the session awareness hook.
             </p>
           </div>
-        </section>
+        </Disclosure>
 
       </div>
     </div>
