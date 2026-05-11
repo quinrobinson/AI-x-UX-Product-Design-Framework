@@ -6,3 +6,10 @@ web/dist
 .claude/settings.local.json
 .claude/launch.json
 .claude/worktrees/
+
+# wrangler files
+.wrangler
+.dev.vars*
+!.dev.vars.example
+.env*
+!.env.example
