@@ -4441,7 +4441,7 @@ function WayfinderCard({ id, label, lede, count, icon: Icon, onNavigate }) {
           transition: "opacity 200ms",
           display: "inline-flex",
         }}>
-          <Icon size={56} stroke={1.4} />
+          <Icon size={56} stroke={1} />
         </span>
       )}
       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8, position: "relative", zIndex: 1 }}>
