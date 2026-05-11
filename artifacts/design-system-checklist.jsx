@@ -7,8 +7,7 @@
  * core components, complex patterns, accessibility, documentation, and
  * AI acceleration — with Figma-ready prompts per item.
  *
- * Part of: github.com/quinrobinson/AI-x-UX-Product-Design-Framework
- * Figma:   figma.com/design/mrHuD7sY7h6uKSVndTSIQE
+ * Part of: github.com/quinrobinson/agentic-product-design-framework
  */
 
 import { useState, useCallback } from "react";

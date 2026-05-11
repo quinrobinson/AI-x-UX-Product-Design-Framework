@@ -117,7 +117,6 @@ const T = {
 };
 
 const REPO = "https://github.com/quinrobinson/Agentic-Product-Design-Framework";
-const FIGMA_URL = "https://www.figma.com/design/mrHuD7sY7h6uKSVndTSIQE";
 const PPTX_URL = `${REPO}/raw/main/artifacts/onboarding-deck.pptx`;
 const RAW = "https://raw.githubusercontent.com/quinrobinson/Agentic-Product-Design-Framework/main/skills";
 

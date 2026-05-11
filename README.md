@@ -21,15 +21,14 @@ The framework is built around six phases — **Discover → Define → Ideate �
 3. **Do the work** — Claude follows structured outputs; you review, direct, and decide
 4. **Start designing** — Open any phase and create. Research, concepts, wireframes, specs — the framework meets you where you are. Use the Phase Handoff Block at the end of each phase to carry full context into the next conversation.
 
-The [live site](https://quinrobinson.github.io/agentic-product-design-framework) has interactive tools for exploring the system, previewing design tokens, and auditing design systems. The [Figma template](https://www.figma.com/design/mrHuD7sY7h6uKSVndTSIQE) gives you a dedicated workspace per project.
+The [live site](https://quinrobinson.github.io/agentic-product-design-framework) has interactive tools for exploring the system, previewing design tokens, and auditing design systems. Bring your own Figma files — Claude reads and writes against them directly via Figma MCP.
 
 ---
 
 ## Before You Start
 
 - **Claude access** — A claude.ai account (free tier works; Pro recommended for longer sessions)
-- **Figma** — Optional but recommended. For MCP integration (Claude working directly in Figma), you'll need Claude Desktop + the Figma desktop app
-- **The Figma template** — [Duplicate it here](https://www.figma.com/design/mrHuD7sY7h6uKSVndTSIQE) and fill in the Cover page with your project details
+- **Figma** — Optional but recommended. For MCP integration (Claude reading and writing against your own Figma files), you'll need Claude Desktop or Claude Code + the Figma desktop app. See the in-app Figma Setup Guide for full steps.
 - **Skill files** — Available in `/skills`. Upload whichever phase you're starting in — or use the Kickoff Prompt below if you're not sure
 
 ---
@@ -83,7 +82,7 @@ No skill file needed yet — Claude will orient itself to the framework, ask you
 ```
 You are a UX design assistant trained on the Agentic Product Design Framework —
 a six-phase system (Discover → Define → Ideate → Prototype → Validate → Deliver)
-with structured skill files, Figma templates, and AI-ready prompts for each phase.
+with structured skill files and AI-ready prompts for each phase.
 
 The six phases and their skill files are:
 - Discover → research-planning.md, research-synthesis.md, competitive-analysis.md, service-blueprint.md, insight-framing.md
@@ -114,8 +113,6 @@ Based on my answers, respond with:
 - A suggested first deliverable — specific, not a category
 - One prompt I can use right now, before uploading anything, to get started
 ```
-
-> **Also in Figma:** The Kickoff Prompt lives on the **AI Toolkit page** of the [Figma template](https://www.figma.com/design/mrHuD7sY7h6uKSVndTSIQE) — the first block on that page. Duplicate the template per project and it's always one click away.
 
 ---
 
@@ -162,14 +159,9 @@ Five JSX artifacts that render as interactive tools, plus a team onboarding pres
 - **`m3-token-reference.jsx`** — Interactive M3 token documentation for Button, Card, Text Field, and Navigation Bar — covers color roles, elevation, shape, typography, and spacing with Figma variable spec prompts
 - **`onboarding-deck.pptx`** — 18-slide team onboarding presentation covering the framework's value, structure, and step-by-step setup. Designed to match the Figma Cover aesthetic: dark/light slide balance, phase colors (01–06) used consistently throughout.
 
-### Figma Template
+### Figma MCP
 
-**[Agentic Design Process Template](https://www.figma.com/design/mrHuD7sY7h6uKSVndTSIQE)** — A 10-page Figma file you duplicate per project:
-- Cover with project metadata
-- Process Map overview
-- 6 phase workspace pages (Discover → Deliver) with structured sections
-- Design System token reference
-- AI Toolkit with copy-ready prompts and skill file references
+This framework is designed to work against **your own Figma files** — not a template. The agents and skill files reference Figma MCP read/write operations so Claude can audit, scaffold, and update components directly in the files you're already working in. See the in-app **Figma Setup Guide** for the one-time MCP connection setup (Claude Code + Figma desktop + personal access token).
 
 ---
 

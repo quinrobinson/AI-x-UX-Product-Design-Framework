@@ -19,8 +19,7 @@ const NAV_ITEMS = [
   { id: "system",      label: "System" },
 ];
 
-const REPO     = "https://github.com/quinrobinson/Agentic-Product-Design-Framework";
-const FIGMA_URL= "https://www.figma.com/community/file/1517625527127540030/agentic-product-design-framework-template";
+const REPO = "https://github.com/quinrobinson/agentic-product-design-framework";
 
 export default function TopNav({ currentPage = "home", onNavigate, baseUrl = "" }) {
   return (

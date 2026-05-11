@@ -7,8 +7,7 @@
  * Covers color roles, elevation, shape, typography, and spacing.
  * Each category includes a Figma variable spec generator prompt.
  *
- * Part of: github.com/quinrobinson/AI-x-UX-Product-Design-Framework
- * Figma:   figma.com/design/mrHuD7sY7h6uKSVndTSIQE
+ * Part of: github.com/quinrobinson/agentic-product-design-framework
  */
 
 import { useState } from "react";
