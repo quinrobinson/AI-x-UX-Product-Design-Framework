@@ -4412,7 +4412,13 @@ function parseRoute() {
 }
 
 // ── Wayfinder card (home "Where do you want to start?") ───────────────────────
-function WayfinderCard({ id, label, lede, count, color, icon: Icon, onNavigate }) {
+// Uses brand gradient + brand purple for cohesion across all five entry cards,
+// rather than phase-specific colors (these cards aren't tied to phases).
+const WAYFINDER_GRADIENT = "linear-gradient(90deg, #863BFF 0%, #C084FC 35%, #E9810C 100%)";
+const WAYFINDER_ACCENT = "#C084FC";
+const WAYFINDER_BORDER_HOVER = "rgba(192, 132, 252, 0.42)";
+
+function WayfinderCard({ id, label, lede, count, icon: Icon, onNavigate }) {
   return (
     <button onClick={() => onNavigate(id)} style={{
       position: "relative", overflow: "hidden",
@@ -4424,14 +4430,14 @@ function WayfinderCard({ id, label, lede, count, color, icon: Icon, onNavigate }
       minHeight: 168, transition: "border-color 200ms, background 200ms",
       fontFamily: "inherit",
     }}
-      onMouseEnter={e => { e.currentTarget.style.borderColor = T.borderHover; e.currentTarget.style.background = "#1C1C1C"; const ic = e.currentTarget.querySelector('.wf-icon'); if (ic) ic.style.opacity = "0.55"; }}
-      onMouseLeave={e => { e.currentTarget.style.borderColor = T.border; e.currentTarget.style.background = T.surface; const ic = e.currentTarget.querySelector('.wf-icon'); if (ic) ic.style.opacity = "0.32"; }}
+      onMouseEnter={e => { e.currentTarget.style.borderColor = WAYFINDER_BORDER_HOVER; e.currentTarget.style.background = "#1C1C1C"; const ic = e.currentTarget.querySelector('.wf-icon'); if (ic) ic.style.opacity = "0.55"; }}
+      onMouseLeave={e => { e.currentTarget.style.borderColor = T.border; e.currentTarget.style.background = T.surface; const ic = e.currentTarget.querySelector('.wf-icon'); if (ic) ic.style.opacity = "0.30"; }}
     >
-      {/* Decorative icon — top-right, large, low opacity in category color */}
+      {/* Decorative icon — top-right, large, muted brand purple */}
       {Icon && (
         <span aria-hidden className="wf-icon" style={{
           position: "absolute", top: 16, right: 14,
-          color, opacity: 0.32, pointerEvents: "none",
+          color: WAYFINDER_ACCENT, opacity: 0.30, pointerEvents: "none",
           transition: "opacity 200ms",
           display: "inline-flex",
         }}>
@@ -4439,8 +4445,13 @@ function WayfinderCard({ id, label, lede, count, color, icon: Icon, onNavigate }
         </span>
       )}
       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8, position: "relative", zIndex: 1 }}>
-        <span style={{ width: 6, height: 6, borderRadius: "50%", background: color }} />
-        <span style={{ fontSize: 10, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.08em", textTransform: "uppercase", color, fontWeight: 500 }}>{label}</span>
+        <span style={{ width: 6, height: 6, borderRadius: "50%", background: WAYFINDER_ACCENT }} />
+        <span style={{
+          fontSize: 10, fontFamily: "'JetBrains Mono', monospace",
+          letterSpacing: "0.08em", textTransform: "uppercase", fontWeight: 600,
+          background: WAYFINDER_GRADIENT,
+          backgroundClip: "text", WebkitBackgroundClip: "text", color: "transparent",
+        }}>{label}</span>
         {count !== undefined && (
           <span style={{ fontSize: 10, fontFamily: "'JetBrains Mono', monospace", color: T.dim }}>· {count}</span>
         )}
@@ -4664,7 +4675,7 @@ export default function App() {
 
       {/* Page-level ambient brand-gradient wash — bleeds full viewport width behind hero */}
       <div style={{ position: "relative", overflow: "hidden" }}>
-        <div aria-hidden style={{ position: "absolute", top: 0, left: 0, right: 0, height: 720, pointerEvents: "none", zIndex: 0 }}>
+        <div aria-hidden style={{ position: "absolute", top: 0, left: 0, right: 0, height: 720, pointerEvents: "none", zIndex: 0, overflow: "hidden" }}>
           <div className="hero-glow hero-glow-purple" />
           <div className="hero-glow hero-glow-orange" />
         </div>
@@ -4714,7 +4725,6 @@ export default function App() {
               id="phases"
               label="By phase"
               count="6 phases"
-              color={T.phases["01"].color}
               icon={IconStack3}
               lede="I know where I am in the project. Show me the right tools and skills for that phase."
               onNavigate={navigate}
@@ -4723,7 +4733,6 @@ export default function App() {
               id="quickstarts"
               label="By task"
               count={`${QUICKSTARTS.length} tasks`}
-              color={T.phases["02"].color}
               icon={IconChecklist}
               lede="I have a specific thing I need to do — synthesize notes, frame a problem, generate concepts."
               onNavigate={navigate}
@@ -4732,7 +4741,6 @@ export default function App() {
               id="agents"
               label="By agent"
               count="6 agents"
-              color={T.phases["03"].color}
               icon={IconUsersGroup}
               lede="I want a Claude specialist — a Researcher, Strategist, Designer, or Engineer to drop into Claude Code."
               onNavigate={navigate}
@@ -4741,7 +4749,6 @@ export default function App() {
               id="skills"
               label="By skill"
               count={`${SKILL_FILES.length} skills`}
-              color={T.phases["04"].color}
               icon={IconFileText}
               lede="I want a specific markdown skill to upload to Claude — research synthesis, problem framing, accessibility audit."
               onNavigate={navigate}
@@ -4749,7 +4756,6 @@ export default function App() {
             <WayfinderCard
               id="scenarios"
               label="By scenario"
-              color={T.phases["05"].color}
               icon={IconRoute}
               lede="I'm running a bigger design challenge — a sprint, an audit, a complete system build. Show me a path."
               onNavigate={navigate}
