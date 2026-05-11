@@ -2,4 +2,7 @@ web/node_modules
 web/dist
 .DS_Store
 .apdf/session.log
+.apdf/session-id
 .claude/settings.local.json
+.claude/launch.json
+.claude/worktrees/
