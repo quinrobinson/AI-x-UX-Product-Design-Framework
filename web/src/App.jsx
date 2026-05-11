@@ -4664,11 +4664,10 @@ export default function App() {
 
       {/* Page-level ambient brand-gradient wash — bleeds full viewport width behind hero */}
       <div style={{ position: "relative", overflow: "hidden" }}>
-        <div aria-hidden style={{
-          position: "absolute", top: 0, left: 0, right: 0, height: 720,
-          pointerEvents: "none", zIndex: 0,
-          background: "radial-gradient(50% 70% at 25% 35%, rgba(134,59,255,0.22) 0%, transparent 70%), radial-gradient(55% 75% at 80% 55%, rgba(233,129,12,0.18) 0%, transparent 70%)",
-        }} />
+        <div aria-hidden style={{ position: "absolute", top: 0, left: 0, right: 0, height: 720, pointerEvents: "none", zIndex: 0 }}>
+          <div className="hero-glow hero-glow-purple" />
+          <div className="hero-glow hero-glow-orange" />
+        </div>
 
       {/* Main content */}
       <div style={{ position: "relative", zIndex: 1, maxWidth: 1440, margin: "0 auto", padding: "72px clamp(24px, 5vw, 80px) 96px" }}>

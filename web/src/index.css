@@ -10,3 +10,32 @@ a { font-family: inherit; }
   .hide-mobile { display: none; }
   .show-mobile { display: inline; }
 }
+
+/* Hero ambient glows — subtle, organic, never-syncing drift */
+.hero-glow {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  will-change: transform;
+}
+.hero-glow-purple {
+  background: radial-gradient(50% 70% at 25% 35%, rgba(134, 59, 255, 0.22) 0%, transparent 70%);
+  animation: hero-drift-a 22s ease-in-out infinite;
+}
+.hero-glow-orange {
+  background: radial-gradient(55% 75% at 80% 55%, rgba(233, 129, 12, 0.18) 0%, transparent 70%);
+  animation: hero-drift-b 18s ease-in-out infinite;
+}
+@keyframes hero-drift-a {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  33%      { transform: translate3d(2.2%, 1.6%, 0) scale(1.05); }
+  66%      { transform: translate3d(-1.6%, 2.4%, 0) scale(0.97); }
+}
+@keyframes hero-drift-b {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  40%      { transform: translate3d(-2.4%, 2.0%, 0) scale(1.06); }
+  75%      { transform: translate3d(2.0%, -1.2%, 0) scale(0.95); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hero-glow-purple, .hero-glow-orange { animation: none; }
+}
